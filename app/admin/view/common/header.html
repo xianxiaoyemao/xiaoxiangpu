@@ -1,0 +1,149 @@
+<a href="javascript:;" class="logo">
+    <!-- 迷你模式下Logo的大小为50X50 -->
+    <span class="logo-mini">{$site.web_name|mb_substr=0,6,'utf-8'|mb_strtoupper='utf-8'}</span>
+    <!-- 普通模式下Logo -->
+    <span class="logo-lg"><b>{$site.web_name|mb_substr=0,6,'utf-8'}</b></span>
+</a>
+<!-- 顶部通栏样式 -->
+<nav class="navbar navbar-static-top">
+    <!-- 边栏切换按钮-->
+    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        <span class="sr-only">Toggle navigation</span>
+    </a>
+
+    <div id="nav" class="pull-left">
+        <!--如果不想在顶部显示角标,则给ul加上disable-top-badge类即可-->
+        <ul class="nav nav-tabs nav-addtabs disable-top-badge hidden-xs" role="tablist">
+            {$navlist|raw}
+        </ul>
+    </div>
+
+    <div class="navbar-custom-menu">
+        <ul class="nav navbar-nav">
+            <li>
+                <a href="__PUBLIC__" target="_blank"><i class="fa fa-home" style="font-size:14px;"></i></a>
+                <!--href="index/index/index"-->
+            </li>
+
+            <!-- 账号信息下拉框 -->
+            <li class="hidden-xs">
+                <a href="javascript:;" data-toggle="checkupdate" title="{:__('Check for updates')}">
+                    <i class="fa fa-refresh"></i>
+                </a>
+            </li>
+
+            <!-- 清除缓存 -->
+            <li>
+                <a href="javascript:;" data-toggle="dropdown" title="{:__('Wipe cache')}">
+                    <i class="fa fa-trash"></i>
+                </a>
+                <ul class="dropdown-menu wipecache">
+                    <li><a href="javascript:;" data-type="all"><i class="fa fa-trash"></i> {:__('Wipe all cache')}</a></li>
+                    <li class="divider"></li>
+                    <li><a href="javascript:;" data-type="content"><i class="fa fa-file-text"></i> {:__('Wipe content cache')}</a></li>
+                    <li><a href="javascript:;" data-type="template"><i class="fa fa-file-image-o"></i> {:__('Wipe template cache')}</a></li>
+                    <li><a href="javascript:;" data-type="addons"><i class="fa fa-rocket"></i> {:__('Wipe addons cache')}</a></li>
+                </ul>
+            </li>
+
+            <!-- 多语言列表 -->
+            {if $Think.config.lang_switch_on}
+            <li class="hidden-xs">
+                <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-language"></i></a>
+                <ul class="dropdown-menu">
+                    <li class="{$config['language']=='zh-cn'?'active':''}">
+                        <a href="?ref=addtabs&lang=zh-cn">简体中文</a>
+                    </li>
+                    <li class="{$config['language']=='en'?'active':''}">
+                        <a href="?ref=addtabs&lang=en">English</a>
+                    </li>
+                </ul>
+            </li>
+            {/if}
+            <!-- 全屏按钮 -->
+            <li class="hidden-xs">
+                <a href="#" data-toggle="fullscreen"><i class="fa fa-arrows-alt"></i></a>
+            </li>
+
+            <!-- 账号信息下拉框 -->
+            <li class="dropdown user user-menu">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <img src="{$admin.avatar|cdnurl}" class="user-image" alt="{$admin.nickname}">
+                    <span class="hidden-xs">{$admin.nickname}</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <!-- User image -->
+                    <li class="user-header">
+                        <img src="{$admin.avatar|cdnurl}" class="img-circle" alt="">
+                        <p>
+                            {$admin.nickname}
+                            <small>{:date('Y-m-d H:i:s',$admin['logintime'])}</small>
+                        </p>
+                    </li>
+                    <!-- Menu Body -->
+                    <li class="user-body">
+                        <div class="row">
+                            <div class="col-xs-4 text-center">
+                                <a href="https://www.iuok.cn" target="_blank">{:__('FastAdmin')}</a>
+                            </div>
+                            <div class="col-xs-4 text-center">
+                                <a href="https://forum.iuok.cn" target="_blank">{:__('Forum')}</a>
+                            </div>
+                            <div class="col-xs-4 text-center">
+                                <a href="https://doc.iuok.cn" target="_blank">{:__('Docs')}</a>
+                            </div>
+                        </div>
+                    </li>
+                    <!-- Menu Footer-->
+                    <li class="user-footer">
+                        <div class="pull-left">
+                            <a href="{:url('general.profile/index')}" class="btn btn-primary addtabsit"><i class="fa fa-user"></i>
+                                个人资料</a>
+                        </div>
+                        <div class="pull-right">
+                            <a href="{:url('index/logout')}" class="btn btn-danger"><i class="fa fa-sign-out"></i>
+                                注销</a>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- 控制栏切换按钮 -->
+            <li class="hidden-xs">
+                <a href="javascript:;" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>
+            </li>
+
+
+
+            <!--<li class="dropdown notifications-menu">-->
+                <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown">-->
+                    <!--<i class="fa fa-bell-o"></i>-->
+                    <!--<span class="label label-warning"></span>-->
+                <!--</a>-->
+                <!--<ul class="dropdown-menu">-->
+                    <!--<li class="header">Latest news</li>-->
+                    <!--<li>-->
+                        <!--&lt;!&ndash; FastAdmin最新更新信息,你可以替换成你自己站点的信息,assets/js/backend/index.js文件 &ndash;&gt;-->
+                        <!--<ul class="menu">-->
+
+                        <!--</ul>-->
+                    <!--</li>-->
+                    <!--<li class="footer"><a href="#" target="_blank">View all</a></li>-->
+                <!--</ul>-->
+            <!--</li>-->
+
+            <!--<li class="dropdown messages-menu github-commits">-->
+                <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown">-->
+                    <!--<i class="fa fa-github"></i>-->
+                    <!--<span class="label label-info"></span>-->
+                <!--</a>-->
+                <!--<ul class="dropdown-menu">-->
+                    <!--<li class="header">Recent commits</li>-->
+                    <!--<li>-->
+                        <!--<ul class="menu"></ul>-->
+                    <!--</li>-->
+                    <!--<li class="footer"><a href="#" target="_blank">View all</a></li>-->
+                <!--</ul>-->
+            <!--</li>-->
+        </ul>
+    </div>
+</nav>
