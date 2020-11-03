@@ -16,6 +16,19 @@ use think\facade\Event;
 use think\facade\Config;
 use think\facade\Db;
 
+if (!function_exists('apiBack')) {
+    function apiBack ($status,$msg, $code, $data = null)
+    {
+        $result = [
+            'status' => $status,
+            'code' => $code,
+            'msg'  => $msg,
+            'data' => $data,
+        ];
+        return json($result);
+    }
+}
+
 /**
  * 获取客户端IP地址
  * @param integer $type 返回类型 0 返回IP地址 1 返回IPV4地址数字
