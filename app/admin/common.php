@@ -143,7 +143,6 @@ if (! function_exists('build_select')) {
     function build_select($name, $options, $selected = [], $attr = []){
         $options = is_array($options) ? $options : explode(',', $options);
         $selected = is_array($selected) ? $selected : explode(',', $selected);
-
         return Form::select($name, $options, $selected, $attr);
     }
 }
