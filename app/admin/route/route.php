@@ -1,5 +1,5 @@
 <?php
 use think\facade\Route;
 
-//Route::get('product/goods', 'product/Goods@index');
+Route::post('goods/getSpec', 'product.goods/getSpec');
 

@@ -1,4 +1,4 @@
-define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefined, Backend, Table, Form) {
+define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'fast'], function ($, undefined, Backend, Table, Form, Fast) {
 
     var Controller = {
         index: function () {
@@ -14,7 +14,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
             });
 
             var table = $("#table");
-
+            Fast.config.openArea = ['800px','100px'];
             // 初始化表格
             table.bootstrapTable({
                 url: $.fn.bootstrapTable.defaults.extend.index_url,
@@ -46,6 +46,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
         },
         add: function () {
             Form.api.bindevent($("form[role=form]"));
+            /*$('#cate').on('change', function () {
+               var category = $('#cate').val();
+               $.post('goods/getSpec', {cate: category}, function (e) {
+                   console.log(e);
+               });
+            });*/
         },
         edit: function () {
             Form.api.bindevent($("form[role=form]"));
