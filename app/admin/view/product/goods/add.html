@@ -1,34 +1,61 @@
 <form id="edit-form" class="form-horizontal form-ajax" role="form" data-toggle="validator" method="POST" action="">
-<!--    <div class="form-group">-->
-<!--        <label class="control-label col-xs-12 col-sm-2">所属组别:</label>-->
-<!--        <div class="col-xs-12 col-sm-8">-->
-<!--            &lt;!&ndash;<select class="form-control selectpicker" multiple="" name="group[]">&ndash;&gt;-->
-<!--                &lt;!&ndash;<option value="1"> 超级管理员</option>&ndash;&gt;-->
-<!--                &lt;!&ndash;<option value="2" selected="selected">&nbsp;├ 二级管理员</option>&ndash;&gt;-->
-<!--                &lt;!&ndash;<option value="3">&nbsp;│&nbsp;├ 三级管理员</option>&ndash;&gt;-->
-<!--                &lt;!&ndash;<option value="5">&nbsp;│&nbsp;└ 三级管理员2</option>&ndash;&gt;-->
-<!--                &lt;!&ndash;<option value="4">&nbsp;└ 二级管理员2</option>&ndash;&gt;-->
-<!--            &lt;!&ndash;</select>&ndash;&gt;-->
-<!--        </div>-->
-<!--    </div>-->
     <div class="form-group">
         <label for="name" class="control-label col-xs-12 col-sm-2">商品名称:</label>
         <div class="col-xs-12 col-sm-8">
-            <input type="text" class="form-control" id="username" name="row[name]" value="" data-rule="required;name" />
+            <input type="text" class="form-control" id="name" name="row[name]" value="" data-rule="required;name" />
         </div>
     </div>
     <div class="form-group">
         <label class="control-label col-xs-12 col-sm-2">商品分类:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_select('row[category_id]', $category, null, ['class'=>'form-control', 'required'=>''])}
+            {:build_select('row[category_id]', $category, null, ['class'=>'form-control', 'required'=>'', 'id'=>'cate'])}
         </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2" >规格:</label>
+        {foreach $specInfo as $key => $vo }
+        <div class="col-xs-12 col-sm-4">
+            <label class="text-danger control-label col-xs-8 col-sm-1" style="text-align: left">{$vo.spec_name}</label>
+            {:build_checkboxs('row[spec_info_id][]', $vo['info'], null)}
+        </div>
+        {/foreach}
     </div>
 
     <div class="form-group">
-        <label for="c-avatar" class="control-label col-xs-12 col-sm-2">头像:</label>
+        <label for="price" class="control-label col-xs-12 col-sm-2">价格:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="row[price]" value=""  />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="discount_price" class="control-label col-xs-12 col-sm-2">优惠价格:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" id="nickname" name="row[discount_price]" value="" data-rule="required" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="sales" class="control-label col-xs-12 col-sm-2">销量:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="number" class="form-control" name="row[sales]" value="" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="sales" class="control-label col-xs-12 col-sm-2">库存:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="number" class="form-control" name="row[inventory]" value="" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="is_hot_sale" class="control-label col-xs-12 col-sm-2">是否热卖:</label>
+        <div class="col-xs-12 col-sm-8">
+            {:build_radios('row[is_hot_sale]', ['normal'=>'是', 'hidden'=>'不是'])}
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="c-avatar" class="control-label col-xs-12 col-sm-2">商品主图:</label>
         <div class="col-xs-12 col-sm-8">
             <div class="input-group">
-                <input id="c-avatar" data-rule="" class="form-control" size="50" name="row[avatar]" type="text" value="">
+                <input id="c-avatar" data-rule="" class="form-control" size="50" name="row[images]" type="text" value="">
                 <div class="input-group-addon no-border no-padding">
                     <span>
                         <button type="button" id="plupload-avatar" class="btn btn-danger plupload" data-input-id="c-avatar" data-mimetype="image/gif,image/jpeg,image/png,image/jpg,image/bmp" data-multiple="true" data-preview-id="p-avatar">
@@ -36,34 +63,9 @@
                         </button>
                     </span>
                 </div>
-                <span class="msg-box n-right" for="c-avatar"></span>
             </div>
+            <span class="msg-box n-right" for="c-avatar"></span>
             <ul class="row list-inline plupload-preview" id="p-avatar"></ul>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="price" class="control-label col-xs-12 col-sm-2">价格:</label>
-        <div class="col-xs-12 col-sm-8">
-            <input type="number" class="form-control" id="email" name="row[price]" value="" data-rule="required;email" />
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="discount_price" class="control-label col-xs-12 col-sm-2">优惠价格:</label>
-        <div class="col-xs-12 col-sm-8">
-            <input type="number" class="form-control" id="nickname" name="row[discount_price]" value="" data-rule="required" />
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="sales" class="control-label col-xs-12 col-sm-2">销量:</label>
-        <div class="col-xs-12 col-sm-8">
-            <input type="number" class="form-control" id="password" name="row[sales]" value="" data-rule="password" />
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="is_hot_sale" class="control-label col-xs-12 col-sm-2">是否热卖:</label>
-        <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[is_hot_sale]', ['normal'=>'是', 'hidden'=>'不是'])}
         </div>
     </div>
     <div class="form-group">
@@ -84,6 +86,12 @@
             {:build_radios('row[status]', ['normal'=>__('Normal'), 'hidden'=>__('Hidden')])}
         </div>
     </div>
+    <div class="form-group">
+        <label for="content" class="control-label col-xs-12 col-sm-2">商品描述:</label>
+        <div class="col-xs-12 col-sm-8">
+            <textarea name="row[introduce]" class="col-xs-12 col-sm-6" style="height: 200px"></textarea>
+        </div>
+    </div>
     <div class="form-group hidden layer-footer">
         <label class="control-label col-xs-12 col-sm-2"></label>
         <div class="col-xs-12 col-sm-8">
@@ -95,5 +103,8 @@
 <style>
     .radio label {
         margin-right: 50px;
+    }
+    .checkbox label {
+        margin-right: unset;
     }
 </style>
