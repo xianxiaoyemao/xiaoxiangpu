@@ -1,20 +1,18 @@
-define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'fast'], function ($, undefined, Backend, Table, Form, Fast) {
+define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'fast'], function ($, undefined, Backend, Table, Form) {
 
     var Controller = {
         index: function () {
             // 初始化表格参数配置
             Table.api.init({
                 extend: {
-                    index_url: 'product.goods/index',
-                    add_url: 'product.goods/add',
-                    edit_url: 'product.goods/edit',
-                    del_url: 'product.goods/del',
-                    multi_url: 'product.goods/multi',
+                    index_url: 'index.web/index',
+                    edit_url: 'index.web/edit',
+                    del_url: 'index.web/del',
+                    multi_url: 'index.web/multi',
                 }
             });
 
             var table = $("#table");
-            Fast.config.openArea = ['800px','100px'];
             // 初始化表格
             table.bootstrapTable({
                 url: $.fn.bootstrapTable.defaults.extend.index_url,
@@ -22,15 +20,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'fast'], function ($,
                     [
                         {field: 'state', checkbox: true, },
                         {field: 'id', title: 'ID'},
-                        {field: 'name', title: '商品名称'},
-                        {field: 'price', title: '价格'},
-                        {field: 'discount_price', title: '优惠价格', operate:false, formatter: Table.api.formatter.label},
-                        {field: 'sales', title: '销量'},
-                        {field: 'is_hot_sale', title: '热卖商品', formatter: Table.api.formatter.status},
-                        {field: 'is_recommend', title: '店长推荐', formatter: Table.api.formatter.status},
-                        {field: 'is_new', title: '新品', formatter: Table.api.formatter.status},
+                        {field: 'username', title: '用户姓名'},
+                        {field: 'mobile', title: '手机号码'},
+                        {field: 'remark', title: '备注信息'},
                         {field: 'status', title: '状态', formatter: Table.api.formatter.status},
-                        {field: 'createtime', title: '创建时间', formatter: Table.api.formatter.datetime},
+                        {field: 'create_time', title: '创建时间', formatter: Table.api.formatter.datetime},
                         {field: 'operate', title: __('Operate'), events: Table.api.events.operate, formatter: function (value, row, index) {
                                 return Table.api.formatter.operate.call(this, value, row, index, table);
                             }}
