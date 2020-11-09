@@ -27,6 +27,6 @@ return [
     ],
     'web_close' => '1',
     'web_logo' => '/storage/uploads/20200814/9fd7a33c5507cff04bf4b9a5fdbbfa8a.png',
-    'miniprogram_app_id' => 'wx0921f2ab7550508e',
-    'miniprogram_app_secret' => 'a1db2bac8bbb511b4755b54109a23d4e',
+    'miniprogram_app_id' => '',
+    'miniprogram_app_secret' => '',
 ];
