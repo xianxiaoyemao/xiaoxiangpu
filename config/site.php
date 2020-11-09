@@ -5,11 +5,10 @@ return [
     'web_desc' => '',
     'configgroup' => [
         'basic' => 'Basic',
-        'email' => 'Email',
+        'gongzhongho' => '微信公众号',
+        'miniprogram' => '微信小程序',
         'dictionary' => 'Dictionary',
-        'software' => '软件配置',
         'user' => 'User',
-        'example' => 'Example',
     ],
     'web_key' => '',
     'categorytype' => [
@@ -27,7 +26,7 @@ return [
         'frontend' => 'zh-cn',
     ],
     'web_close' => '1',
-    'web_logo' => '/storage/uploads/20200823/ec9b50339ad2c9aac01e4be63d17386d.jpg',
-    'software_close' => '1',
-    'softwareapi' => '',
+    'web_logo' => '/storage/uploads/20200814/9fd7a33c5507cff04bf4b9a5fdbbfa8a.png',
+    'miniprogram_app_id' => 'wx0921f2ab7550508e',
+    'miniprogram_app_secret' => 'a1db2bac8bbb511b4755b54109a23d4e',
 ];
