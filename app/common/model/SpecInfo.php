@@ -16,18 +16,7 @@ class SpecInfo extends BaseModel
         'updatetime' => 'int',
     ];
 
-//    public function getGoodName(){
-//        return $this->belongsTo(Spec::class,'spec_id','id', [], 'LEFT')->setEagerlyType(0);
-//    }
-
-    public function specparent(){
-        return $this->hasMany(Spec::class, 'spec_id', 'id', [], 'LEFT')->setEagerlyType(0);
+    public function spec(){
+        return $this->belongsTo(Spec::class, 'spec_id', 'id');
     }
-
-//    public function specparent(){
-//        return $this->belongsTo(Spec::class);
-//    }
-//    public function specparent(){
-//        return $this->belongsTo(Spec::class,'stu_id','id');
-//    }
 }

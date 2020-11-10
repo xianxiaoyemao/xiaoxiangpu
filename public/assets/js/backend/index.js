@@ -56,73 +56,6 @@ define(['jquery', 'bootstrap', 'backend', 'addtabs', 'adminlte', 'form'], functi
                 Backend.api.addtabs($(this).data("url"));
             });
 
-            //读取FastAdmin的更新信息
-            $.ajax({
-                url: 'http://demo.fastadmin.net/index/index/news',
-                type: 'post',
-                dataType: 'jsonp',
-                success: function (ret) {
-                    $(".notifications-menu > a span").text(ret.new > 0 ? ret.new : '');
-                    $(".notifications-menu .footer a").attr("href", ret.url);
-                    $.each(ret.newslist, function (i, j) {
-                        var item = '<li><a href="' + j.url + '" target="_blank"><i class="' + j.icon + '"></i> ' + j.title + '</a></li>';
-                        $(item).appendTo($(".notifications-menu ul.menu"));
-                    });
-                }
-            });
-
-            //读取FastAdmin的Commits信息
-            $.ajax({
-                url: 'https://api.github.com/repos/karsonzhang/fastadmin/commits?state=open&per_page=10&page=1&sort=updated',
-                type: 'get',
-                dataType: 'jsonp',
-                success: function (ret) {
-                    $(".github-commits > a span").text(ret.data.length);
-                    $(".github-commits .footer a").attr("href", "https://github.com/karsonzhang/fastadmin/commits/master");
-
-                    var dateDiff = function (hisTime, nowTime) {
-                        if (!arguments.length)
-                            return '';
-                        var arg = arguments,
-                                now = arg[1] ? arg[1] : new Date().getTime(),
-                                diffValue = now - arg[0],
-                                result = '',
-                                minute = 1000 * 60,
-                                hour = minute * 60,
-                                day = hour * 24,
-                                halfamonth = day * 15,
-                                month = day * 30,
-                                year = month * 12,
-                                _year = diffValue / year,
-                                _month = diffValue / month,
-                                _week = diffValue / (7 * day),
-                                _day = diffValue / day,
-                                _hour = diffValue / hour,
-                                _min = diffValue / minute;
-
-                        if (_year >= 1)
-                            result = parseInt(_year) + "年前";
-                        else if (_month >= 1)
-                            result = parseInt(_month) + "个月前";
-                        else if (_week >= 1)
-                            result = parseInt(_week) + "周前";
-                        else if (_day >= 1)
-                            result = parseInt(_day) + "天前";
-                        else if (_hour >= 1)
-                            result = parseInt(_hour) + "个小时前";
-                        else if (_min >= 1)
-                            result = parseInt(_min) + "分钟前";
-                        else
-                            result = "刚刚";
-                        return result;
-                    };
-                    $.each(ret.data, function (i, j) {
-                        var author = j.author ? j.author : {html_url: "https://github.com/karsonzhang", avatar_url: "/assets/img/avatar.png", login: "Anonymous"};
-                        var item = '<li><a href="' + j.html_url + '"><div class="pull-left"><img src="' + author.avatar_url + '" class="img-circle" alt="' + author.login + '"></div><h4>' + author.login + '<small><i class="fa fa-clock-o"></i> ' + dateDiff(new Date(j.commit.committer.date).getTime()) + '</small></h4><p>' + j.commit.message + '</p></a></li>';
-                        $(item).appendTo($(".github-commits ul.menu"));
-                    });
-                }
-            });
 
             //切换左侧sidebar显示隐藏
             $(document).on("click fa.event.toggleitem", ".sidebar-menu li > a", function (e) {
@@ -194,7 +127,7 @@ define(['jquery', 'bootstrap', 'backend', 'addtabs', 'adminlte', 'form'], functi
             $(document).on("click", "a[addtabs]", function (e) {
                 localStorage.setItem("lastpage", $(this).attr("url"));
             });
-            
+
             //回到最后一次打开的页面
             var lastpage = localStorage.getItem("lastpage");
             if (lastpage) {

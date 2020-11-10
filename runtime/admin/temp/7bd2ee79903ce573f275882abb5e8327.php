@@ -1,8 +1,27 @@
+<?php /*a:3:{s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\index\login.html";i:1597720105;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1576229932;}*/ ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {include file="common/meta" /}
+    <meta charset="utf-8">
+<title><?php echo htmlentities((isset($title) && ($title !== '')?$title:'')); ?></title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="renderer" content="webkit">
+
+<link rel="shortcut icon" href="/assets/img/favicon.ico"/>
+<!-- Loading Bootstrap -->
+<link href="/assets/css/backend<?php echo app('request')->env('app_debug')?'':'.min'; ?>.css?v=<?php echo htmlentities(config('site.version')); ?>"
+      rel="stylesheet">
+<!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+<!--[if lt IE 9]>
+<script src="/assets/js/html5shiv.js"></script>
+<script src="/assets/js/respond.min.js"></script>
+<![endif]-->
+<script type="text/javascript">
+    var require = {
+        config: <?php echo json_encode($config); ?>
+    };
+</script>
     <style type="text/css">
         body {
             color: #999;
@@ -72,7 +91,7 @@
         <div class="login-screen">
             <div class="well">
                 <div class="login-form">
-                    <!--<img id="profile-img" class="profile-img-card" src="__CDN__/assets/img/avatar.png"/>-->
+                    <!--<img id="profile-img" class="profile-img-card" src="/assets/img/avatar.png"/>-->
                     <p id="profile-name" class="profile-name-card"></p>
                     <form action="" method="post" id="login-form">
                         <div id="errtips" class="hide"></div>
@@ -96,9 +115,9 @@
                             <input type="text" name="captcha" class="form-control" placeholder="验证码"
                                    data-rule="验证码:required;length(4)"/>
                             <span class="input-group-addon" style="padding:0;border:none;cursor:pointer;">
-                                <img src="{:request()->rootUrl()}{:captcha_src()}" width="100" height="30"
-                                       onclick="this.src = '{:request()->rootUrl()}{:captcha_src()}?r=' + Math.random();"/>
-
+                                        <img src="<?php echo request()->rootUrl(); ?><?php echo captcha_src(); ?>" width="100"
+                                             height="30"
+                                             onclick="this.src = '<?php echo request()->rootUrl(); ?><?php echo captcha_src(); ?>?r=' + Math.random();"/>
                             </span>
                         </div>
 
@@ -118,6 +137,7 @@
         </div>
     </div>
 </div>
-{include file="common/script" /}
+<script src="/assets/js/require<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js"
+        data-main="/assets/js/require-backend<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js?v=<?php echo htmlentities($site['version']); ?>"></script>
 </body>
 </html>
