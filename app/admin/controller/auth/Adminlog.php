@@ -33,13 +33,11 @@ class Adminlog extends Backend{
     public function index(){
         if ($this->request->isAjax()) {
             [$where, $sort, $order, $offset, $limit] = $this->buildparams();
-            dump($where);die;
             $total = $this -> adminlog
                 ->where($where)
                 ->where('admin_id', 'in', $this->childrenAdminIds)
                 ->order($sort, $order)
                 ->count();
-
             $list = $this -> adminlog
                 ->where($where)
                 ->where('admin_id', 'in', $this->childrenAdminIds)
