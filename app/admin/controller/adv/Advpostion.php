@@ -6,21 +6,20 @@
  * Time: 16:08
  */
 namespace app\admin\controller\adv;
-
 use app\common\controller\Backend;
-//use app\common\model\Config as ConfigModel;
 use think\facade\Db;
 class Advpostion extends Backend{
     protected $model = null;
+    protected $advmodel =null;
     protected $noNeedRight = ['check', 'rulelist'];
     public function initialize(){
         parent::initialize();
-        $this ->model = Db::name('advposition');
+        $this ->model = new \app\admin\model\Advposition();
+        $this -> advmodel = new \app\admin\model\Adv();
     }
     public function index(){
         if ($this->request->isAjax()) {
             [$where, $sort, $order, $offset, $limit] = $this->buildparams();
-
             $total = $this -> model
                 ->where($where)
                 ->order($sort, $order)
@@ -31,7 +30,6 @@ class Advpostion extends Backend{
                 ->order($sort, $order)
                 ->limit($offset, $limit)
                 ->select();
-
             $result = ['total' => $total, 'rows' => $list];
 
             return json($result);
@@ -43,7 +41,7 @@ class Advpostion extends Backend{
             $params = $this->request->post('row/a');
             if($params){
                 $params['create_time'] =time();
-                $this ->model -> insert($params);
+                $this ->model -> save($params);
                 $this->success();
             }
             $this->error();
@@ -51,23 +49,21 @@ class Advpostion extends Backend{
         return $this-> fetch();
     }
     public function edit($ids=null){
-        $row = Db::name('advposition') ->find($ids);
+        $row = $this -> model ->find($ids);
         if (! $row) {
             $this->error(__('No Results were found'));
         }
         if ($this->request->isPost()) {
             $params = $this->request->post('row/a');
             if($params){
-                $data['title'] = $params['title'];
-                $data['desc'] = $params['desc'];
-                $data['status'] = $params['status'];
-                $data['sort'] = $params['sort'];
-                $data['update_time'] = time();
-                $this ->model -> where('id',$params['id']) ->  update($params);
+                $params['update_time'] = time();
+                $result = $row->save($params);
+                if ($result === false) {
+                    $this->error($row->getError());
+                }
                 $this->success();
             }
             $this->error();
-
         }
         $this->assign('row', $row);
         return $this-> fetch();
@@ -77,8 +73,8 @@ class Advpostion extends Backend{
      */
     public function del($ids = ''){
         if ($ids) {
-            $this -> model -> where('id',$ids) -> delete();
-            Db::name('adv') -> where('pid',$ids)-> delete();
+            $this->model -> destroy($ids);
+            $this -> advmodel -> where('pid',$ids) -> delete();
             $this->success();
         }
         $this->error();
