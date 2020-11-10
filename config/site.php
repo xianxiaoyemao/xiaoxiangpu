@@ -25,7 +25,5 @@ return [
         'frontend' => 'zh-cn',
     ],
     'web_close' => '1',
-    'web_logo' => '/storage/uploads/20200814/9fd7a33c5507cff04bf4b9a5fdbbfa8a.png',
-    'miniprogram_app_id' => '',
-    'miniprogram_app_secret' => '',
+    'web_logo' => '/storage/uploads/20200814/9fd7a33c5507cff04bf4b9a5fdbbfa8a.png'
 ];
