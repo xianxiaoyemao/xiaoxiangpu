@@ -8,12 +8,36 @@
 namespace app\common\model;
 use think\Model;
 
-class Product extends Model{
-    protected $connection = 'mysql_products';
+class Product extends BaseModel
+{
+    //开启自动时间戳
+    protected $autoWriteTimestamp=true;
+    // 定义时间戳字段名
+    protected $createTime = 'createtime';
+    protected $updateTime = 'updatetime';
 
-    protected $fillable = [
-        'product_core', 'title', 'category_id', 'status',
-        'audit_status', 'shop_id', 'description_id', 'rating',
-        'sold_count','review_count','price','image'
-    ];
+    //获取属性
+    public function getStatusAttr($value)
+    {
+        $status = [9 => 'deleted', 1 => 'normal', 2 => 'hidden'];
+        return $status[$value];
+    }
+
+    public function getIsHotSaleAttr($value)
+    {
+        $status = [1 => 'normal', 2 => 'hidden'];
+        return $status[$value];
+    }
+
+    public function getIsRecommendAttr($value)
+    {
+        $status = [1 => 'normal', 2 => 'hidden'];
+        return $status[$value];
+    }
+
+    public function getIsNewAttr($value)
+    {
+        $status = [1 => 'normal', 2 => 'hidden'];
+        return $status[$value];
+    }
 }

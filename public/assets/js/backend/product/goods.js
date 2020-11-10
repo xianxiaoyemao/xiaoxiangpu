@@ -14,7 +14,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
             });
 
             var table = $("#table");
-
             // 初始化表格
             table.bootstrapTable({
                 url: $.fn.bootstrapTable.defaults.extend.index_url,
@@ -26,15 +25,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'price', title: '价格'},
                         {field: 'discount_price', title: '优惠价格', operate:false, formatter: Table.api.formatter.label},
                         {field: 'sales', title: '销量'},
-                        {field: 'is_hot_sale', title: '热卖商品'},
-                        {field: 'is_recommend', title: '店长推荐'},
-                        {field: 'is_new', title: '新品'},
+                        {field: 'is_hot_sale', title: '热卖商品', formatter: Table.api.formatter.status},
+                        {field: 'is_recommend', title: '店长推荐', formatter: Table.api.formatter.status},
+                        {field: 'is_new', title: '新品', formatter: Table.api.formatter.status},
                         {field: 'status', title: '状态', formatter: Table.api.formatter.status},
                         {field: 'createtime', title: '创建时间', formatter: Table.api.formatter.datetime},
                         {field: 'operate', title: __('Operate'), events: Table.api.events.operate, formatter: function (value, row, index) {
-                                if(row.id == 1){
-                                    return '';
-                                }
                                 return Table.api.formatter.operate.call(this, value, row, index, table);
                             }}
                     ]
@@ -45,6 +41,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
         },
         add: function () {
             Form.api.bindevent($("form[role=form]"));
+            $('#append').click(function () {
+                var html = $('#skuattr').html();
+                var str = '<label class="control-label col-xs-12 col-sm-2"></label><div id="skuattr" class="form-group">' + html + '</div>';
+                $('#skuattr').after(str);
+            });
         },
         edit: function () {
             Form.api.bindevent($("form[role=form]"));
