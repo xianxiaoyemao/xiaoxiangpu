@@ -1,5 +1,4 @@
 <?php
-
 return [
     'web_name' => '陕西天屿懿德科技网络有限公司',
     'web_desc' => '',
