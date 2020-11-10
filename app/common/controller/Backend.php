@@ -316,7 +316,7 @@ class Backend extends BaseController{
                 case '=':
                 case ' <> ':
                 case '<>':
-                    $where[] = [$k, $sym, (string) $v];
+                    $where[] = [$k, trim($sym), (string) $v];
                     break;
                 case 'LIKE':
                 case 'NOT LIKE':
@@ -397,7 +397,6 @@ class Backend extends BaseController{
                 }
             };
         }
-
         return [$where, trim($sort), trim($order), $offset, $limit];
     }
 

@@ -76,7 +76,7 @@ class Config extends Backend{
                         $params['content'] = '';
                     }
                     $result = $this->model->create($params);
-                    /*if ($result !== false) {
+                    if ($result !== false) {
                         try {
                             $this->refreshFile();
                         } catch (Exception $e) {
@@ -85,8 +85,7 @@ class Config extends Backend{
                         $this->success();
                     } else {
                         $this->error($this->model->getError());
-                    }*/
-                    $this->success();
+                    }
                 } catch (Exception $e) {
                     $this->error($e->getMessage());
                 }
