@@ -17,12 +17,17 @@
         {
             "name": "yunwuxin",
             "email": "448901948@qq.com"
-        }        
+        }
     ],
     "require": {
         "php": ">=7.1.0",
         "topthink/framework": "^6.0.0",
-        "topthink/think-orm": "^2.0"
+        "topthink/think-orm": "^2.0",
+        "overtrue/wechat": "~4.0",
+        "topthink/think-multi-app": "^1.0",
+        "topthink/think-view": "^1.0",
+        "topthink/think-captcha": "^3.0",
+        "elasticsearch/elasticsearch": "^7.9"
     },
     "require-dev": {
         "symfony/var-dumper": "^4.2",
