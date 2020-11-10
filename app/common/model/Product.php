@@ -16,6 +16,11 @@ class Product extends BaseModel
     protected $createTime = 'createtime';
     protected $updateTime = 'updatetime';
 
+    public function prodeuctSku ()
+    {
+        return $this->hasMany(ProductSku::class);
+    }
+
     //获取属性
     public function getStatusAttr($value)
     {
