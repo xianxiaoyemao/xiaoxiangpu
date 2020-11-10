@@ -131,9 +131,8 @@ define(['jquery', 'bootstrap', 'toastr', 'layer', 'lang'], function ($, undefine
                 url = Fast.api.fixurl(url);
                 url = url + (url.indexOf("?") > -1 ? "&" : "?") + "dialog=1";
                 // var area = [$(window).width() > 800 ? '800px' : '100%', $(window).height() > 600 ? '600px' : '95%'];
-                var area = [$(window).width() > 800 ? '90%' : '100%', $(window).height() > 600 ? '80%' : '95%'];
+                var area = [$(window).width() > 800 ? '100%' : '100%', $(window).height() > 600 ? '100%' : '95%'];
                 // var area = ['90%',$(window).height() > 600 ? '600px' : '95%'];
-                alert(12313)
                 Layer.open($.extend({
                     type: 2,
                     title: title,

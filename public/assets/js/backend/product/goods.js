@@ -22,8 +22,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'state', checkbox: true, },
                         {field: 'id', title: 'ID'},
                         {field: 'name', title: '商品名称'},
-                        {field: 'price', title: '价格'},
-                        {field: 'discount_price', title: '优惠价格', operate:false, formatter: Table.api.formatter.label},
+                        {field: 'price', title: '市场价格'},
                         {field: 'sales', title: '销量'},
                         {field: 'is_hot_sale', title: '热卖商品', formatter: Table.api.formatter.status},
                         {field: 'is_recommend', title: '店长推荐', formatter: Table.api.formatter.status},
@@ -44,12 +43,45 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
             Form.api.bindevent($("form[role=form]"));
             $('#append').click(function () {
                 var html = $('#skuattr').html();
-                var str = '<label class="control-label col-xs-12 col-sm-2"></label><div id="skuattr" class="form-group">' + html + '</div>';
-                $('#skuattr').after(str);
+                var str = '<div id="skuattr" class="form-group">\n' +
+                    '                <div class="col-xs-12 col-sm-2">\n' +
+                    '                    <input type="text" class="form-control" size="40" name="row[sku_title][]" value="" placeholder="属性名称"/>\n' +
+                    '                </div>\n' +
+                    '                <div class="col-xs-12 col-sm-2">\n' +
+                    '                    <input type="text" class="form-control" name="row[sku_price][]" value="" placeholder="价格"/>\n' +
+                    '                </div>\n' +
+                    '                <div class="col-xs-12 col-sm-2">\n' +
+                    '                    <input type="text" class="form-control" name="row[stock][]" value="" placeholder="库存"/>\n' +
+                    '                </div>\n' +
+                    '                <span class="btn btn-sm btn-danger btn-remove"><i class="fa fa-times"></i></span>\n' +
+                    '            </div>';
+                $('#append').parent().prev().children('#prev').append(str);
+            });
+            $(document).on("click", "#prev .form-group .btn-remove", function () {
+                $(this).parent().remove();
             });
         },
         edit: function () {
             Form.api.bindevent($("form[role=form]"));
+            $('#append').click(function () {
+                var html = $('#skuattr').html();
+                var str = '<div id="skuattr" class="form-group">\n' +
+                    '                <div class="col-xs-12 col-sm-2">\n' +
+                    '                    <input type="text" class="form-control" size="40" name="row[sku_title][]" value="" placeholder="属性名称"/>\n' +
+                    '                </div>\n' +
+                    '                <div class="col-xs-12 col-sm-2">\n' +
+                    '                    <input type="text" class="form-control" name="row[sku_price][]" value="" placeholder="价格"/>\n' +
+                    '                </div>\n' +
+                    '                <div class="col-xs-12 col-sm-2">\n' +
+                    '                    <input type="text" class="form-control" name="row[stock][]" value="" placeholder="库存"/>\n' +
+                    '                </div>\n' +
+                    '                <span class="btn btn-sm btn-danger btn-remove"><i class="fa fa-times"></i></span>\n' +
+                    '            </div>';
+                $('#append').parent().prev().children('#prev').append(str);
+            });
+            $(document).on("click", "#prev .form-group .btn-remove", function () {
+                $(this).parent().remove();
+            });
         }
     };
     return Controller;
