@@ -38,7 +38,6 @@ class Adminlog extends Backend{
                 ->where('admin_id', 'in', $this->childrenAdminIds)
                 ->order($sort, $order)
                 ->count();
-
             $list = $this -> adminlog
                 ->where($where)
                 ->where('admin_id', 'in', $this->childrenAdminIds)
