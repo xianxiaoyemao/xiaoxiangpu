@@ -21,9 +21,9 @@ return [
             // 数据库类型
             'type'              => env('database.type', 'mysql'),
             // 服务器地址
-            'hostname'          => env('database.hostname', '127.0.0.1'),
+            'hostname'          => env('database.hostname', '182.92.120.119'),
             // 数据库名
-            'database'          => 'xiaoxiangpu',
+            'database'          => 'xxptest',
             // 用户名
             'username'          => env('database.username', 'root'),
             // 密码
@@ -93,23 +93,28 @@ return [
             // 字段缓存路径
             'schema_cache_path' => app()->getRuntimePath() . 'schema' . DIRECTORY_SEPARATOR,
         ],
-        'redis' =>[
-            'type' => 'redis',
-            // 服务器地址
-            'hostname'        => Env::get('redis.hostname', '127.0.0.1'),
-            // 数据库名
-            'database'        => Env::get('redis.database', ''),
-            // 密码
-            'password'        => Env::get('redis.password', ''),
-            // 端口
-            'hostport'        => Env::get('redis.hostport', '6379'),
 
-            'timeout'         => Env::get('redis.timeout', 0),
-
-            'prefix'          => Env::get('redis.prefix', ''),
-        ]
 
         // 更多的数据库配置信息
     ],
+    'redis' =>[
+        'type' => 'redis',
+        // 服务器地址
+        'hostname'        => Env::get('redis.hostname', '127.0.0.1'),
+        // 数据库名
+        'database'        => Env::get('redis.database', ''),
+        // 密码
+        'password'        => Env::get('redis.password', ''),
+        // 端口
+        'hostport'        => Env::get('redis.hostport', '6379'),
+
+        'timeout'         => Env::get('redis.timeout', 0),
+
+        'prefix'          => Env::get('redis.prefix', ''),
+    ],
+    'elasticsearch' => [
+        // Elasticsearch 支持多台服务器负载均衡，因此这里是一个数组
+        'hosts' => explode(',', env('ES_HOSTS')),
+    ]
 
 ];
