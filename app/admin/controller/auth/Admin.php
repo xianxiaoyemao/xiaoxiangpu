@@ -11,7 +11,6 @@ use fast\Random;
 use app\admin\model\AuthGroup;
 use app\admin\model\AuthGroupAccess;
 use app\common\controller\Backend;
-use think\Facade\DB;
 use app\admin\model\AdminLog;
 class Admin extends Backend{
     protected $model = null;
@@ -24,7 +23,6 @@ class Admin extends Backend{
         $this->childrenAdminIds = $this->auth->getChildrenAdminIds(true);
         $this->childrenGroupIds = $this->auth->getChildrenGroupIds(true);
         $groupList = AuthGroup::where('id', 'in', $this->childrenGroupIds)->select()->toArray();
-//        $groupList = AuthGroup::where('status', 'normal')->select()->toArray();
         Tree::instance()->init($groupList);
         $groupdata = [];
         //判断是否为超级管理员
@@ -34,16 +32,8 @@ class Admin extends Backend{
                 $groupdata[$v['id']] = $v['name'];
             }
         } else {
-//            $this->groupdata = Tree::instance()->getTreeList(Tree::instance()->getTreeArray(0), 'name');
-//            $ruledata = [0 => __('None')];
-//            foreach ($this->groupdata as $k => &$v) {
-//                $ruledata[$v['id']] = $v['name'];
-//            }
-//            unset($v);
-//            $this ->assign('groupdata', $ruledata);
             $result = [];
             $groups = $this->auth->getGroups();
-
             foreach ($groups as $m => $n) {
                 $childlist = Tree::instance()->getTreeList(Tree::instance()->getTreeArray($n['id']));
                 $temp = [];
@@ -108,23 +98,24 @@ class Admin extends Backend{
         if ($this->request->isPost()) {
             $params = $this->request->post('row/a');
             if($params){
-                $data['username'] = $params['username'];
-                $data['salt'] = Random::alnum();
-                $data['password'] = md5(md5($params['password']).$data['salt']);
-                $data['email'] = $params['email'];
-                $data['nickname'] = $params['nickname'];
-                $data['status'] = $params['status'];
-                $data['createtime'] = time();
+                $params['salt'] = Random::alnum();
+                $params['password'] = md5(md5($params['password']).$params['salt']);
+                $params['avatar'] = '/assets/img/avatar.png'; //设置新管理员默认头像。
+                $params['createtime'] = time();
                 try {
-                    validate('Admin.add')->check($data);
+                    validate('Admin.add')->check($params);
                 } catch (\Exception $e) {
                     $this->error($e->getMessage());
                 }
-                $resultid = Db::name('admin')->insertGetId($data);
-                $group['uid'] = $resultid;
+                $result = $this->model->save($params);
+                if ($result === false) {
+                    $this->error($this->model->getError());
+                }
+                $group['uid'] = $this->model->id;
                 $group['group_id'] = $params['groupid'];
-                Db::name('auth_group_access') -> insert($group);
-                AdminLog::adminlog('添加管理员',$data);
+                $model = new AuthGroupAccess();
+                $model -> save($group);
+                AdminLog::adminlog('添加管理员',json_encode($params));
                 $this->success();
             }
             $this->error();
