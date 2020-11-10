@@ -18,28 +18,35 @@ class Speclist extends Backend{
         $this -> assign('speccate',$speccate);
     }
     public function index(){
-//        $this -> relationSearch = true;
         if ($this->request->isAjax()) {
             [$where, $sort, $order, $offset, $limit] = $this->buildparams();
             $total = $this->model
+                -> with('spec')
                 ->where($where)
                 ->order($sort, $order)
                 ->count();
+
             $list = $this->model
+                -> with('spec')
                 ->where($where)
                 ->order($sort, $order)
                 ->limit($offset, $limit)
                 ->select()->toArray();
-            foreach ( $this -> Spec as $kk => $vv){
-                foreach ($list as $k => &$v) {
-                    if($v['spec_id'] == $vv['id']){
-                        $list[$k]['spec_name'] = $vv['spec_name'];
-                    }
-                }
+//            $sql = $this->model ->getLastSql();
+            foreach ($list as $key => $value) {
+                $list[$key]['spec_name'] = $value['spec']['spec_name'];
+                unset($list[$key]['spec']);
             }
-            unset($v);
+//            foreach ( $this -> Spec as $kk => $vv){
+//                foreach ($list as $k => &$v) {
+//                    if($v['spec_id'] == $vv['id']){
+//                        $list[$k]['spec_name'] = $vv['spec_name'];
+//                    }
+//                }
+//            }
+
 //            $row = Db::name('spec_info')->alias('a') -> join('spec b','a.spec_id=b.id') -> select();
-//            dump($row);die;
+
             $result = ['total' => $total, 'rows' => $list];
             return json($result);
         }

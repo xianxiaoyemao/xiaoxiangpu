@@ -136,7 +136,6 @@ require(['jquery', 'bootstrap'], function ($, undefined) {
     // 避免目录冲突
     paths['backend/'] = 'backend/';
     require.config({paths: paths});
-
     // 初始化
     $(function () {
         require(['fast'], function (Fast) {
