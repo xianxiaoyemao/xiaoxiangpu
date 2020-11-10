@@ -26,8 +26,6 @@
         "overtrue/wechat": "~4.0",
         "topthink/think-multi-app": "^1.0",
         "topthink/think-view": "^1.0",
-        "topthink/think-captcha": "^3.0",
-        "elasticsearch/elasticsearch": "^7.9",
         "topthink/think-captcha": "^3.0"
     },
     "require-dev": {
