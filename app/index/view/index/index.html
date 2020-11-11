@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <link rel="shortcut icon" href="__HOME__/home/img/xym.ico">
+    <link type="text/css" href="__HOME__/home/css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="__HOME__/home/css/index.css">
+</head>
+<body>
+    <div class="boxAll">
+        <div class="boxHeader">
+            <div class="headLeft">
+                <img src="__HOME__/home/img/Logo1.png" alt="">
+            </div>
+            <div class="headNav">
+                <a href="#">
+                    网站首页
+                    <div class="navimg">
+                        <img src="__HOME__/home/img/17.png" alt="">
+                    </div>
+                </a>
+                <a href="{:url('index/about')}">关于我们</a>
+                <a href="{:url('index/production')}">产品中心</a>
+            </div>
+        </div>
+        <div class="banner">
+            <img src="__HOME__/home/img/top.png" alt="">
+            <!--<div class="bannerbottom">
+                <img src="__HOME__/home/img/15.png" alt="">
+            </div>-->
+        </div>
+        <div class="index_content">
+            <div class="index_content2">
+                <h1>服务优势</h1>
+                <div>Service advantages</div>
+            </div>
+            <div class="index_content3">
+                <div class="taidu">
+                    <img src="__HOME__/home/img/2.png" alt="">
+                </div>
+                <div class="team">
+                    <img src="__HOME__/home/img/16.png" alt="">
+                </div>
+                <div class="wuyou">
+                    <img src="__HOME__/home/img/7.png" alt="">
+                </div>
+            </div>
+        </div>
+        <div class="index_content">
+            <div class="index_content2">
+                <h1>产品中心</h1>
+                <div>Office space</div>
+            </div>
+            <div class="index_production">
+                <div style="height: 60px;"></div>
+                <div class="productionimg">
+                    <img src="__HOME__/home/img/12.gif" alt="">
+                </div>
+                <div class="productiontitle">
+                    <h2>【吾境-电商助手】</h2>
+                    <p>
+                        “吾境”电商助手是一款以提供各大电商平台搜索商品，进行商品采集、
+获取商品信息以及商品类目、商品发布、商品上下架等多功能的上货软件。
+                   </p>
+                   <a href="{:url('index/production')}">立即订购</a>
+                </div>
+            </div>
+        </div>
+        <div class="index_bgc">
+            <div class="index_aboutus">
+                <div class="aboutus">
+                    <div class="index_content2 index_contentabout">
+                        <h1>关于我们</h1>
+                        <div>Compant introduction</div>
+                    </div>
+                    <div class="about_smallimg">
+                        <img src="__HOME__/home/img/1.png" alt="">
+                    </div>
+                    <p>
+                        西安小野猫信息科技有限公司由“天屿电商”与“光芒影视”联合成立于2020年8月。
+公司自主开发的“吾境”电商助手已正式上线。拥有专业的、完整的互联网电商孵化服
+务团队，是一家集供应链数据整合，程序开发，网店代运营，外贸平台开发，跨境电商
+孵化，畅销产品为一体的互联网创新型公司。
+                   </p>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="footercenter">
+                <div style="height: 35px;"></div>
+                <div class="footerLeft">
+                    <div class="borderleft">
+                        <h1>
+                            西安小野猫信息科技有限公司
+                        </h1>
+                        <h2>
+                            地址：西安市曲江区莱安中心T2
+                        </h2>
+                        <h3>
+                            服务热线：888-88888888
+                        </h3>
+                    </div>
+                </div>
+                <div class="footercenter2">
+                    <h4>在线留言</h4>
+                    <div>
+                        <span>*</span> 姓名：<input id="username" name="username" style="padding-left: 5px; color: #fff" type="text">
+                    </div>
+                    <div>
+                        <span>*</span> 电话：<input id="mobile" name="mobile" style="padding-left: 5px; color: #fff" type="text">
+                    </div>
+                    <div>
+                        <span>*</span> 备注：<input id="remark" name="remark" style="padding-left: 5px; color: #fff" type="text">
+                    </div>
+                    <div class="sub" style="cursor: pointer">
+                        <img src="__HOME__/home/img/submit.png" alt="">
+                    </div>
+                </div>
+                <div class="footeright">
+                    <div>
+                        <!-- <img src="" alt=""> -->
+                    </div>
+                    <span>
+                        扫一扫添加微信关注
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="indexfooter">
+            <p>版权所有@西安小野猫信息科技有限公司 &nbsp;&nbsp;&nbsp;&nbsp; 陕ICP备2020013263号-2 &nbsp;&nbsp;&nbsp;&nbsp; 技术支持：科技网络</p>
+        </div>
+    </div>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script>
+        // 提交
+        $(".sub").click(function(){
+            let username = $('#username').val()
+            let mobile = $('#mobile').val()
+            let remark = $('#remark').val()
+
+            $.post('/admin/index/web/add', {'username': username, 'mobile': mobile, 'remark': remark}, function (e) {
+                if (e.status == 'success') {
+                    alert('提交成功')
+                }
+            })
+        })
+    </script>
+
+</body>
+</html>

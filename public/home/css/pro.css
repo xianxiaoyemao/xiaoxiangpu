@@ -1,0 +1,237 @@
+.boxAll {
+	width: 100%;
+	font-family: Source Han Sans SC;
+}
+/* 头部 */
+.boxHeader {
+	width: 60%;
+	margin: 0 auto;
+	height: 120px;
+	line-height: 120px;
+}
+.headLeft {
+	width: 30%;
+	height: 61px;
+	display: inline-block;
+	vertical-align: middle;
+}
+.headLeft img {
+	width: 100%;
+}
+.headNav {
+	display: inline-block;
+	margin-left: 10%;
+	position: relative;
+}
+.headNav a {
+	width: 81px;
+	height: 21px;
+	font-size: 20px;
+	font-weight: 400;
+	color: #1D1D1D;
+	margin-left: 95px;
+}
+.headNav a:nth-child(3) {
+	font-weight: 800;
+}
+.navimg {
+	width: 100px;
+	height: 4px;
+	position: absolute;
+	left: 83%;
+	top: 80px;
+}
+.navimg img {
+	width: 100%;
+}
+/* banner图 */
+.banner {
+	height: 653px;
+	background: url(../img/3.png)no-repeat;
+	background-size: 100%;
+}
+.banner img {
+	width: 100%;
+}
+/* 下载 */
+.pro_banner {
+	width: 60%;
+	margin: 0 auto;
+	padding-top: 100px;
+}
+.bannergif {
+	width: 348px;
+	height: 397px;
+	vertical-align: top;
+}
+.bannergif img {
+	width: 100%;
+}
+.bannerLeft, .bannergif {
+	display: inline-block;
+}
+.bannerLeft {
+	width: 69%;
+}
+.bannerLeft h1 {
+	font-size: 54px;
+	font-weight: bold;
+	color: #FDF9F9;
+}
+.bannerLeft span{
+	font-size: 20px;
+	font-weight: 400;
+	color: #FDF9F9;
+}
+.dinggou {
+	width: 200px;
+	height: 54px;
+	cursor: pointer;
+	margin-top: 30px;
+}
+.dinggou img {
+	width: 100%;
+}
+.price {
+	font-size: 12px;
+	font-weight: 400;
+	color: #FFFFFF;
+	float: left;
+	line-height: 40px;
+}
+.bannerLeft ul li {
+	float: left;
+	width: 170px;
+	height: 100px;
+	background: #fff;
+	text-align: center;
+	line-height: 40px;
+	cursor: pointer;
+}
+.li_active {
+	height: 96px!important;
+	border: 2px solid;
+	border-image: linear-gradient(0deg, #204EF9, #0FF8D4, #A80AF1) 10 10;
+}
+.bannerLeft ul li span {
+	font-size: 36px;
+	font-weight: 400;
+	color: #F6601E;
+}
+.bannerLeft ul li a {
+	font-size: 12px;
+	font-weight: 400;
+	color: #9E9E9E;
+}
+/* 提供 */
+.proadmin {
+	width: 60%;
+	margin: 30px auto 0;
+}
+.proadmin h1 {
+	text-align: center;
+	font-size: 36px;
+	font-weight: bold;
+	color: #333333;
+	line-height: 17px;
+}
+.proadmin h1 span {
+	width: 18px;
+	height: 17px;
+}
+.proadmin div {
+	width: 100%;
+	height: auto;
+	margin-top: 20px;
+}
+.proadmin div img{
+	width: 100%;
+}
+/* 底部 */
+.footer {
+	/* margin-top: 80px; */
+	width: 100%;
+	height: 300px;
+	background: #272727;
+}
+.footercenter {
+	width: 60%;
+	margin: 0 auto;
+}
+.footerLeft, .footercenter2, .footeright {
+	display: inline-block;
+	width: 25%;
+	vertical-align: middle;
+	line-height: 2;
+}
+.footerLeft, .footercenter2 {
+	width: 32%;
+	height: 235px;
+	border-right: 1px solid rgba(255, 255, 255, 0.6);
+}
+.footercenter2 {
+	margin-left: 80px;
+}
+.borderleft {
+	margin-top: 65px;
+}
+.footerLeft h1, .footerLeft h2, .footerLeft h3, .footercenter2 h4{
+	font-size: 20px;
+	font-weight: bold;
+	color: #FFFFFF;
+}
+.footerLeft h2, .footerLeft h3 {
+	font-size: 14px;
+}
+.footercenter2 span {
+	color: rgba(217, 4, 4, 1);
+}
+.footercenter2 div {
+	color: #fff;
+	font-size: 14px;
+	margin-top: 12px;
+}
+.footercenter2 input {
+	width: 256px;
+	height: 32px;
+	background: #344050;
+}
+.sub {
+	width: 160px;
+	height: 36px;
+}
+.sub img {
+	width: 100%;
+}
+.footeright {
+	margin: 0 auto;
+	text-align: center;
+}
+.footeright div {
+	width: 164px;
+	height: 164px;
+	background-color: #fff;
+	margin: 0 auto 20px;
+}
+.footeright div img {
+	width: 100%;
+}
+.footeright span {
+	font-size: 12px;
+	font-weight: 400;
+	color: #FFFFFF;
+
+}
+.indexfooter {
+	width: 100%;
+	height: 50px;
+	line-height: 50px;
+	background: #151515;
+}
+.indexfooter p {
+	width: 60%;
+	margin: 0 auto;
+	font-size: 12px;
+	font-weight: 400;
+	color: #FFFFFF;
+}
