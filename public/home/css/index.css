@@ -1,0 +1,275 @@
+.boxAll {
+	width: 100%;
+	font-family: Source Han Sans SC;
+}
+/* 头部 */
+.boxHeader {
+	width: 60%;
+	margin: 0 auto;
+	height: 120px;
+	line-height: 120px;
+}
+.headLeft {
+	width: 30%;
+	height: 61px;
+	display: inline-block;
+	vertical-align: middle;
+}
+.headLeft img {
+	width: 100%;
+}
+.headNav {
+	display: inline-block;
+	margin-left: 10%;
+	position: relative;
+}
+.headNav a {
+	width: 81px;
+	height: 21px;
+	font-size: 20px;
+	font-weight: 400;
+	color: #1D1D1D;
+	margin-left: 95px;
+}
+.headNav a:nth-child(1) {
+	font-weight: 800;
+}
+.navimg {
+	width: 100px;
+	height: 4px;
+	position: absolute;
+	left: 16%;
+	top: 80px;
+}
+.navimg img {
+	width: 100%;
+}
+/* banner图 */
+.banner {
+	height: 840px;
+	position: relative;
+}
+.bannerbottom {
+	position: absolute;
+	bottom: 10px;
+}
+.banner img {
+	width: 100%;
+}
+/* 公共头部 */
+.index_content {
+	width: 60%;
+	margin: 60px auto;
+}
+.index_content2 {
+	text-align: center;
+}
+.index_content2 h1 {
+	font-size: 36px;
+	font-weight: bold;
+	color: #333333;
+}
+.index_content2 div {
+	font-size: 14px;
+	font-weight: 400;
+	color: #B3B3B3;
+	margin-bottom: 40px;
+}
+/* 服务优势 */
+.index_content3 {
+	width: 100%;
+}
+.taidu, .team, .wuyou {
+	width: 338px;
+	height: 101px;
+	display: inline-block;
+}
+.taidu {
+	height: 122px;
+}
+.team, .wuyou {
+	margin-left: 5%;
+}
+.taidu img, .team img, .wuyou img {
+	width: 100%;
+}
+/* 产品中心 */
+.index_production {
+	width: 100%;
+	height: 445px;
+	box-shadow: 0px 3px 21px 0px rgba(21, 102, 249, 0.24);
+	text-align: center;
+}
+.productionimg {
+	width: 293px;
+	height: 296px;
+	display: inline-block;
+	vertical-align: top;
+}
+.productionimg img {
+	width: 100%;
+}
+.productiontitle {
+	display: inline-block;
+	margin-left: 100px;
+	margin-top: 55px;
+}
+.productiontitle h2 {
+	width: 170px;
+	height: 50px;
+	font-size: 20px;
+	font-weight: bold;
+	color: #484848;
+	border-bottom: 1px solid #B3B3B3;
+}
+.productiontitle p {
+	width: 530px;
+	font-size: 16px;
+	font-weight: 400;
+	color: #444444;
+	padding: 30px 0;
+}
+.productiontitle a {
+	width: 127px;
+	height: 34px;
+	line-height: 34px;
+	color: #fff;
+	display: block;
+	text-align: center;
+	background-color: rgb(0, 63, 180, .9);
+}
+/* 关于我们 */
+.index_bgc {
+	height: 574px;
+	background: url(../img/20.png)no-repeat;
+	background-size: 100%;
+}
+.index_aboutus {
+	width: 60%;
+	margin: 0px auto;
+	padding-top: 20px;
+}
+.aboutus {
+	width: 703px;
+	height: 530px;
+	background: #FFFFFF;
+}
+.index_contentabout, .about_smallimg, .aboutus p {
+	margin: 0 40px;
+}
+.index_contentabout {
+	width: 152px;
+	text-align: left;
+
+}
+.index_contentabout h1 {
+	height: 80px;
+	line-height: 100px;
+}
+.index_contentabout div {
+	font-size: 12px;
+	height: 30px;
+	border-bottom: 1px solid#B3B3B3;
+}
+.about_smallimg {
+	width: 605px;
+	height: 155px;
+}
+.about_smallimg img {
+	width: 100%;
+}
+.aboutus p {
+	width: 625px;
+	font-size: 16px;
+	font-weight: 400;
+	color: #808080;
+	margin-top: 40px;
+}
+/* 底部 */
+.footer {
+	margin-top: 80px;
+	width: 100%;
+	height: 300px;
+	background: #272727;
+}
+.footercenter {
+	width: 60%;
+	margin: 0 auto;
+}
+.footerLeft, .footercenter2, .footeright {
+	display: inline-block;
+	width: 25%;
+	vertical-align: middle;
+	line-height: 2;
+}
+.footerLeft, .footercenter2 {
+	width: 32%;
+	height: 235px;
+	border-right: 1px solid rgba(255, 255, 255, 0.6);
+}
+.footercenter2 {
+	margin-left: 80px;
+}
+.borderleft {
+	margin-top: 65px;
+}
+.footerLeft h1, .footerLeft h2, .footerLeft h3, .footercenter2 h4{
+	font-size: 20px;
+	font-weight: bold;
+	color: #FFFFFF;
+}
+.footerLeft h2, .footerLeft h3 {
+	font-size: 14px;
+}
+.footercenter2 span {
+	color: rgba(217, 4, 4, 1);
+}
+.footercenter2 div {
+	color: #fff;
+	font-size: 14px;
+	margin-top: 12px;
+}
+.footercenter2 input {
+	width: 256px;
+	height: 32px;
+	background: #344050;
+}
+.sub {
+	width: 160px;
+	height: 36px;
+}
+.sub img {
+	width: 100%;
+}
+.footeright {
+	margin: 0 auto;
+	text-align: center;
+}
+.footeright div {
+	width: 164px;
+	height: 164px;
+	background-color: #fff;
+	margin: 0 auto 20px;
+}
+.footeright div img {
+	width: 100%;
+}
+.footeright span {
+	font-size: 12px;
+	font-weight: 400;
+	color: #FFFFFF;
+
+}
+.indexfooter {
+	width: 100%;
+	height: 50px;
+	line-height: 50px;
+	background: #151515;
+}
+.indexfooter p {
+	width: 60%;
+	margin: 0 auto;
+	font-size: 12px;
+	font-weight: 400;
+	color: #FFFFFF;
+}
