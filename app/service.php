@@ -7,4 +7,5 @@ use app\AppService;
 return [
     AppService::class,
     app\service\FileSystemService::class,
+    app\service\OrderService::class
 ];
