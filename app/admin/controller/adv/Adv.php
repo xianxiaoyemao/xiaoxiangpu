@@ -14,10 +14,13 @@ class Adv extends Backend{
     protected $model = null;
     protected $noNeedRight = ['check', 'rulelist'];
     protected $advpostion;
+//    protected $advmodel =null;
+
     public function initialize(){
         parent::initialize();
-        $this -> model = Db::name('adv');
-        $this -> advpostion= Db::name('advposition') -> where('status','normal') -> order('id asc') -> select();
+        $this -> model = new \app\admin\model\Adv();
+        $this -> advmodel = new \app\admin\model\Advposition();
+        $this -> advpostion= $this -> advmodel -> where('status','normal') -> order('id asc') -> select();
         $advgroup =[];
         foreach ( $this -> advpostion as $k => $v) {
             $advgroup[$v['id']] = $v['title'];
@@ -28,22 +31,20 @@ class Adv extends Backend{
         if ($this->request->isAjax()) {
             [$where, $sort, $order, $offset, $limit] = $this->buildparams();
             $total = $this->model
+                -> with('advposition')
                 ->where($where)
                 ->order($sort, $order)
                 ->count();
             $list = $this->model
+                -> with('advposition')
                 ->where($where)
                 ->order($sort, $order)
                 ->limit($offset, $limit)
                 ->select() ->toArray();
-            foreach ( $this -> advpostion as $kk => $vv){
-                foreach ($list as $k => &$v) {
-                    if($v['pid'] == $vv['id']){
-                        $list[$k]['posation'] = $vv['title'];
-                    }
-                }
+            foreach ($list as $key => $value) {
+                $list[$key]['posation'] = $value['advposition']['title'];
+                unset($list[$key]['advposition']);
             }
-            unset($v);
             $result = ['total' => $total, 'rows' => $list];
             return json($result);
         }
@@ -55,7 +56,7 @@ class Adv extends Backend{
             $params = $this->request->post('row/a');
             if($params){
                 $params['createtime'] =time();
-                $this ->model -> insert($params);
+                $this ->model -> save($params);
                 $this->success();
             }
             $this->error();
@@ -63,19 +64,18 @@ class Adv extends Backend{
         return $this -> fetch();
     }
     public function edit($ids=null){
-        $row = Db::name('adv') ->find($ids);
+        $row = $this -> model ->find($ids);
         if (! $row) {
             $this->error(__('No Results were found'));
         }
         if ($this->request->isPost()) {
             $params = $this->request->post('row/a');
             if($params){
-                $data['title'] = $params['title'];
-                $data['status'] = $params['status'];
-                $data['sort'] = $params['sort'];
-                $data['status'] = $params['status'];
-                $data['updatetime'] = time();
-                $this ->model -> where('id',$params['id']) ->  update($params);
+                $params['update_time'] = time();
+                $result = $row->save($params);
+                if ($result === false) {
+                    $this->error($row->getError());
+                }
                 $this->success();
             }
             $this->error();
@@ -89,7 +89,7 @@ class Adv extends Backend{
      */
     public function del($ids = ''){
         if ($ids) {
-            $this -> model -> where('id',$ids) -> delete();
+            $this->model -> destroy($ids);
             $this->success();
         }
         $this->error();
