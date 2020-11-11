@@ -1,4 +1,4 @@
-<?php /*a:3:{s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\index\login.html";i:1597720105;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1576229932;}*/ ?>
+<?php /*a:3:{s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\index\login.html";i:1604997786;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1604992884;}*/ ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -115,9 +115,9 @@
                             <input type="text" name="captcha" class="form-control" placeholder="验证码"
                                    data-rule="验证码:required;length(4)"/>
                             <span class="input-group-addon" style="padding:0;border:none;cursor:pointer;">
-                                        <img src="<?php echo request()->rootUrl(); ?><?php echo captcha_src(); ?>" width="100"
-                                             height="30"
-                                             onclick="this.src = '<?php echo request()->rootUrl(); ?><?php echo captcha_src(); ?>?r=' + Math.random();"/>
+                                <img src="<?php echo request()->rootUrl(); ?><?php echo captcha_src(); ?>" width="100" height="30"
+                                       onclick="this.src = '<?php echo request()->rootUrl(); ?><?php echo captcha_src(); ?>?r=' + Math.random();"/>
+
                             </span>
                         </div>
 
@@ -139,5 +139,6 @@
 </div>
 <script src="/assets/js/require<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js"
         data-main="/assets/js/require-backend<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js?v=<?php echo htmlentities($site['version']); ?>"></script>
+
 </body>
 </html>

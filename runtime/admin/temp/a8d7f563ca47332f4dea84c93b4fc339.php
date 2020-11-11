@@ -1,4 +1,4 @@
-<?php /*a:4:{s:59:"D:\phpstudy_pro\WWW\xxp\app\admin\view\index\web\index.html";i:1604887003;s:58:"D:\phpstudy_pro\WWW\xxp\app\admin\view\layout\default.html";i:1596373268;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1576229932;}*/ ?>
+<?php /*a:4:{s:59:"D:\phpstudy_pro\WWW\xxp\app\admin\view\index\web\index.html";i:1604887003;s:58:"D:\phpstudy_pro\WWW\xxp\app\admin\view\layout\default.html";i:1596373268;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1604992884;}*/ ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlentities($config['language']); ?>">
     <head>
@@ -78,5 +78,6 @@
         </div>
         <script src="/assets/js/require<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js"
         data-main="/assets/js/require-backend<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js?v=<?php echo htmlentities($site['version']); ?>"></script>
+
     </body>
 </html>

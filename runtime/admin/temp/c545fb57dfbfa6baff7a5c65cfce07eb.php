@@ -1,4 +1,4 @@
-<?php /*a:6:{s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\index\index.html";i:1596371714;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\header.html";i:1598191167;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\menu.html";i:1598181248;s:58:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\control.html";i:1598189895;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1576229932;}*/ ?>
+<?php /*a:6:{s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\index\index.html";i:1596371714;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\header.html";i:1598191167;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\menu.html";i:1598181248;s:58:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\control.html";i:1598189895;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1604992884;}*/ ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlentities($config['language']); ?>">
 <head>
@@ -521,5 +521,6 @@
 </div>
 <script src="/assets/js/require<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js"
         data-main="/assets/js/require-backend<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js?v=<?php echo htmlentities($site['version']); ?>"></script>
+
 </body>
 </html>

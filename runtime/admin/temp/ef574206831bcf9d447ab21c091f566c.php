@@ -1,4 +1,4 @@
-<?php /*a:4:{s:61:"D:\phpstudy_pro\WWW\xxp\app\admin\view\product\goods\add.html";i:1604921080;s:58:"D:\phpstudy_pro\WWW\xxp\app\admin\view\layout\default.html";i:1596373268;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1576229932;}*/ ?>
+<?php /*a:4:{s:61:"D:\phpstudy_pro\WWW\xxp\app\admin\view\product\goods\add.html";i:1604993694;s:58:"D:\phpstudy_pro\WWW\xxp\app\admin\view\layout\default.html";i:1596373268;s:55:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\meta.html";i:1576229932;s:57:"D:\phpstudy_pro\WWW\xxp\app\admin\view\common\script.html";i:1604992884;}*/ ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlentities($config['language']); ?>">
     <head>
@@ -65,18 +65,18 @@
     <div class="form-group">
         <label for="price" class="control-label col-xs-12 col-sm-2">规格名称:</label>
         <div class="col-xs-12 col-sm-8">
-            <input type="text" class="form-control" name="row[spec_name]" value="" placeholder="例：口味等" data-rule="required"/>
+            <input type="text" class="form-control" name="row[spec_name]" value="" placeholder="例：口味等"/>
         </div>
     </div>
 
     <div class="form-group">
         <label for="price" class="control-label col-xs-12 col-sm-2">规格属性:</label>
         <div class="col-xs-12 col-sm-8">
-            <input type="text" class="form-control" name="row[spec_value]" value="" placeholder="属性多时，用 - 分割。例：麻辣-微辣-特辣" data-rule="required"/>
+            <input type="text" class="form-control" name="row[spec_value]" value="" placeholder="属性多时，用 - 分割。例：麻辣-微辣-特辣" />
         </div>
     </div>
 
-    <div class="form-group">
+    <div class="form-group" style="margin-bottom: unset">
         <label class="control-label col-xs-12 col-sm-2">SKU属性:</label>
         <div id="prev" style="padding-left: 18%">
             <div id="skuattr" class="form-group">
@@ -196,5 +196,6 @@
         </div>
         <script src="/assets/js/require<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js"
         data-main="/assets/js/require-backend<?php echo app('request')->env('app_debug')?'':'.min'; ?>.js?v=<?php echo htmlentities($site['version']); ?>"></script>
+
     </body>
 </html>
