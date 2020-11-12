@@ -7,7 +7,7 @@ use app\common\model\Config;
 use app\Request;
 use fast\Http;
 
-class WeChat
+class Wechat
 {
     protected $configModel = null;
 
