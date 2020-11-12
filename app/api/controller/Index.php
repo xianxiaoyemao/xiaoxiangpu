@@ -24,7 +24,7 @@ class Index
      */
     public function config (Request $request)
     {
-        if (!$request->isPost()) return apiBack('ok', '请求方式错误', '10004');
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
 
         //轮播图
         $swiper = Adv::where('title', '首页轮播')->field('advurl')->select()->toArray();

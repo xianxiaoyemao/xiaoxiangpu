@@ -1,4 +1,5 @@
 <?php
+
 return [
     'web_name' => '陕西天屿懿德科技网络有限公司',
     'web_desc' => '',
@@ -25,7 +26,9 @@ return [
         'frontend' => 'zh-cn',
     ],
     'web_close' => '1',
-    'web_logo' => '/storage/uploads/20200814/9fd7a33c5507cff04bf4b9a5fdbbfa8a.png',
+    'web_logo' => '',
     'miniprogram_app_id' => '',
     'miniprogram_app_secret' => '',
+    '新疆大枣' => [
+    ],
 ];
