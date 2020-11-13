@@ -3,6 +3,12 @@ namespace app\common\model;
 
 class User extends BaseModel
 {
+    //开启自动时间戳
+    protected $autoWriteTimestamp=true;
+    // 定义时间戳字段名
+    protected $createTime = 'createtime';
+    protected $updateTime = 'updatetime';
+
 //    protected $connection = 'mysql';
     public $incrementing = false;
     /**
