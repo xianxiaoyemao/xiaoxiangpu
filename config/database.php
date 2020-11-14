@@ -97,21 +97,6 @@ return [
 
         // 更多的数据库配置信息
     ],
-    'redis' =>[
-        'type' => 'redis',
-        // 服务器地址
-        'hostname'        => Env::get('redis.hostname', '127.0.0.1'),
-        // 数据库名
-        'database'        => Env::get('redis.database', ''),
-        // 密码
-        'password'        => Env::get('redis.password', ''),
-        // 端口
-        'hostport'        => Env::get('redis.hostport', '6379'),
-
-        'timeout'         => Env::get('redis.timeout', 0),
-
-        'prefix'          => Env::get('redis.prefix', ''),
-    ],
     'elasticsearch' => [
         // Elasticsearch 支持多台服务器负载均衡，因此这里是一个数组
         'hosts' => explode(',', env('es_hosts.ES_HOSTS')),

@@ -8,7 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: yunwuxin <448901948@qq.com>
 // +----------------------------------------------------------------------
-
+use think\facade\Env;
 return [
     'default'     => 'sync',
     'connections' => [
@@ -23,8 +23,8 @@ return [
         'redis'    => [
             'driver'     => 'redis',
             'queue'      => 'default',
-            'host'       => '127.0.0.1',
-            'port'       => 6379,
+            'host' => Env::get('redis.hostname', '127.0.0.1'),
+            'port' => Env::get('redis.hostport', '6379'),
             'password'   => '',
             'select'     => 0,
             'timeout'    => 0,
