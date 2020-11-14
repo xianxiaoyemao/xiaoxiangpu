@@ -30,6 +30,67 @@ if (!function_exists('apiBack')) {
 }
 
 /**
+ * @param $data  要加密的字符串
+ * @param $key   密钥
+ * @return string
+ */
+if (!function_exists('encrypt')) {
+    function encrypt($data, $key = 'encrypt')
+    {
+        $key = md5($key);
+        $x = 0;
+        $len = strlen($data);
+        $l = strlen($key);
+        $char = '';
+        for ($i = 0; $i < $len; $i++) {
+            if ($x == $l) {
+                $x = 0;
+            }
+            $char .= $key{$x};
+            $x++;
+        }
+        $str = '';
+        for ($i = 0; $i < $len; $i++){
+            $str .= chr(ord($data{$i}) + (ord($char{$i})) % 256);
+        }
+        $str = $key . $str;
+        return base64_encode($str);
+    }
+}
+
+/**
+ * @param $data    要解密的字符串
+ * @param $key     密钥
+ * @return string
+ */
+if (!function_exists('decrypt')) {
+    function decrypt($data, $key = 'encrypt')
+    {
+        $key = md5($key);
+        $x = 0;
+        $l = strlen($key);
+        $data = substr(base64_decode($data), $l);
+        $len = strlen($data);
+        $char = '';
+        for ($i = 0; $i < $len; $i++) {
+            if ($x == $l) {
+                $x = 0;
+            }
+            $char .= substr($key, $x, 1);
+            $x++;
+        }
+        $str = '';
+        for ($i = 0; $i < $len; $i++) {
+            if (ord(substr($data, $i, 1)) < ord(substr($char, $i, 1))) {
+                $str .= chr((ord(substr($data, $i, 1)) + 256) - ord(substr($char, $i, 1)));
+            } else {
+                $str .= chr(ord(substr($data, $i, 1)) - ord(substr($char, $i, 1)));}
+        }
+        return $str;
+    }
+}
+
+/**
  * 获取客户端IP地址
  * @param integer $type 返回类型 0 返回IP地址 1 返回IPV4地址数字
  * @param boolean $adv 是否进行高级模式获取（有可能被伪装）

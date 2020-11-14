@@ -3,10 +3,11 @@
 namespace app\api\controller;
 
 
+use app\BaseController;
 use app\common\model\Adv;
 use app\Request;
 
-class Index
+class Index extends BaseController
 {
     public function userRegister (Request $request)
     {
