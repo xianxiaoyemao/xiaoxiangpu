@@ -12,7 +12,7 @@ class Redis{
     protected static $con = null;
     public function __construct(){
         $con = new \Redis();
-        $con->connect(config('redis.host'), config('redis.port'), 5);
+        $con->connect(config('queue.connections.redis.host'), config('queue.connections.redis.port'), 5);
         self::$con = $con;
     }
     public static function handler(){
