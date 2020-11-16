@@ -85,7 +85,7 @@ class Address extends BaseController
         $id = $request -> post('id');
         $res = $address -> where('id',$id) -> update(['is_defult'=>1]);
         if($res){
-            $address -> where("uid = $uid and id != $id") ->  update(['is_defult'=>0]);
+            $address -> where("user_id = $uid and id != $id") ->  update(['is_defult'=>0]);
         }
         return apiBack('success', '设置默认地址成功', '10000');
     }
