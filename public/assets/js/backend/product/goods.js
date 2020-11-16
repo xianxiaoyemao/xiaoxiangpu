@@ -27,6 +27,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'is_hot_sale', title: '热卖商品', formatter: Table.api.formatter.status},
                         {field: 'is_recommend', title: '店长推荐', formatter: Table.api.formatter.status},
                         {field: 'is_new', title: '新品', formatter: Table.api.formatter.status},
+                        {field: 'is_rush', title: '抢购商品', formatter: Table.api.formatter.status},
                         {field: 'status', title: '状态', formatter: Table.api.formatter.status},
                         {field: 'createtime', title: '创建时间', formatter: Table.api.formatter.datetime},
                         {field: 'operate', title: __('Operate'), events: Table.api.events.operate, formatter: function (value, row, index) {

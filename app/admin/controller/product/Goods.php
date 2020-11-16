@@ -91,9 +91,10 @@ class Goods extends Backend
                     $data['is_recommend'] = $params['is_recommend'] == 'normal' ? 1 : 2;
                     $data['is_new'] = $params['is_new'] == 'normal' ? 1 : 2;
                     $data['is_hot_sale'] = $params['is_hot_sale'] == 'normal' ? 1 : 2;
+                    $data['is_rush'] = $params['is_rush'] == 'normal' ? 1 : 2;
 
                     $data['product_spec_info'] = $this->getSpenInfo($params['spec_name'], $params['spec_value']);
-                    $data['create_time'] = time();
+                    $data['createtime'] = time();
                     $product = $this->model->create($data);
                     //sku
                     $sku = $this->getSkuInfo($params['sku_title'], $params['sku_price'], $params['stock'], $product->id);
@@ -120,7 +121,7 @@ class Goods extends Backend
         $product = $this->model->find($ids);
 
         //sku属性
-        $sku = $product->prodeuctSku()->select();
+        $sku = $product->skus()->select();
 
         $this->assign('sku', $sku);
         $spec = json_decode($product->product_spec_info, 1);
@@ -152,6 +153,11 @@ class Goods extends Backend
                     $params['is_recommend'] = 1;
                 } else {
                     $params['is_recommend'] = 2;
+                }
+                if ($params['is_rush'] == 'normal') {
+                    $params['is_rush'] = 1;
+                } else {
+                    $params['is_rush'] = 2;
                 }
                 $params['product_spec_info'] = $this->getSpenInfo($params['spec_name'], $params['spec_value']);
                 $product->save($params);

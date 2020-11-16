@@ -56,6 +56,11 @@ class Product extends BaseModel
         return $status[$value];
     }
 
+    public function getIsRushAttr($value)
+    {
+        $status = [1 => 'normal', 2 => 'hidden'];
+        return $status[$value];
+    }
 //    const TYPE_NORMAL ='product';
 //
 //    const TYPE_SECKILL = 'seckill';
