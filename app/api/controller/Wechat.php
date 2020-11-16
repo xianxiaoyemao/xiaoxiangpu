@@ -52,6 +52,7 @@ class Wechat extends BaseController
 
         $user = $this->userModel->where('openid', $openId)->find();
         if ($user) {
+            $uid = $user->uid;
             $token = $user->token;
             $mobile = $user->mobile;
             $mobile == '' ? $isMobile = false : $isMobile = true;
@@ -60,6 +61,7 @@ class Wechat extends BaseController
             $this->userModel->token = $token;
             $this->userModel->openid = $openId;
             $this->userModel->save();
+            $uid = $this->userModel-> id;
             $isMobile = false;
         }
         if (!Cache::get('REQUESTTOKEN_' . $this->userModel -> id)) {
@@ -69,7 +71,7 @@ class Wechat extends BaseController
 
         $data = [
             'openId' => $openId,
-            'uid' => $this->userModel -> id,
+            'uid' => $uid,
             'isMobile' => $isMobile,
             'token' => $accessToken,
             'sessionKey' => $sessionKey
