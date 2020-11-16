@@ -18,3 +18,8 @@ Route::post('address/addressupdate', 'address/addressupdate');//编辑地址
 Route::post('address/addressdel', 'address/addressdel');//删除地址
 Route::post('address/addressisdeful', 'address/addressisdeful');//设置默认地址
 //地址管理接口
+
+
+//产品管理
+Route::post('product/productlist', 'product/productlist');
+Route::post('product/productdetails', 'product/productdetails');//商品详情

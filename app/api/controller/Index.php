@@ -37,17 +37,26 @@ class Index extends BaseController
         $skiimiao = (new Product)::where(['status'=>1,'is_rush'=>1])
             -> field($productsfild)
             -> order('createtime desc')
-            -> limit('0,1')
+            -> limit(0,3)
             -> select() -> toArray();
-        dump($skiimiao);die;
-        //商品列表
-        $products = \app\common\model\Product::where('status', 1)->select()->toArray();
+        //店长推荐chanpin
+        $shopproducts =  (new Product)::where(['status'=>1,'is_recommend'=>1,'category_id'=>2])
+            -> field($productsfild)
+            -> order('createtime desc')
+            -> limit(0,6)
+            -> select() -> toArray();
+        //新疆特产
+        $xjtcp =  (new Product)::where(['status'=>1,'category_id'=>3])
+            -> field($productsfild)
+            -> order('createtime desc')
+            -> limit(0,6)
+            -> select() -> toArray();
         $roll = ['xxx用户购买两份椒麻鸡', '王小二购买新疆特产一份', '张三购买椒麻鸡套餐两份', '李四购买椒麻鸡两份'];
         $data = [
             'swiper' => $swiper,
-            'skillmiao' => $skiimiao,
-            'products' => $products,
-
+            'skillmiao' => ['type'=>'ms','data'=>$skiimiao],//$skiimiao,
+            'dztj' => ['type'=>'jmj','data'=>$shopproducts],
+            'xjtcp' => ['type'=>'xjtcp','data'=>$xjtcp],
             'roll' => $roll
         ];
         return apiBack('success', '成功', '10000', $data);
