@@ -52,7 +52,7 @@ class Wechat extends BaseController
 
         $user = $this->userModel->where('openid', $openId)->find();
         if ($user) {
-            $uid = $user->uid;
+            $uid = $user-> id;
             $token = $user->token;
             $mobile = $user->mobile;
             $mobile == '' ? $isMobile = false : $isMobile = true;
