@@ -23,3 +23,6 @@ Route::post('address/addressisdeful', 'address/addressisdeful');//设置默认�
 //产品管理
 Route::post('product/productlist', 'product/productlist');
 Route::post('product/productdetails', 'product/productdetails');//商品详情
+Route::post('product/productevaluation', 'product/productevaluation');//商品详情
+
+
