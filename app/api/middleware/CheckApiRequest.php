@@ -13,14 +13,14 @@ class CheckApiRequest extends BaseController
     {
         if ($request->pathinfo() !== 'wechat/wxlogin') {
             $accessToken = $request->post('access_token');
-            $openId = $request->post('openId');
-            if ($accessToken == '' || $openId == '') return apiBack('fail', 'Invalid Request', '10004');
+            $uid = $request->post('uid');
+            if ($accessToken == '' || $uid == '') return apiBack('fail', 'Invalid Request', '10004');
             $token = decrypt($accessToken, 'XIAOXIANGPU');
-            if (Cache::get('REQUESTTOKEN_' . $openId)) {
-                $cacheToken = Cache::get('REQUESTTOKEN_' . $openId);
+            if (Cache::get('REQUESTTOKEN_' . $uid)) {
+                $cacheToken = Cache::get('REQUESTTOKEN_' . $uid);
             } else {
-                $cacheToken = User::where('openid', $openId)->value('token');
-                Cache::set('REQUESTTOKEN_' . $openId, $cacheToken, 9000);
+                $cacheToken = User::where('id', $uid)->value('token');
+                Cache::set('REQUESTTOKEN_' . $uid, $cacheToken, 9000);
             }
             if ($token !== $cacheToken) return apiBack('fail', '非法请求！！！', '10004');
         }

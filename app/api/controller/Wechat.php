@@ -48,6 +48,8 @@ class Wechat extends BaseController
         $res = json_decode(Http::get($url, $param), 1);
         $sessionKey = $res['session_key'];
         $openId = $res['openid'];
+
+
         $user = $this->userModel->where('openid', $openId)->find();
         if ($user) {
             $token = $user->token;
@@ -60,13 +62,14 @@ class Wechat extends BaseController
             $this->userModel->save();
             $isMobile = false;
         }
-        if (!Cache::get('REQUESTTOKEN_' . $openId)) {
-            Cache::set('REQUESTTOKEN_' . $openId, $token, 9000);
+        if (!Cache::get('REQUESTTOKEN_' . $this->userModel -> id)) {
+            Cache::set('REQUESTTOKEN_' . $this->userModel -> id, $token, 9000);
         }
         $accessToken = encrypt($token, 'XIAOXIANGPU');
 
         $data = [
             'openId' => $openId,
+            'uid' => $this->userModel -> id,
             'isMobile' => $isMobile,
             'token' => $accessToken,
             'sessionKey' => $sessionKey
