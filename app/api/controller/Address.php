@@ -18,7 +18,10 @@ class Address extends BaseController
             -> field('id,contact_name as username,contact_phone as phone,disarea,address,is_defult')
             -> order('createtime desc')
             -> select() -> toArray();
-        return apiBack('success', '获取地址列表成功', '10000',$address);
+        $isdeful = (new AdressModel)::where(['status'=>1,'user_id'=>$uid,'is_defult'=>1]) -> value('id');
+        $data['is_defult'] = $isdeful;
+        $data['data'] = $address;
+        return apiBack('success', '获取地址列表成功', '10000',$data);
     }
 
     //添加地址

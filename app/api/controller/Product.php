@@ -8,6 +8,7 @@ use app\BaseController;
 //use Illuminate\Pagination\LengthAwarePaginator;
 use think\facade\Db;
 use app\Request;
+use think\facade\Query;
 use app\common\model\Product as PModel;
 class Product extends BaseController{
     //产品列表
@@ -39,7 +40,26 @@ class Product extends BaseController{
     public function productdetails(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $productid = $request->post('id');
-        $details = (new PModel)::find($productid) -> toArray();
+        $details = (new PModel)::with(['shops'=>function(Query $query){
+            $query -> field('shop_id,title');
+        }])
+            -> fieldRaw('id,shop_id')
+            ->where('id',$productid)
+//            -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,introduce,product_spec_info,parea')
+            -> select() -> toArray();
+        dump($details);die;
+        $details['product_spec_info'] = json_decode($details['product_spec_info'],true);
+        return apiBack('success', '成功', '10000', $details);
+    }
+
+    //产品评价
+    public function productevaluation(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $productid = $request->post('uid');
+        $productid = $request->post('id');
+        $details = (new PModel)::with('skus')->where('id',$productid)
+            -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,introduce,product_spec_info,parea')
+            -> find() -> toArray();
         $details['product_spec_info'] = json_decode($details['product_spec_info'],true);
         return apiBack('success', '成功', '10000', $details);
     }
