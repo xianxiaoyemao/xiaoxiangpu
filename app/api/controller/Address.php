@@ -12,7 +12,6 @@ class Address extends BaseController
     //地址管理列表
     public function addresslist(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $address = new AdressModel();
         $uid = $request -> post('uid');
         $address = (new AdressModel)::where(['status'=>1,'user_id'=>$uid])
             -> field('id,contact_name as username,contact_phone as phone,disarea,address,is_defult')
