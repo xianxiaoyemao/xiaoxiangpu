@@ -14,11 +14,11 @@ class Address extends BaseController
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $address = new AdressModel();
         $uid = $request -> post('uid');
-        $address = $address -> where(['status'=>1,'user_id'=>$uid])
+        $address = (new AdressModel)::where(['status'=>1,'user_id'=>$uid])
             -> field('id,contact_name as username,contact_phone as phone,disarea,address,is_defult')
             -> order('createtime desc')
-            -> select('id') -> toArray();
-        return apiBack('success', '添加地址成功', '10000',$address);
+            -> select() -> toArray();
+        return apiBack('success', '获取地址列表成功', '10000',$address);
     }
 
     //添加地址
@@ -37,8 +37,12 @@ class Address extends BaseController
         $data['address'] = $request -> post('address');
         $data['status'] = 1;
         $data['createtime'] = time();
-        $address -> save($data);
-        return apiBack('success', '添加地址成功', '10000');
+        $res = $address -> save($data);
+        if($res){
+            return apiBack('success', '添加地址成功', '10000');
+        }else{
+            return apiBack('fail', '添加地址失败', '10004');
+        }
     }
 
     //获取单个地址
@@ -64,8 +68,12 @@ class Address extends BaseController
         $data['address'] = $request -> post('address');
         $data['status'] = 1;
         $data['updatetime'] = time();
-        $address -> where('id',$id) ->  save($data);
-        return apiBack('success', '更新地址成功', '10000');
+        $res = $address -> where('id',$id) ->  save($data);
+        if($res){
+            return apiBack('success', '更新地址成功', '10000');
+        }else{
+            return apiBack('fail', '更新地址失败', '10004');
+        }
     }
 
     //设置默认地址
