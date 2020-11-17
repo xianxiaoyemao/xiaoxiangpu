@@ -90,8 +90,8 @@ class Wechat extends BaseController
         $data = $this->decryptData($encryptedData, $iv, $sessionKey);
 
         $mobile = $data['phoneNumber'];
-        $openId = $request->post('openId');
-        $user = $this->userModel->where('openid', $openId)->find();
+        $uid = $request->post('uid');
+        $user = $this->userModel->where('id', $uid)->find();
         $user->mobile = $mobile;
         $user->save();
         return apiBack('success', '请求成功', '10000');
