@@ -16,7 +16,7 @@ class Product extends BaseModel
     protected $createTime = 'createtime';
     protected $updateTime = 'updatetime';
 
-    public function skus ()
+    public function skus()
     {
         return $this->hasMany(ProductSku::class);
     }
@@ -30,6 +30,21 @@ class Product extends BaseModel
         return $this->belongsTo(Shops::class,'shop_id');
     }
 
+
+    public function productcomment(){
+        return $this->hasMany(ProductComment::class);
+    }
+
+    public function productdetails($productid){
+        $details = $this -> with(['shops'=>function(Query $query){
+            $query -> field('shop_id,title');
+        }])
+            -> fieldRaw('id,shop_id')
+            ->where('id',$productid)
+//            -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,introduce,product_spec_info,parea')
+            -> select() -> toArray();
+        return $details;
+    }
 
     //获取属性
     public function getStatusAttr($value)

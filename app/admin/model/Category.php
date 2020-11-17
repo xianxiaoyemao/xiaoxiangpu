@@ -11,16 +11,11 @@ class Category extends BaseModel
     // 设置字段信息
     protected $schema = [
         'id'         => 'int',
+        'pid'         => 'int',
         'cate_name'  => 'string',
         'status'     => 'int',
         'createtime' => 'int',
         'updatetime' => 'int',
     ];
 
-    //获取属性
-    public function getStatusAttr($value)
-    {
-        $status = [9 => 'deleted', 1 => 'normal'];
-        return $status[$value];
-    }
 }

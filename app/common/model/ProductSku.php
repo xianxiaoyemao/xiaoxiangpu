@@ -6,11 +6,13 @@ namespace app\common\model;
 
 class ProductSku extends BaseModel
 {
-    public function product ()
-    {
-        return $this->belongsTo(Product::class);
+//    public function product ()
+//    {
+//        return $this->belongsTo(Product::class);
+//    }
+    public function product(){
+        return $this->hasOne(Product::class,"product_id","id");
     }
-
 
 
 //    public function decreaseStock($amount)

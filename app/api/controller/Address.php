@@ -94,10 +94,14 @@ class Address extends BaseController
     public function addressdel(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $address = new AdressModel();
-        $uid = $request -> post('uid');
         $id = $request -> post('id');
-        $address -> where('id',$id) ->  delete();
-        return apiBack('success', '删除成功', '10000');
+        $res = $address -> where('id',$id) ->  delete();
+        if($res){
+            return apiBack('success', '删除成功', '10000');
+        }else{
+            return apiBack('fail', '删除失败', '10000');
+        }
+
     }
     //获取地区一级
     public function getarea($pcode){

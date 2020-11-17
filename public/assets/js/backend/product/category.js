@@ -13,7 +13,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                 }
             });
 
-            var table = $("#table");
+            var table = $("#table"); 
 
             // 初始化表格
             table.bootstrapTable({
@@ -23,7 +23,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'state', checkbox: true, },
                         {field: 'id', title: 'ID'},
                         {field: 'cate_name', title: '分类名称'},
-                        {field: 'status', title: '状态', formatter: Table.api.formatter.status},
+                        {field: 'status', title: '状态', formatter:function (value) {
+                            if(value == 1){
+                                return '<span class="text-success"><i class="fa fa-circle"></i> 正常</span>';
+                            }else if (value == 9){
+                                return '<span class="text-success"><i class="fa fa-circle"></i> 隐藏</span>';
+                            }
+                            },operate:false
+                        },
                         {field: 'createtime', title: '创建时间', formatter: Table.api.formatter.datetime},
                         {field: 'operate', title: __('Operate'), events: Table.api.events.operate, formatter: function (value, row, index) {
                                 if(row.id == 1){
