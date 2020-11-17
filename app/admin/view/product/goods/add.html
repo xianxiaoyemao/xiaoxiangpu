@@ -2,7 +2,7 @@
     <div class="form-group">
         <label for="name" class="control-label col-xs-12 col-sm-2">商品名称:</label>
         <div class="col-xs-12 col-sm-8">
-            <input type="text" class="form-control" id="name" name="row[name]" value="" data-rule="required;name" />
+            <input type="text" class="form-control" id="name" name="row[name]" value="" data-rule="required;title" />
         </div>
     </div>
     <div class="form-group">
@@ -17,18 +17,35 @@
             {:build_select('row[shop_id]', $shopslist, null, ['class'=>'form-control', 'required'=>''])}
         </div>
     </div>
-
+    <div class="form-group">
+        <label for="c-pimages" class="control-label col-xs-12 col-sm-2">商品主图:</label>
+        <div class="col-xs-12 col-sm-8">
+            <div class="input-group">
+                <input id="c-pimages" data-rule="" class="form-control" size="50" name="details[images_url]" type="text" value="">
+                <div class="input-group-addon no-border no-padding">
+                    <span>
+                        <button type="button" id="plupload-pimages" class="btn btn-danger plupload" data-input-id="c-pimages"
+                                data-mimetype="image/gif,image/jpeg,image/png,image/jpg,image/bmp" data-multiple="true" data-preview-id="p-pimages">
+                            <i class="fa fa-upload"></i> 上传
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <span class="msg-box n-right" for="c-pimages"></span>
+            <ul class="row list-inline plupload-preview" id="p-pimages"></ul>
+        </div>
+    </div>
     <div class="form-group">
         <label  class="control-label col-xs-12 col-sm-2">规格名称:</label>
         <div class="col-xs-12 col-sm-8">
-            <input type="text" class="form-control" name="row[spec_name]" value="" placeholder="例：口味等"/>
+            <input type="text" class="form-control" name="spec[spec_name]" value="" placeholder="例：口味等"/>
         </div>
     </div>
 
     <div class="form-group">
         <label  class="control-label col-xs-12 col-sm-2">规格属性:</label>
         <div class="col-xs-12 col-sm-8">
-            <input type="text" class="form-control" name="row[spec_value]" value="" placeholder="属性多时，用 - 分割。例：麻辣-微辣-特辣" />
+            <input type="text" class="form-control" name="spec[spec_value]" value="" placeholder="属性多时，用 - 分割。例：麻辣-微辣-特辣" />
         </div>
     </div>
 
@@ -37,13 +54,13 @@
         <div id="prev" style="padding-left: 18%">
             <div id="skuattr" class="form-group">
                 <div class="col-xs-12 col-sm-2">
-                    <input type="text" class="form-control" size="40" name="row[sku_title][]" value="" placeholder="属性名称"/>
+                    <input type="text" class="form-control" size="40" name="rowsku[sku_title][]" value="" placeholder="属性名称"/>
                 </div>
                 <div class="col-xs-12 col-sm-2">
-                    <input type="text" class="form-control" name="row[sku_price][]" value="" placeholder="价格"/>
+                    <input type="text" class="form-control" name="rowsku[sku_price][]" value="" placeholder="价格"/>
                 </div>
                 <div class="col-xs-12 col-sm-2">
-                    <input type="text" class="form-control" name="row[stock][]" value="" placeholder="库存"/>
+                    <input type="text" class="form-control" name="rowsku[stock][]" value="" placeholder="库存"/>
                 </div>
                 <span class="btn btn-sm btn-danger btn-remove"><i class="fa fa-times"></i></span>
             </div>
@@ -72,73 +89,79 @@
             <input type="number" class="form-control" name="row[sales]" value="" />
         </div>
     </div>
+<!--    <div class="form-group">-->
+<!--        <label  class="control-label col-xs-12 col-sm-2">商品库存:</label>-->
+<!--        <div class="col-xs-12 col-sm-8">-->
+<!--            <input type="number" class="form-control" name="row[inventory]" value="" />-->
+<!--        </div>-->
+<!--    </div>-->
     <div class="form-group">
-        <label  class="control-label col-xs-12 col-sm-2">商品库存:</label>
-        <div class="col-xs-12 col-sm-8">
-            <input type="number" class="form-control" name="row[inventory]" value="" />
-        </div>
-    </div>
-    <div class="form-group">
-        <label  class="control-label col-xs-12 col-sm-2">商品产地:</label>
+        <label  class="control-label col-xs-12 col-sm-2">商品出产地:</label>
         <div class="col-xs-12 col-sm-8">
             <input type="number" class="form-control" name="row[parea]" value="" />
         </div>
     </div>
     <div class="form-group">
-        <label  class="control-label col-xs-12 col-sm-2">是否热卖:</label>
-        <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[is_hot_sale]', ['normal'=>'是', 'hidden'=>'不是'])}
-        </div>
+        <label  class="control-label col-xs-12 col-sm-2">商品详情</label>
     </div>
     <div class="form-group">
-        <label for="c-avatar" class="control-label col-xs-12 col-sm-2">商品主图:</label>
+        <label for="c-picdesc" class="control-label col-xs-12 col-sm-2">商品详情图:</label>
         <div class="col-xs-12 col-sm-8">
             <div class="input-group">
-                <input id="c-avatar" data-rule="" class="form-control" size="50" name="row[images]" type="text" value="">
+                <input id="c-picdesc" data-rule="" class="form-control" size="50" name="details[picdesc]" type="text" value="">
                 <div class="input-group-addon no-border no-padding">
                     <span>
-                        <button type="button" id="plupload-avatar" class="btn btn-danger plupload" data-input-id="c-avatar" data-mimetype="image/gif,image/jpeg,image/png,image/jpg,image/bmp" data-multiple="true" data-preview-id="p-avatar">
+                        <button type="button" id="plupload-picdesc" class="btn btn-danger plupload" data-input-id="c-picdesc"
+                                data-mimetype="image/gif,image/jpeg,image/png,image/jpg,image/bmp" data-multiple="true" data-preview-id="p-picdesc">
                             <i class="fa fa-upload"></i> 上传
                         </button>
                     </span>
                 </div>
             </div>
-            <span class="msg-box n-right" for="c-avatar"></span>
-            <ul class="row list-inline plupload-preview" id="p-avatar"></ul>
+            <span class="msg-box n-right" for="c-picdesc"></span>
+            <ul class="row list-inline plupload-preview" id="p-picdesc"></ul>
         </div>
     </div>
     <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">商品描述:</label>
+        <div class="col-xs-12 col-sm-8">
+            <textarea name="details[introduce]" id="c-editor" cols="60" rows="5" class="form-control editor"></textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">是否热卖:</label>
+        <div class="col-xs-12 col-sm-8">
+            {:build_radios('row[is_hot_sale]', ['1'=>'是', '2'=>'不是'])}
+        </div>
+    </div>
+
+    <div class="form-group">
         <label  class="control-label col-xs-12 col-sm-2">店长推荐:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[is_recommend]', ['normal'=>'是', 'hidden'=>'不是'])}
+            {:build_radios('row[is_recommend]', ['1'=>'是', '2'=>'不是'])}
         </div>
     </div>
     <div class="form-group">
         <label  class="control-label col-xs-12 col-sm-2">新品:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[is_new]', ['normal'=>'是', 'hidden'=>'不是'])}
+            {:build_radios('row[is_new]', ['1'=>'是', '2'=>'不是'])}
         </div>
     </div>
 
     <div class="form-group">
         <label class="control-label col-xs-12 col-sm-2">抢购商品:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[is_rush]', ['normal'=>'是', 'hidden'=>'不是'])}
+            {:build_radios('row[is_rush]', ['1'=>'是', '2'=>'不是'])}
         </div>
     </div>
 
     <div class="form-group">
         <label  class="control-label col-xs-12 col-sm-2">状态:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[status]', ['normal'=>__('Normal'), 'hidden'=>__('Hidden')])}
+            {:build_radios('row[status]', ['1'=>__('Normal'), '2'=>__('Hidden')])}
         </div>
     </div>
-    <div class="form-group">
-        <label  class="control-label col-xs-12 col-sm-2">商品描述:</label>
-        <div class="col-xs-12 col-sm-8">
-            <textarea name="row[introduce]" id="c-editor" cols="60" rows="5" class="form-control editor"></textarea>
-        </div>
-    </div>
+
     <div class="form-group hidden layer-footer">
         <label class="control-label col-xs-12 col-sm-2"></label>
         <div class="col-xs-12 col-sm-8">

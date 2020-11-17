@@ -8,13 +8,13 @@
 namespace app\admin\controller\product;
 
 use app\common\controller\Backend;
-use app\common\model\Product;
-use app\common\model\ProductSku;
 use app\Request;
 use think\Exception;
-use think\facade\Db;
 use app\common\model\Shops;
 use app\admin\model\Category;
+use app\common\model\Product;
+use app\common\model\ProductSku;
+use app\common\model\ProductDetails;
 class Goods extends Backend
 {
     protected $model = null;
@@ -71,26 +71,20 @@ class Goods extends Backend
             $params = $this->request->post('row/a');
 //            dump($params);die;
             if($params){
+                $skus = $this->request->post('rowsku/a');
+                $details = $this->request->post('details/a');
+                $spec = $this->request->post('spec/a');
                 try {
-                    $data['name'] = $params['name'];
-                    $data['category_id'] = $params['category_id'];
-                    $data['images'] = $params['images'];
-                    $data['price'] = $params['price'];
-                    $data['sales'] = $params['sales'];
-                    $data['inventory'] = $params['inventory'];
-                    $data['introduce'] = $params['introduce'];
-                    $data['status'] = $params['status'] == 'normal' ? 1 : 2;
-                    $data['is_recommend'] = $params['is_recommend'] == 'normal' ? 1 : 2;
-                    $data['is_new'] = $params['is_new'] == 'normal' ? 1 : 2;
-                    $data['is_hot_sale'] = $params['is_hot_sale'] == 'normal' ? 1 : 2;
-                    $data['is_rush'] = $params['is_rush'] == 'normal' ? 1 : 2;
-
-                    $data['product_spec_info'] = $this->getSpenInfo($params['spec_name'], $params['spec_value']);
-                    $data['createtime'] = time();
-                    $product = $this->model->create($data);
-                    //sku
-                    $sku = $this->getSkuInfo($params['sku_title'], $params['sku_price'], $params['stock'], $product->id);
-
+                    $params['pcid'] = (new Category)::where('id',$params['category_id']) -> field('pid')->find()->toArray()['pid'];
+                    $params['images'] = explode(',',$details['images_url'])[0];
+                    $params['inventory'] = array_sum($skus['stock']);
+                    $params['product_spec_info'] = $this->getSpenInfo($spec['spec_name'], $spec['spec_value']);
+                    $params['createtime'] = time();
+                    $this->model->save($params);
+                    $details['product_id'] = $this->model->id;
+                    $details['createtime'] = time();
+                    (new ProductDetails) -> save($details);
+                    $sku = $this->getSkuInfo($skus['sku_title'], $skus['sku_price'], $skus['stock'], $this->model->id);
                     $this->skuModel->saveAll($sku);
                     $this->success();
                 } catch (Exception $e) {
@@ -108,56 +102,38 @@ class Goods extends Backend
      * @return string
      * @throws \Exception
      */
-    public function edit ($ids = null)
-    {
+    public function edit ($ids = null){
         $product = $this->model->find($ids);
-
+        $details = (new ProductDetails) -> find($ids);
         //sku属性
         $sku = $product->skus()->select();
 
         $this->assign('sku', $sku);
-        $spec = json_decode($product->product_spec_info, 1);
-        $product->spec_name = $spec['name'];
-        $product->spec_value = implode('-', $spec['list']);
+        $specinfo = json_decode($product->product_spec_info, 1);
+        $spec['spec_name'] =$specinfo['name'];
+        $spec['spec_value'] = implode('-', $specinfo['list']);
+        $this->assign('spec', $spec);
+        $this->assign('details', $details);
+
         if (! $product) {
             $this->error(__('No Results were found'));
         }
-
         if ($this->request->isPost()) {
             $params = $this->request->post('row/a');
+            $spec = $this->request->post('spec/a');
+            $skus = $this->request->post('rowsku/a');
+            $details = $this->request->post('details/a');
             try {
-                if ($params['status'] == 'normal') {
-                    $params['status'] = 1;
-                } else {
-                    $params['status'] = 2;
-                }
-                if ($params['is_hot_sale'] == 'normal') {
-                    $params['is_hot_sale'] = 1;
-                } else {
-                    $params['is_hot_sale'] = 2;
-                }
-                if ($params['is_new'] == 'normal') {
-                    $params['is_new'] = 1;
-                } else {
-                    $params['is_new'] = 2;
-                }
-                if ($params['is_recommend'] == 'normal') {
-                    $params['is_recommend'] = 1;
-                } else {
-                    $params['is_recommend'] = 2;
-                }
-                if ($params['is_rush'] == 'normal') {
-                    $params['is_rush'] = 1;
-                } else {
-                    $params['is_rush'] = 2;
-                }
-                $params['product_spec_info'] = $this->getSpenInfo($params['spec_name'], $params['spec_value']);
+                $params['pcid'] = (new Category)::where('id',$params['category_id']) -> field('pid')->find()->toArray()['pid'];
+                $params['images'] = explode(',',$details['images_url'])[0];
+                $params['inventory'] = array_sum($skus['stock']);
+                $params['product_spec_info'] = $this->getSpenInfo($spec['spec_name'], $spec['spec_value']);
+                $params['updatetime'] = time();
                 $product->save($params);
-
-                $skuInfo = $this->getSkuInfo($params['sku_title'], $params['sku_price'], $params['stock'], $ids);
+                $skuInfo = $this->getSkuInfo($skus['sku_title'], $skus['sku_price'], $skus['stock'], $ids);
                 $this->skuModel->where('product_id', $ids)->delete();
                 $this->skuModel->saveAll($skuInfo);
-
+                (new ProductDetails) -> where('product_id',$ids) -> update($details);
                 $this->success($ids);
             } catch (Exception $e) {
                 $this->error($e->getMessage());

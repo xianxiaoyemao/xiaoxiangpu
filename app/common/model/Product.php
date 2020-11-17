@@ -35,47 +35,18 @@ class Product extends BaseModel
         return $this->hasMany(ProductComment::class);
     }
 
-    public function productdetails($productid){
-        $details = $this -> with(['shops'=>function(Query $query){
-            $query -> field('shop_id,title');
-        }])
-            -> fieldRaw('id,shop_id')
-            ->where('id',$productid)
-//            -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,introduce,product_spec_info,parea')
-            -> select() -> toArray();
-        return $details;
-    }
+//    public function productdetails($productid){
+//        $details = $this -> with(['shops'=>function(Query $query){
+//            $query -> field('shop_id,title');
+//        }])
+//            -> fieldRaw('id,shop_id')
+//            ->where('id',$productid)
+////            -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,introduce,product_spec_info,parea')
+//            -> select() -> toArray();
+//        return $details;
+//    }
 
     //获取属性
-    public function getStatusAttr($value)
-    {
-        $status = [9 => 'deleted', 1 => 'normal', 2 => 'hidden'];
-        return $status[$value];
-    }
-
-    public function getIsHotSaleAttr($value)
-    {
-        $status = [1 => 'normal', 2 => 'hidden'];
-        return $status[$value];
-    }
-
-    public function getIsRecommendAttr($value)
-    {
-        $status = [1 => 'normal', 2 => 'hidden'];
-        return $status[$value];
-    }
-
-    public function getIsNewAttr($value)
-    {
-        $status = [1 => 'normal', 2 => 'hidden'];
-        return $status[$value];
-    }
-
-    public function getIsRushAttr($value)
-    {
-        $status = [1 => 'normal', 2 => 'hidden'];
-        return $status[$value];
-    }
 //    const TYPE_NORMAL ='product';
 //
 //    const TYPE_SECKILL = 'seckill';
