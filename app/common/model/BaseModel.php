@@ -1,7 +1,7 @@
 <?php
 
 namespace app\common\model;
-
+use think\facade\Db;
 use think\Model;
 use think\db\Query;
 
@@ -86,4 +86,43 @@ class BaseModel extends Model{
 
         return $result;
     }
+
+
+    /**
+     * 开启事务
+     */
+    public static function beginTrans()
+    {
+        Db::startTrans();
+    }
+
+    /**
+     * 提交事务
+     */
+    public static function commitTrans()
+    {
+        Db::commit();
+    }
+
+    /**
+     * 关闭事务
+     */
+    public static function rollbackTrans()
+    {
+        Db::rollback();
+    }
+
+    /**
+     * 根据结果提交滚回事务
+     * @param $res
+     */
+    public static function checkTrans($res)
+    {
+        if ($res) {
+            self::commitTrans();
+        } else {
+            self::rollbackTrans();
+        }
+    }
+
 }
