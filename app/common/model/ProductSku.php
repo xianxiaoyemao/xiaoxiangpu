@@ -14,6 +14,9 @@ class ProductSku extends BaseModel
         return $this->hasOne(Product::class,"product_id","id");
     }
 
+     public function skucartitem(){
+        return $this -> hasMany(Cart::class);
+    }
 
 //    public function decreaseStock($amount)
 //    {
