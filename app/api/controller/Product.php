@@ -42,12 +42,16 @@ class Product extends BaseController{
             -> field($productsfild)
             -> order('createtime desc')
             -> select()  -> toArray();
-        foreach ($list as $key => $val){
-            if($val['is_rush'] == 1){
-                $list[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-            }
-        }
-        return apiBack('success', '成功', '10000', $list);
+//        foreach ($list as $key => $val){
+//            if($val['is_rush'] == 1){
+//                $list[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+//            }
+//        }
+        $data =[
+            'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
+            'data' => $list
+        ];
+        return apiBack('success', '成功', '10000', $data);
     }
 
     //商品详情

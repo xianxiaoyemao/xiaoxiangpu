@@ -10,6 +10,7 @@ class Order extends BaseController
 {
     //创建订单
     public function createorder(Request $request){
+
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request->post('uid');
         $type = $request->post('type');
@@ -20,15 +21,21 @@ class Order extends BaseController
         $skuid = $request->post('skuid');
         $quantity = $request->post('quantity');
         $addressid = $request->post('addressid');
-        $orderdata =[
-            'user_id' => $uid,
-            'createtime' => time(),
-        ];
+//        $orderdata =[
+//            'user_id' => $uid,
+//            'createtime' => time(),
+//        ];
+
         switch ($type){
             case 'cart':
                 //查询店铺id
                 $cartlist = (new Cart)::with(['product']) -> where('id in('.$cartid.')') -> select() -> toArray();
-
+                $arr = [];
+                foreach ($cartlist as $key => $val){
+                    $arr[$key]['shopid'] =  $val['product']['shop_id'];
+                    $arr[$key]['price'] =  $val['price'];
+                    $arr[$key]['specvalue'] =  $val['specvalue'];
+                }
                 $order_no = $this -> build_order_no();
                 $orderdata['order_no'] = $order_no;
                 break;
@@ -37,7 +44,7 @@ class Order extends BaseController
                 break;
         }
 
-        dump();die;
+        dump($cartlist);die;
         $orderdata =[
             'user_id' => $uid,
             'order_no' => $order_no,
@@ -79,7 +86,7 @@ class Order extends BaseController
 
 //        $sql="insert into ih_order(order_sn,user_id,goods_id,sku_id,price)
 //values('$order_sn','$user_id','$goods_id','$sku_id','$price')";
-//        $order_rs=mysqli_query($conn,$sql);
+//        $order_rs=mysqli_query($conn,$sql); https://blog.csdn.net/qq43599939/article/details/78471459
 
 //库存减少
 //        $sql="update ih_store set number=number-{$number} where sku_id='$sku_id'";
@@ -129,7 +136,6 @@ class Order extends BaseController
             'user_id'  =>$user_id,
             'goods_id' =>$goods_id,
             'time'     =>time(),
-        ...
         );
 
         //订单信息暂存 redis 哈希表，后续处理
