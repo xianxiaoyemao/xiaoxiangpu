@@ -20,6 +20,7 @@ class Cartitem extends BaseController{
         foreach ($cartlist as $key => $val){
             $arr['id'] = $val['id'];
             $arr['quantity'] = $val['quantity'];
+            $arr['total_price'] = $val['price'] * $val['quantity'];
             $arr['skuprice'] = $val['price'];
             $arr['product_id'] = $val['product_id'];
             $arr['sku_id'] = $val['sku_id'];
@@ -40,6 +41,7 @@ class Cartitem extends BaseController{
             }else{
                 $arr['isstock'] = '在售中';
             }
+
         }
         return apiBack('success', '获取成功', '10000',$arr);
     }
@@ -78,8 +80,9 @@ class Cartitem extends BaseController{
     //删除购物车商品
     public function cartdel(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $cartid = $this ->post('ids');
-        $res = (new Cart)->delete($cartid);
+        $cartid = $request ->post('ids');
+        $where = 'id in('.$cartid.')';
+        $res = (new Cart)-> where($where)->delete();
         if($res){
             return apiBack('success', '删除成功', '10000');
         }else{
