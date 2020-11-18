@@ -27,3 +27,4 @@ Route::post('product/productdetails', 'product/productdetails');//商品详情
 //购物车管理
 Route::post('cartitem/cartlist', 'cartitem/cartlist');
 Route::post('cartitem/cartsave', 'cartitem/cartsave');
+Route::post('cartitem/cartdel', 'cartitem/cartdel');
