@@ -74,9 +74,9 @@ class Index extends BaseController
     public function sign (Request $request)
     {
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $openId = $request->post('openId');
+        $uid = $request->post('uid');
         $userModel = new User();
-        $user = $userModel->where('openid', $openId)->find();
+        $user = $userModel->where('id', $uid)->find();
         $end_time = strtotime(date("Y-m-d",time())) + 60*60*24;
         $sign_time = $end_time - $user->last_sign_time;
         if ($sign_time < 86400) return  apiBack('fail', '今日已签到，请明天再来', '10004');
