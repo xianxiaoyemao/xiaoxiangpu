@@ -6,6 +6,8 @@ use app\BaseController;
 //use app\Exceptions\InvalidRequestException;
 //use Illuminate\Http\Request;
 //use Illuminate\Pagination\LengthAwarePaginator;
+use app\common\model\ProductDetails;
+use app\common\model\ProductSku;
 use think\facade\Db;
 use app\Request;
 use app\common\model\Product as PModel;
@@ -16,7 +18,7 @@ class Product extends BaseController{
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $type = $request->post('type');
         $where = "status=1";
-        $limit = "";
+        $page = "";
         switch ($type){
             case 'ms':
                 $where.=" and is_rush=1";
@@ -28,11 +30,16 @@ class Product extends BaseController{
                 $where.=" and category_id=3";
                 break;
         }
-        $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales';
+        $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,is_rush';
         $list = (new PModel)::with('shops')->where($where)
-            ->field($productsfild)
+            -> field($productsfild)
             -> order('createtime desc')
-            ->  select()  -> toArray();
+            -> select()  -> toArray();
+        foreach ($list as $key => $val){
+            if($val['is_rush'] == 1){
+                $list[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+            }
+        }
         return apiBack('success', '成功', '10000', $list);
     }
 
@@ -44,11 +51,29 @@ class Product extends BaseController{
 //        $details = (new PModel)::with(['shops' => function($query) {
 //            $query->field('id');
 //        }])->select() -> toArray();
-        $details = (new PModel)::with(['skus'])->where('id',$productid)
-            -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,introduce,product_spec_info,parea')
-            -> find() -> toArray();
-        $details['product_spec_info'] = json_decode($details['product_spec_info'],true);
-        return apiBack('success', '成功', '10000', $details);
+        $pdetails = (new PModel)::field('id,name,images,price,discount_price,shop_id,sales,rating,review,product_spec_info,parea,is_rush')
+        ->find($productid) -> toArray();
+        $details = (new ProductDetails)::find($productid);
+        $pdetails['images_url'] = $details->images_url;
+        $pdetails['picdesc'] = $details->picdesc;
+        $pdetails['introduce'] = $details->introduce;
+        $pdetails['product_spec_info'] = json_decode($pdetails['product_spec_info'],true);
+        if($pdetails['is_rush'] == 1){
+            $pdetails['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+        }
+//
+        //:with(['productdetails'=>function($query){$query->field('product_id,images_url,picdesc,introduce');}])
+//        ->where('id',$productid)
+
+//             -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,product_spec_info,parea')
+
+//            -> find() ->toArray();
+        $skulist = (new ProductSku)::where('product_id',$productid)  -> field('id as skuid,title,price as skuprice') -> select()->toArray();
+        $data =[
+            'details'=>$pdetails,
+            'skulist'=> $skulist,
+        ];
+        return apiBack('success', '成功', '10000', $data);
     }
 
     //产品评价

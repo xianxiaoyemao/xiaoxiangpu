@@ -53,7 +53,7 @@ class Index extends BaseController
             -> select() -> toArray();
         $roll = ['xxx用户购买两份椒麻鸡', '王小二购买新疆特产一份', '张三购买椒麻鸡套餐两份', '李四购买椒麻鸡两份'];
         $data = [
-            'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end'))] ,
+            'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()] ,
             'swiper' => $swiper,
             'skillmiao' => ['type'=>'ms','data'=>$skiimiao],//$skiimiao,
             'dztj' => ['type'=>'jmj','data'=>$shopproducts],

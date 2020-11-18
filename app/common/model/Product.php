@@ -35,6 +35,13 @@ class Product extends BaseModel
         return $this->hasMany(ProductComment::class);
     }
 
+    public function productdetails(){
+        return $this -> hasOne(ProductDetails::class,'product_id');
+    }
+
+    public function cartitem(){
+        return $this -> hasMany(Cart::class);
+    }
 //    public function productdetails($productid){
 //        $details = $this -> with(['shops'=>function(Query $query){
 //            $query -> field('shop_id,title');
