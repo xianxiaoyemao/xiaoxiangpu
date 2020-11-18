@@ -15,7 +15,13 @@ class Cartitem extends BaseController{
     public function cartlist(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request -> post('uid');
-        $cartlist = (new Cart)::with(['product','skus'])->where(['user_id'=>$uid]) -> select() -> toArray();
+        $category_id = $request -> post('cid') ?? 0;
+        if($category_id == 0){
+            $cartlist = (new Cart)  -> with(['product','skus'])->where(['user_id'=>$uid]) -> select() -> toArray();
+        }else{
+            $haswhere['category_id'] = $category_id;
+            $cartlist = (new Cart) -> hasWhere('product', $haswhere) -> with(['product','skus'])->where(['user_id'=>$uid]) -> select() -> toArray();
+        }
         $arr =[];
         foreach ($cartlist as $key => $val){
             $arr['id'] = $val['id'];
@@ -24,6 +30,7 @@ class Cartitem extends BaseController{
             $arr['skuprice'] = $val['price'];
             $arr['product_id'] = $val['product_id'];
             $arr['sku_id'] = $val['sku_id'];
+            $arr['specvalue'] = $val['specvalue'];
             $arr['name'] = $val['product']['name'];
             $arr['category_id'] = $val['product']['category_id'];
             $arr['images'] = $val['product']['images'];
@@ -41,7 +48,6 @@ class Cartitem extends BaseController{
             }else{
                 $arr['isstock'] = '在售中';
             }
-
         }
         return apiBack('success', '获取成功', '10000',$arr);
     }
@@ -54,6 +60,7 @@ class Cartitem extends BaseController{
         $skuid = $request -> post('skuid');
         $quantity = $request -> post('quantity');
         $price = $request -> post('price');
+        $specvalue = $request -> post('specvalue');
         $cartinfo = (new Cart)::where(['user_id'=>$uid,'product_id'=>$product_id,'sku_id'=>$skuid]) ->find();
         if(empty($cartinfo)){
             $data =[
@@ -61,14 +68,19 @@ class Cartitem extends BaseController{
                 'product_id' => (int)$product_id,
                 'sku_id' => (int)$skuid,
                 'quantity' => (int)$quantity,
+                'specvalue'=> $specvalue,
                 'price' => floatval($price),
                 'createtime' => time()
             ];
             $res =  (new Cart) -> save($data);
         }else{
             $quantity = $cartinfo -> quantity + (int)$quantity;
+            $data = [
+                'specvalue' => $specvalue,
+                'quantity' => $quantity,
+            ];
             $res =  (new Cart)::where(['id'=>$cartinfo->id])
-                -> update(['quantity'=>$quantity]);
+                -> update($data);
         }
         if($res){
             return apiBack('success', '操作成功', '10000');

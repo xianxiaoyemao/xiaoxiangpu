@@ -4,6 +4,7 @@ namespace app\service;
 use Monolog\Logger;
 use Yansongda\Pay\Pay;
 use Elasticsearch\ClientBuilder as ESClientBuilder;//这里必须带
+use fast\Redis;
 class FileSystemService extends \think\Service{
     /**
      * 注册服务
@@ -17,6 +18,8 @@ class FileSystemService extends \think\Service{
             $builder = ESClientBuilder::create()->setHosts(config('database.elasticsearch.hosts'));
             return $builder->build();
         });
+
+        $this->app->bind('redis',Redis::class);
 
     }
 

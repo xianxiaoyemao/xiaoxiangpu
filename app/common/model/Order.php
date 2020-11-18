@@ -4,7 +4,10 @@
 namespace app\common\model;
 
 
-class Order
+class Order extends BaseModel
 {
 
+    public function cacheKeyCreateOrder(){
+        self::beginTrans();
+    }
 }

@@ -9,8 +9,8 @@
 error_reporting(0);
 use think\facade\Db;
 use think\facade\Cache;
-use app\api\model\BusinessApplicationPlatform;
-
+//use app\api\model\BusinessApplicationPlatform;
+use app\common\model\Log;
 //use think\response\Json;
 header('Content-Type: text/html;charset=utf-8');
 header('Access-Control-Allow-Origin:*');
@@ -25,6 +25,14 @@ define('SHUJUCUNCHU',app()->getRootPath().'public');
 if(!is_dir(SHUJUCUNCHU)){
     mkdir(SHUJUCUNCHU,0777,true);
 }
+
+//记录日志
+function insertLog($event,$type=0){
+    $data =['event'=>$event,'type'=>$type];
+    (new Log)::save($data);
+}
+
+
 //判断系统平台
 function smsyem_version(){
     if (strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') || strpos($_SERVER['HTTP_USER_AGENT'], 'iPad')) {
