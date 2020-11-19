@@ -2,6 +2,7 @@
 namespace app\api\controller;
 use app\BaseController;
 use app\common\model\Cart;
+use app\common\model\Product;
 use app\Request;
 use app\common\model\Address;
 use app\common\model\Order as OrderModel;
@@ -14,60 +15,37 @@ class Order extends BaseController
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request->post('uid');
         $type = $request->post('type');
-        $cartid = $request->post('cartids');
-        $pid = $request->post('pid');
+//        $cartid = $request->post('cartids');
+        $pid = $request->post('pids');
         $skuid = $request->post('skuid');
         $price = $request->post('price');
         $skuid = $request->post('skuid');
         $quantity = $request->post('quantity');
         $addressid = $request->post('addressid');
-//        $orderdata =[
-//            'user_id' => $uid,
-//            'createtime' => time(),
-//        ];
-
         switch ($type){
             case 'cart':
                 //查询店铺id
-                $cartlist = (new Cart)::with(['product']) -> where('id in('.$cartid.')') -> select() -> toArray();
-                $arr = [];
-                foreach ($cartlist as $key => $val){
-                    $arr[$key]['shopid'] =  $val['product']['shop_id'];
-                    $arr[$key]['price'] =  $val['price'];
-                    $arr[$key]['specvalue'] =  $val['specvalue'];
+                $cartlist = (new Product) -> where('id in('.$pid.')') -> field('id,shop_id,name') -> select() -> toArray();
+                $arrlist = array_merge(group_same_key($cartlist,'shop_id'));
+                foreach ($arrlist as $key => $val){
+//                    $this -> ordersave($uid,$pid,$skuid,$price,$quantity,$addressid);
                 }
-                $order_no = $this -> build_order_no();
-                $orderdata['order_no'] = $order_no;
                 break;
             case 'ljgm':
-                $order_no = $this -> build_order_no();
+                $order_no = $this -> createOrderNm();
+                $res = (new OrderModel) -> cacheKeyCreateOrder($uid,$order_no,$addressid,$pid,$skuid,$price,$quantity);
                 break;
         }
 
         dump($cartlist);die;
-        $orderdata =[
-            'user_id' => $uid,
-            'order_no' => $order_no,
-            'createtime' => time(),
-        ];
 
-        $deleiedata = [
-            'order_id'=>'order_id',
-            'product_id' =>'product_id',
-            'skuid' =>'skuid',
-            'price' =>'price',
-            'total_price' =>'total_price',
-            'specvalue' =>'specvalue',
-            'number' =>'number',
-            'createtime' =>time(),
-        ];
+
+
 //        $res = (new OrderModel) -> save($param);
     }
 
 
-    public function ordersave(){
 
-    }
 
     //秒杀
     public function seconds_kill(){
@@ -159,14 +137,36 @@ class Order extends BaseController
         $address = Address::find($address_id);
         return $orderService -> addOrder($uid,$address,$remark,$items,$shop_id);
     }
+
     /**
+     * 生成15位的订单号
+     * @return string 订单号
+     */
+    public function createOrderNm(){
+        $year_code = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+        $date_code = array('0',
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',
+            'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M',
+            'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y');
+        //一共15位订单号,同一秒内重复概率1/10000000,26年一次的循环\
+        $order_sn = $year_code[(intval(date('Y')) - 2010) % 26] . //年 1位
+            strtoupper(dechex(date('m'))) . //月(16进制) 1位
+            $date_code[intval(date('d'))] . //日 1位
+            substr(time(), -5) . substr(microtime(), 2, 5) . //秒 5位 // 微秒 5位
+            sprintf('%02d', rand(0, 99)); //  随机数 2位
+        return $order_sn;
+    }
+        /**
      * 得到新订单号
      * @return  string
      */
     public function build_order_no(){
         /* 选择一个随机的方案 */
-        mt_srand((double) microtime() * 1000000);
-        return date('Ymd') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+        $osn = 'XXP'.intval(date('Ymd')).
+            substr(time(), -5) .
+            substr(microtime(), 2, 5) .
+            sprintf('%02d', rand(0, 99));
+        return $osn;
     }
 
 

@@ -10,7 +10,7 @@ error_reporting(0);
 use think\facade\Db;
 use think\facade\Cache;
 //use app\api\model\BusinessApplicationPlatform;
-use app\common\model\Log;
+use app\common\model\Log as LogModel;
 //use think\response\Json;
 header('Content-Type: text/html;charset=utf-8');
 header('Access-Control-Allow-Origin:*');
@@ -25,11 +25,19 @@ define('SHUJUCUNCHU',app()->getRootPath().'public');
 if(!is_dir(SHUJUCUNCHU)){
     mkdir(SHUJUCUNCHU,0777,true);
 }
+//对数组进行分组
+function group_same_key($arr,$key){
+    $new_arr = array();
+    foreach($arr as $k=>$v ){
+        $new_arr[$v[$key]][] = $v;
+    }
+    return $new_arr;
+}
 
 //记录日志
 function insertLog($event,$type=0){
-    $data =['event'=>$event,'type'=>$type];
-    (new Log)::save($data);
+    $data =['content'=>$event,'type'=>$type,'addtime'=>time()];
+    (new LogModel) -> insert($data);
 }
 
 
