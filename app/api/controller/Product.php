@@ -31,7 +31,7 @@ class Product extends BaseController{
                 $where.=" and category_id=3";
                 break;
             case 'group':
-                $where.=" and spell_group=1";
+                $where.=" and spell_group > 1";
                 break;
             case 'buy0':
                 $where.=" and buy0=1";
@@ -58,6 +58,9 @@ class Product extends BaseController{
     public function productdetails(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $productid = $request->post('id');
+        if(empty($productid)){
+            return apiBack('fail', '商品id不能为空', '10004');
+        }
         // 可以使用闭包查询
         $pdetails = (new PModel)::field('id,category_id,name,images,price,discount_price,shop_id,sales,rating,review,product_spec_info,parea,is_rush')
         ->find($productid) -> toArray();
@@ -73,9 +76,7 @@ class Product extends BaseController{
 //        app() -> llen();
         //:with(['productdetails'=>function($query){$query->field('product_id,images_url,picdesc,introduce');}])
 //        ->where('id',$productid)
-
 //             -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,product_spec_info,parea')
-
 //            -> find() ->toArray();
         $skulist = (new ProductSku)::where('product_id',$productid)  -> field('id as skuid,title,price as skuprice,stock') -> select()->toArray();
         foreach ($skulist as $key => $val){
@@ -103,6 +104,10 @@ class Product extends BaseController{
             -> select() -> toArray();
         return apiBack('success', '成功', '10000', $details);
     }
+
+
+
+
 
 
     //添加商品到购物车
