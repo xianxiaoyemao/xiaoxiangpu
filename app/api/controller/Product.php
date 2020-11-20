@@ -20,15 +20,19 @@ class Product extends BaseController{
 //        $cid = $request->post('cid') ?? 0;
         $where = "status=1";
         $page = "";
+        $cate = [];
+        $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, catename');
         switch ($type){
             case 'ms':
                 $where.=" and is_rush=1";
                 break;
             case 'jmj':
                 $where.=" and category_id=2";
+                $cate = $db->where('pid', 2)->select()->toArray();
                 break;
             case 'xjtcp':
                 $where.=" and category_id=3";
+                $cate = $db->where('pid', 3)->select()->toArray();
                 break;
             case 'group':
                 $where.=" and spell_group > 1";
@@ -49,7 +53,8 @@ class Product extends BaseController{
 //        }
         $data =[
             'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
-            'data' => $list
+            'data' => $list,
+            'cate' => $cate
         ];
         return apiBack('success', '成功', '10000', $data);
     }
@@ -68,6 +73,7 @@ class Product extends BaseController{
         $pdetails['images_url'] = $details->images_url;
         $pdetails['picdesc'] = $details->picdesc;
         $pdetails['introduce'] = $details->introduce;
+        $pdetails['comment_num'] = ProductComment::where('product_id', $productid)->count();
         $pdetails['product_spec_info'] = json_decode($pdetails['product_spec_info'],true);
         if($pdetails['is_rush'] == 1){
             $pdetails['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
@@ -90,6 +96,7 @@ class Product extends BaseController{
         $data =[
             'details'=>$pdetails,
             'skulist'=> $skulist,
+            'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()]
         ];
         return apiBack('success', '成功', '10000', $data);
     }
