@@ -79,6 +79,27 @@ class Wechat extends BaseController
         return apiBack('success', '请求成功', '10000', $data);
     }
 
+    /**
+     * 添加用户信息
+     * @param Request $request
+     * @return \think\response\Json
+     */
+    public function addUserInfo (Request $request)
+    {
+        if (!$request->isPost()) return apiBack('ok', '请求方式错误', '10004');
+        $post = $request->post();
+        $user = $this->userModel->where('id', $post['uid'])->find();
+        $user->nickname = $post['nickname'];
+        $user->avatar = $post['avatar'];
+        $user->save();
+        return apiBack('success', '请求成功', '10000');
+    }
+
+    /**
+     * 解密手机号
+     * @param Request $request
+     * @return \think\response\Json
+     */
     public function getWechatData (Request $request)
     {
         if (!$request->isPost()) return apiBack('ok', '请求方式错误', '10004');
