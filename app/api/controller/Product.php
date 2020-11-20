@@ -21,7 +21,7 @@ class Product extends BaseController{
         $where = "status=1";
         $page = "";
         $cate = [];
-        $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, catename');
+        $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, cate_name');
         switch ($type){
             case 'ms':
                 $where.=" and is_rush=1";
