@@ -14,53 +14,56 @@ class Order extends BaseModel
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function cacheKeyCreateOrder($uid,$order_no,$addressId,$pid,$skuid,$price,$quantity = 1){
+    public function cacheKeyCreateOrder($uid,$order_no,$addressId,$pid,$skuid,$price,$specvalue,$quantity = 1){
         self::beginTrans();
         try {
             $count=app('redis')->lpop('goods_store'.$pid.$skuid);
             if(!$count){
-                insertLog('已经抢光了哦');
-                return '已经抢光了哦';
+//                insertLog('已经抢光了哦');
+               echo apiBack('fail', '库存不足', '10004'); exit();
             }
             //查询订单是否存在
             $orderinfo = $this -> find($order_no);
-            if($orderinfo){}
+            if($orderinfo){
+                return '订单已存在';
+            }
+            //减库存
+//            (new ProductSku)::where('id',$skuid) -> setInc('store');//默认加1 setInc('num',2); // 字段原值加2
+            $store = (new ProductSku)::where('id',$skuid) -> setDec('store',$quantity);//默认减1 setDec('num',2); // 字段原值减2
+            if($store){
+                (new Product) -> where('id',$pid) -> setDec('inventory',$quantity);
+                insertLog('库存减少成功');
+            }else{
+                insertLog('库存减少失败');
+            }
             $orderdata =[
                 'user_id' => $uid,
                 'order_no' => $order_no,
                 'createtime' => time(),
-                'payment_price' => $price,
+                'payment_price' => $price * $quantity,
                 'status' => 1,
                 'pay_status' =>1,
                 'addressid' => $addressId
             ];
-            $res = $this -> save($orderdata);
-            if($res){//库存减少
-                $number=1;
-//                (new ProductSku)::where('id',$skuid) -> setInc('store');//默认加1 setInc('num',2); // 字段原值加2
-               $store = (new ProductSku)::where('id',$skuid) -> setDec('store',$quantity);//默认减1 setDec('num',2); // 字段原值减2
-                if($store){
-                    insertLog('库存减少成功');
-                }else{
-                    insertLog('库存减少失败');
-                }
-            }
-            $this->id;
+            $orderid = Order::create($orderdata);
+            $oid = $orderid -> id;
             $deleiedata = [
-                'order_id'=>$this->id,
+                'order_id'=> $oid,
                 'product_id' =>$pid,
-                'skuid' =>$skuid,
-                'price' =>'price',
+                'skuid' => $skuid,
+                'price' => $price,
                 'total_price' =>$quantity * $price,
-                'specvalue' =>'specvalue',
+                'specvalue' => $specvalue,
                 'number' => $quantity,
                 'createtime' =>time(),
             ];
-            (new OrderDetail)::save($deleiedata);
-
+            $result = (new OrderDetail)::save($deleiedata);
+            if($result){
+                return 1;
+            }
         } catch (\PDOException $e) {
             self::rollbackTrans();
-            return self::setErrorInfo('生成订单时SQL执行错误错误原因：' . $e->getMessage());
+            return '生成订单时SQL执行错误错误原因：' . $e->getMessage();
         }
     }
     public function cacheKeyCreateOrder1($uid, $key,$addressId, $payType,  $useIntegral = false,
