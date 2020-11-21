@@ -11,17 +11,16 @@ class Order extends BaseController
 {
     //创建订单
     public function createorder(Request $request){
-
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request->post('uid');
         $type = $request->post('type');
 //        $cartid = $request->post('cartids');
-        $pid = $request->post('pids');
-        $skuid = $request->post('skuid');
+        $pid = $request->post('pids') ;
         $price = $request->post('price');
         $skuid = $request->post('skuid');
         $quantity = $request->post('quantity');
         $addressid = $request->post('addressid');
+        $specvalue = $request->post('specvalue');
         switch ($type){
             case 'cart':
                 //查询店铺id
@@ -33,15 +32,12 @@ class Order extends BaseController
                 break;
             case 'ljgm':
                 $order_no = $this -> createOrderNm();
-                $res = (new OrderModel) -> cacheKeyCreateOrder($uid,$order_no,$addressid,$pid,$skuid,$price,$quantity);
+                $res = (new OrderModel) -> cacheKeyCreateOrder($uid,$order_no,$addressid,$pid,$skuid,$price,$specvalue,$quantity);
+                if($res == 1){
+                    return apiBack('success', '添加成功', '10000',['order_no'=>$order_no]);
+                }
                 break;
         }
-
-        dump($cartlist);die;
-
-
-
-//        $res = (new OrderModel) -> save($param);
     }
 
 

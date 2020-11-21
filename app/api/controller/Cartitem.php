@@ -25,29 +25,29 @@ class Cartitem extends BaseController{
         }
         $arr =[];
         foreach ($cartlist as $key => $val){
-            $arr['id'] = $val['id'];
-            $arr['quantity'] = $val['quantity'];
-            $arr['total_price'] = $val['price'] * $val['quantity'];
-            $arr['skuprice'] = $val['price'];
-            $arr['product_id'] = $val['product_id'];
-            $arr['sku_id'] = $val['sku_id'];
-            $arr['specvalue'] = $val['specvalue'];
-            $arr['name'] = $val['product']['name'];
-            $arr['category_id'] = $val['product']['category_id'];
-            $arr['images'] = $val['product']['images'];
-            $arr['price'] = $val['product']['price'];
-            $arr['discount_price'] = $val['product']['discount_price'];
-            $arr['sales'] = $val['product']['sales'];
-            $arr['is_rush'] = $val['product']['is_rush'];
-            if($arr['is_rush'] == 1){
-                $arr['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+            $arr[$key]['id'] = $val['id'];
+            $arr[$key]['quantity'] = $val['quantity'];
+            $arr[$key]['total_price'] = $val['price'] * $val['quantity'];
+            $arr[$key]['skuprice'] = $val['price'];
+            $arr[$key]['product_id'] = $val['product_id'];
+            $arr[$key]['sku_id'] = $val['sku_id'];
+            $arr[$key]['specvalue'] = $val['specvalue'];
+            $arr[$key]['name'] = $val['product']['name'];
+            $arr[$key]['category_id'] = $val['product']['category_id'];
+            $arr[$key]['images'] = $val['product']['images'];
+            $arr[$key]['price'] = $val['product']['price'];
+            $arr[$key]['discount_price'] = $val['product']['discount_price'];
+            $arr[$key]['sales'] = $val['product']['sales'];
+            $arr[$key]['is_rush'] = $val['product']['is_rush'];
+            if($val['product']['is_rush'] == 1){
+                $arr[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
             }
-            $arr['product_spec_info'] = json_decode($val['product']['product_spec_info'],1);
-            $arr['title'] = $val['skus']['title'];
+            $arr[$key]['product_spec_info'] = json_decode($val['product']['product_spec_info'],1);
+            $arr[$key]['title'] = $val['skus']['title'];
             if($val['skus']['stock'] == 0){
-                $arr['isstock'] = '已售完';//已售完
+                $arr[$key]['isstock'] = '已售完';//已售完
             }else{
-                $arr['isstock'] = '在售中';
+                $arr[$key]['isstock'] = '在售中';
             }
         }
         return apiBack('success', '获取成功', '10000',$arr);
@@ -76,8 +76,11 @@ class Cartitem extends BaseController{
                     'price' => floatval($pskulist[0]['price']),
                     'createtime' => time()
                 ];
+                $stock = $pskulist[0]['stock'];
                 break;
             case 'details':
+                //查询
+                $skunum = (new ProductSku)::where('id',$skuid) -> field('stock') -> find() -> toArray();
                 $data = [
                     'user_id' => (int)$uid,
                     'product_id' => (int)$pid,
@@ -87,6 +90,7 @@ class Cartitem extends BaseController{
                     'price' => floatval($price),
                     'createtime' => time()
                 ];
+                $stock = $skunum['stock'];
                 break;
         }
         $cartinfo = (new Cart)::where(['user_id'=>$uid,'product_id'=>$pid,'sku_id'=>$data['sku_id'],'specvalue'=>$data['specvalue']]) ->find();
@@ -101,9 +105,14 @@ class Cartitem extends BaseController{
                 -> update($data);
         }
         if($res){
-            return apiBack('success', '操作成功', '10000');
+            $res=app('redis')->llen('goods_store'.$pid.$data['sku_id']);
+            $count=$stock - $res;
+            for($i=0;$i<$count;$i++){
+                app('redis') ->lpush('goods_store'.$pid.$data['sku_id'],1);
+            }
+            return apiBack('success', '添加成功', '10000');
         }else{
-            return apiBack('fail', '操作失败', '10004');
+            return apiBack('fail', '添加失败', '10004');
         }
     }
 

@@ -113,6 +113,7 @@ class Product extends BaseController{
         //https://blog.csdn.net/yanhui_wei/article/details/8585509
 //        https://blog.csdn.net/weixin_30333885/article/details/98378934
 //        https://blog.csdn.net/Gekkoou/article/details/88714674
+//        https://blog.csdn.net/qq_42573785/article/details/105815508
         //点击添加购物车按钮时，传递过来两个参数
         $product_spec_id = isset ( $_GET ['spid'] ) ? intval ( $_GET ['spid'] ) : 0;
         //产品规格id：product_spec_id,对应product_spec_id表中product_spec_id字段的值
