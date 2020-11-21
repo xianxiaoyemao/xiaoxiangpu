@@ -46,11 +46,6 @@ class Product extends BaseController{
             -> field($productsfild)
             -> order('createtime desc')
             -> select()  -> toArray();
-//        foreach ($list as $key => $val){
-//            if($val['is_rush'] == 1){
-//                $list[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-//            }
-//        }
         $data =[
             'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
             'data' => $list,
@@ -78,11 +73,7 @@ class Product extends BaseController{
         if($pdetails['is_rush'] == 1){
             $pdetails['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
         }
-
-//        app() -> llen();
         //:with(['productdetails'=>function($query){$query->field('product_id,images_url,picdesc,introduce');}])
-//        ->where('id',$productid)
-//             -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,product_spec_info,parea')
 //            -> find() ->toArray();
         $skulist = (new ProductSku)::where('product_id',$productid)  -> field('id as skuid,title,price as skuprice,stock') -> select()->toArray();
         foreach ($skulist as $key => $val){
