@@ -39,6 +39,13 @@ class Index extends BaseController
             -> order('createtime desc')
             -> limit(0,3)
             -> select() -> toArray();
+        //0元购
+        $buyBy0 = (new Product)::where(['status'=>1,'buy0'=>1])
+            -> field($productsfild)
+            -> order('createtime desc')
+            -> limit(0,3)
+            -> select() -> toArray();
+
         //店长推荐chanpin
         $shopproducts =  (new Product)::where(['status'=>1,'is_recommend'=>1,'category_id'=>2])
             -> field($productsfild)
@@ -59,6 +66,7 @@ class Index extends BaseController
             'dztj' => ['type'=>'jmj','data'=>$shopproducts],
             'xjtcp' => ['type'=>'xjtcp','data'=>$xjtcp],
             'roll' => $roll,
+            'buy0' => $buyBy0
         ];
         return apiBack('success', '成功', '10000', $data);
     }

@@ -6,6 +6,7 @@ Route::post('wechat/wxlogin', 'wechat/wxLogin');
 Route::post('index/config', 'index/config');
 
 Route::post('wechat/getwechatdata', 'wechat/getWechatData');
+Route::post('wechat/addUserInfo', 'wechat/addUserInfo');
 
 Route::post('index/sign', 'index/sign');
 
