@@ -9,6 +9,7 @@
 namespace app\api\controller;
 use app\BaseController;
 use app\common\model\Cart;
+use app\common\model\ProductSku;
 use app\Request;
 class Cartitem extends BaseController{
     //购物车列表
@@ -56,27 +57,44 @@ class Cartitem extends BaseController{
     public function cartsave(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request -> post('uid');
-        $product_id = $request -> post('product_id');
+        $type = $request -> post('type');
+        $pid = $request -> post('product_id');
         $skuid = $request -> post('skuid');
-        $quantity = $request -> post('quantity');
         $price = $request -> post('price');
         $specvalue = $request -> post('specvalue');
-        $cartinfo = (new Cart)::where(['user_id'=>$uid,'product_id'=>$product_id,'sku_id'=>$skuid]) ->find();
+        $quantity = $request -> post('quantity') ?? 1;
+        switch ($type){
+            case 'list':
+                //查询商品
+                $pskulist = (new ProductSku)::where('product_id',$pid) -> field('id as skuid,price,stock') -> select() -> toArray();
+                $data = [
+                    'user_id' => (int)$uid,
+                    'product_id' => (int)$pid,
+                    'sku_id' => (int)$pskulist[0]['skuid'],
+                    'quantity' => (int)$quantity,
+                    'specvalue'=> '',
+                    'price' => floatval($pskulist[0]['price']),
+                    'createtime' => time()
+                ];
+                break;
+            case 'details':
+                $data = [
+                    'user_id' => (int)$uid,
+                    'product_id' => (int)$pid,
+                    'sku_id' => (int)$skuid,
+                    'quantity' => (int)$quantity,
+                    'specvalue'=> $specvalue,
+                    'price' => floatval($price),
+                    'createtime' => time()
+                ];
+                break;
+        }
+        $cartinfo = (new Cart)::where(['user_id'=>$uid,'product_id'=>$pid,'sku_id'=>$data['sku_id'],'specvalue'=>$data['specvalue']]) ->find();
         if(empty($cartinfo)){
-            $data =[
-                'user_id' => (int)$uid,
-                'product_id' => (int)$product_id,
-                'sku_id' => (int)$skuid,
-                'quantity' => (int)$quantity,
-                'specvalue'=> $specvalue,
-                'price' => floatval($price),
-                'createtime' => time()
-            ];
             $res =  (new Cart) -> save($data);
         }else{
             $quantity = $cartinfo -> quantity + (int)$quantity;
             $data = [
-                'specvalue' => $specvalue,
                 'quantity' => $quantity,
             ];
             $res =  (new Cart)::where(['id'=>$cartinfo->id])
