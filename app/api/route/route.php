@@ -29,7 +29,8 @@ Route::post('product/productdetails', 'product/productdetails');//商品详情
 Route::post('cartitem/cartlist', 'cartitem/cartlist');
 Route::post('cartitem/cartsave', 'cartitem/cartsave');
 Route::post('cartitem/cartdel', 'cartitem/cartdel');
-
-
+Route::post('cartitem/cart2', 'cartitem/cart2');
+Route::post('cartitem/cartsubmit', 'cartitem/cartsubmit');//提交订单
+//Route::post('cartitem/cartconfirm', 'cartitem/cartconfirm');//确认订单
 //订单管理
 Route::post('order/createorder', 'order/createorder');

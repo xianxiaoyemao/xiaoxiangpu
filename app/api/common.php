@@ -25,14 +25,6 @@ define('SHUJUCUNCHU',app()->getRootPath().'public');
 if(!is_dir(SHUJUCUNCHU)){
     mkdir(SHUJUCUNCHU,0777,true);
 }
-//对数组进行分组
-function group_same_key($arr,$key){
-    $new_arr = array();
-    foreach($arr as $k=>$v ){
-        $new_arr[$v[$key]][] = $v;
-    }
-    return $new_arr;
-}
 
 //记录日志
 function insertLog($event,$type=0){
@@ -53,23 +45,7 @@ function smsyem_version(){
     return $app_version;
 }
 
-//数组排序
-function array_sort($arr,$keys,$type='asc'){
-    $keysvalue = $new_array = array();
-    foreach ($arr as $k=>$v){
-        $keysvalue[$k] = $v[$keys];
-    }
-    if($type == 'asc'){
-        asort($keysvalue);
-    }else{
-        arsort($keysvalue);
-    }
-    reset($keysvalue);
-    foreach ($keysvalue as $k=>$v){
-        $new_array[$k] = $arr[$k];
-    }
-    return $new_array;
-}
+
 
 //文件下载
 function downloadFile($path){
@@ -89,14 +65,7 @@ function downloadFile($path){
         exit;
     }
 }
-//删除单个文件方法
-function delFile($filename){
-    if(file_exists($filename)){
-        unlink($filename);
-    }else{
-        return '我已经被删除了哦！';
-    }
-}
+
 
 /**
  * @param $data  要加密的字符串
