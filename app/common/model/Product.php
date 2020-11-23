@@ -54,7 +54,7 @@ class Product extends BaseModel
           -> limit($start,$end)
           -> select() -> toArray();
       foreach ($retust as $key => $val){
-          $retust['product_spec_info'] = json_decode($val['product_spec_info'],1);
+          $retust[$key]['product_spec_info'] = json_decode($val['product_spec_info'],1);
       }
       return $retust;
     }

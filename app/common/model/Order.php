@@ -19,8 +19,8 @@ class Order extends BaseModel
         try {
             $count=app('redis')->lpop('goods_store'.$pid.$skuid);
             if(!$count){
-//                insertLog('已经抢光了哦');
-               echo apiBack('fail', '库存不足', '10004'); exit();
+                insertLog('已经抢光了哦');
+                return  0;
             }
             //查询订单是否存在
             $orderinfo = $this -> find($order_no);
@@ -60,14 +60,13 @@ class Order extends BaseModel
             $result = (new OrderDetail)::save($deleiedata);
             if($result){
                 return 1;
+            }else{
+                return 2;
             }
         } catch (\PDOException $e) {
             self::rollbackTrans();
             return '生成订单时SQL执行错误错误原因：' . $e->getMessage();
         }
     }
-    public function cacheKeyCreateOrder1($uid, $key,$addressId, $payType,  $useIntegral = false,
-                                         $couponId = 0, $mark = '', $combinationId = 0, $pinkId = 0, $seckill_id = 0,
-                                         $bargain_id = 0, $test = false, $isChannel = 0, $shipping_type = 1, $real_name = '', $phone = '', $storeId = 0)
-    {}
+
 }

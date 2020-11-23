@@ -19,7 +19,9 @@ class Product extends BaseController{
         $type = $request->post('type');
 //        $cid = $request->post('cid') ?? 0;
         $where = "status=1";
-        $page = "";
+        $orderby = "createtime desc";
+        $page = $request->post('page') ?? 0;
+        $limit = 20;
         $cate = [];
         $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, cate_name');
         switch ($type){
@@ -42,6 +44,7 @@ class Product extends BaseController{
                 break;
         }
         $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,is_rush';
+//        $list = (new PModel)::productlist($where,$productsfild,$orderby,$page,$limit);
         $list = (new PModel)::with('shops')->where($where)
             -> field($productsfild)
             -> order('createtime desc')

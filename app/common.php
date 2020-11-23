@@ -15,6 +15,8 @@ use think\facade\Lang;
 use think\facade\Event;
 use think\facade\Config;
 use think\facade\Db;
+require ('function.php');
+
 
 if (!function_exists('apiBack')) {
     function apiBack ($status,$msg, $code, $data = null)
