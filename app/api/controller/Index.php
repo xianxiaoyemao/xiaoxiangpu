@@ -36,7 +36,6 @@ class Index extends BaseController
         $orderby = "createtime desc";
         //秒杀商品
         $skiimiao = (new Product)::productlist(['status'=>1,'is_rush'=>1],$productsfild,$orderby,0,3);
-
         //0元购
         $buyBy0 = (new Product)::productlist(['status'=>1,'buy0'=>1],$productsfild,$orderby,0,3);
         //店长推荐chanpin

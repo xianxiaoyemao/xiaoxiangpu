@@ -304,6 +304,7 @@ class Cartitem extends BaseController{
         $pay_pwd = $request -> post("pay_pwd/s", ''); // 支付密码
 
         $action = $request -> post("action"); // 立即购买
+        $cartids = $request -> post("cartid");
 
 
 
