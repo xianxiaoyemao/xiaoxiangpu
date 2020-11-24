@@ -33,3 +33,6 @@ Route::post('cartitem/cartdel', 'cartitem/cartdel');
 
 //订单管理
 Route::post('order/createorder', 'order/createorder');
+
+//我的
+Route::post('personal/index', 'personal/index');
