@@ -12,10 +12,10 @@ class PlaceOrder extends Common {
 //        $this->order = new Order();
 //    }
 
-    public function addNormalOrder($cartList,$areaid,$remark=''){
+    public function addNormalOrder($cartList,$areaid,$totle_price,$remark=''){
 //        $this->check($cartList['product']['shop_id']);
         $this->queueInc();
-        $this->addOrder($cartList['user_id'],$areaid,$remark);//$uid,$shop_id,$addressid,$remark
+        $this->addOrder($cartList['user_id'],$areaid,$totle_price,$remark);//$uid,$shop_id,$addressid,$remark
         $this->addOrderGoods();
 //        $this->addShopOrder();
 //        $this->addOrderBespeak();
@@ -45,12 +45,12 @@ class PlaceOrder extends Common {
      * 插入订单表
      * @throws TpshopException
      */
-    private function addOrder($userid,$areaid,$remark){
+    private function addOrder($userid,$areaid,$totle_price,$remark){
         $orderData = [
             'order_sn' => $this ->get_order_sn(), // 订单编号
             'user_id' => $userid, // 用户id
             'addressid' => $areaid,
-            'goods_price' => 0,
+            'goods_price' => $totle_price,
             'shipping_price' => 0,
             'payment_price'=>0,
             'status' => 1,
