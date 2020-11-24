@@ -71,10 +71,10 @@ class CartLogic{
      * 获取用户的购物车列表
      * @return false|\PDOStatement|string|\think\Collection
      */
-    public function getCartList($selected = 0){
+    public function getCartList($cartid){
         $cartWhere = "user_id = $this->user_id";
-        if ($selected != 0) {
-            $cartWhere .= " and selected=1";
+        if ($cartid) {
+            $cartWhere .= " and id in($cartid)";
         }
         if($this-> cartc_id == 0){
             $cartlist = (new Cart)  -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
@@ -113,7 +113,7 @@ class CartLogic{
      * @return int|string
      */
     public function getUserCartOrderCount(){
-        $count = (new Cart()) ->where(['user_id' => $this->user_id, 'selected' => 1])->count();
+        $count = (new Cart()) ->where(['user_id' => $this->user_id])->count();
         return $count;
     }
 

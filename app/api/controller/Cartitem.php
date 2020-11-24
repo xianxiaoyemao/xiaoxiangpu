@@ -201,6 +201,22 @@ class Cartitem extends BaseController{
         }
     }
 
+    //选中状态
+    public function cartselect(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $uid = $request -> post('uid/d');
+        $cartid = $request -> post('id/d');
+        $selected = $request -> post('selected/d');
+        if($selected == 1){
+            $result1 = (new Cart())::where(['id'=>$cartid,'user_id'=>$uid]) -> update(['selected' => 1]);
+        }else{
+            $result = (new Cart())::where(['id'=>$cartid,'user_id'=>$uid]) -> update(['selected' => 1]);
+        }
+        if($result1){
+            return apiBack('success', '选中成功', '10000');
+        }
+    }
+
 
     /**
      * 购物车第二步确定页面
@@ -208,6 +224,7 @@ class Cartitem extends BaseController{
     public function cart2(Request $request){ //cartconfirm
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request -> post('uid');
+        $cartid = $request -> post('cartid');
         $action = $request -> post('action'); // 行为
         $pid = $request -> post('pid/d');// 商品id
         $skuid = $request -> post('skuid/d');//商品规格id
@@ -238,7 +255,7 @@ class Cartitem extends BaseController{
             if ($cartLogic->getUserCartOrderCount() == 0){
                 return apiBack('fail', '你的购物车没有选中商品', '10004');
             }
-            $cartList['cartList'] = $cartLogic->getCartList(1); // 获取用户选中的购物车商品
+            $cartList['cartList'] = $cartLogic->getCartList($cartid); // 获取用户选中的购物车商品
 //            $cartList['cartList'] = $cartLogic->getCombination($cartList['cartList']);  //找出搭配购副商品
             $cartGoodsTotalNum = count($cartList['cartList']);
         }
@@ -249,6 +266,8 @@ class Cartitem extends BaseController{
 //        $userCouponList = $couponLogic->getUserAbleCouponList($uid, $cartGoodsId, $cartGoodsCatId);//用户可用的优惠券列表
         $cartList = array_merge($cartList,$cartPriceInfo);
         $cartList['cartnum'] = $cartGoodsTotalNum;
+        $cartList['couponsnum'] = 0; //优惠卷
+        $cartList['integral'] = 0; //积分
         return apiBack('success', '获取成功', '10000',$cartList);
     }
 
@@ -258,9 +277,9 @@ class Cartitem extends BaseController{
     public function cartsubmit(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request -> post('uid');
-        $addressid = $request -> post("address_id/d"); //  收货地址id
+        $addressid = $request -> post("addressid/d"); //  收货地址id
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
-        $dining = $request -> post("address_id/d",0);//用餐方式 1自提 0
+        $dining = $request -> post("dining/d",0);//用餐方式 1自提 0
 
         $goods_id = $request -> post("pid/d"); // 商品id
         $item_id = $request -> post("skuid/d"); // 商品规格id
@@ -313,6 +332,7 @@ class Cartitem extends BaseController{
                 $pay->payGoodsList($cartList);
             } else {
                 $userCartList = $cartLogic->getCartList(1);
+                dump($userCartList);die;
                 $cartLogic->checkStockCartList($userCartList);
                 $pay->payCart($userCartList);
             }
@@ -484,6 +504,8 @@ class Cartitem extends BaseController{
         View::assign('address_list', $address_list);
         return View::fetch('ajax_address');
     }
+
+
 
 
     /**
