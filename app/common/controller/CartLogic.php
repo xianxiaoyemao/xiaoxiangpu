@@ -29,49 +29,25 @@ use app\common\util\TpshopException;
  * Class CatsLogic
  * @package Home\Logic
  */
-class CartLogic{
-    protected $goods;//商品模型
-    protected $specGoodsPrice;//商品规格模型
-    protected $goodsBuyNum;//购买的商品数量
+class CartLogic extends Common {
+
     protected $session_id;//session_id
     protected $user_id = 0;//user_id
     protected $cartc_id = 0;//user_id
     protected $userGoodsTypeCount = 0;//用户购物车的全部商品种类
     protected $userCouponNumArr; //用户符合购物车店铺可用优惠券数量
     protected $combination;
-    protected $specvalue;
 
-    /**
-     * 设置用户ID
-     * @param $user_id
-     */
-    public function setUserId($user_id){
-        $this->user_id = $user_id;
-    }
 
-    //设置购物分类
-    public function setCartcartory($cartc_id){
-        $this-> cartc_id = $cartc_id;
-    }
 
-    /**
-     * 设置购买的商品数量
-     * @param $goodsBuyNum
-     */
-    public function setGoodsBuyNum($goodsBuyNum){
-        $this->goodsBuyNum = $goodsBuyNum;
-    }
-    //设置属性规格值
-    public function setSpecvalue($specvalue){
-        $this->specvalue = $specvalue;
-    }
+
 
     /**
      * @param int $selected |是否被用户勾选中的 0 为全部 1为选中  一般没有查询不选中的商品情况
      * 获取用户的购物车列表
      * @return false|\PDOStatement|string|\think\Collection
      */
-    public function getCartList($cartid){
+    public function getCartList($cartid = ''){
         $cartWhere = "user_id = $this->user_id";
         if ($cartid) {
             $cartWhere .= " and id in($cartid)";
@@ -107,37 +83,7 @@ class CartLogic{
     }
 
 
-    /**
-     *  modify ：cart_count
-     *  获取用户购物车欲购买的商品有多少种
-     * @return int|string
-     */
-    public function getUserCartOrderCount(){
-        $count = (new Cart()) ->where(['user_id' => $this->user_id])->count();
-        return $count;
-    }
 
-    /**
-     * 包含一个商品模型
-     * @param $goods_id
-     */
-    public function setGoodsModel($goods_id){
-        if ($goods_id > 0) {
-            //加了判断，上架才能买
-            $this->goods = (new Product)::where(['id'=>$goods_id,'status'=>1])->find();
-        }
-    }
-    /**
-     * 通过item_id包含一个商品规格模型
-     * @param $item_id
-     */
-    public function setProductSku($item_id){
-        if ($item_id > 0) {
-            $this->specGoodsPrice = (new ProductSku())::where('id',$item_id)->find();
-        }else{
-            $this->specGoodsPrice = null;
-        }
-    }
 
     /**
      * 加入购物车入口
@@ -505,27 +451,34 @@ class CartLogic{
      */
     public function buyNow(){
         if (empty($this->goods)) {
-            throw new TpshopException('立即购买', 0, ['status' => 0, 'msg' => '购买商品不存在', 'result' => '']);
+            throw new TpshopException('立即购买', 0, '购买商品不存在');
         }
         if (empty($this->goodsBuyNum)) {
-            throw new TpshopException('立即购买', 0, ['status' => 0, 'msg' => '购买商品数量不能为0', 'result' => '']);
+            throw new TpshopException('立即购买', 0, '购买商品数量不能为0');
         }
         $buyGoods = [
             'user_id' => $this->user_id,
             'product_id' => $this->goods['id'],
             'sku_id' => $this->specGoodsPrice['id'],
+//            'speckey' => $this->specvalue,
             'specvalue' => $this->specvalue,
             'price' => $this->specGoodsPrice['price'],
             'quantity' => $this->goodsBuyNum, // 购买数量
             'createtime' => time(), // 加入购物车时间
             'is_rush' => $this->goods['is_rush'],   // 0 普通订单,1 限时抢购, 2 团购 , 3 促销优惠
+            'shop_id' => $this->goods['shop_id'],//店铺ID
+            'shoptitle' => (new Shops())::where('id',$this->goods['shop_id']) -> value('title'),//店铺ID
 //            'prom_id' => 0,   // 活动id
             'product' => $this->goods,
+            'skus' => $this->specGoodsPrice
         ];
+//        if($this->goods['is_rush'] == 1){
+//
+//        }
 //        dump($buyGoods);die;
         $store_count = $this->specGoodsPrice['stock'];
         if ($this->goodsBuyNum > $store_count) {
-            throw new TpshopException('立即购买', 0, ['status' => 0, 'msg' => '商品库存不足，剩余' . $store_count, 'result' => '']);
+            throw new TpshopException('立即购买', 0, '商品库存不足，剩余' . $store_count);
         }
 
 //        $cart = new Cart();
@@ -977,23 +930,10 @@ class CartLogic{
      * @param $cartList
      * @throws TpshopException
      */
-    public function checkStockCartList($cartList)
-    {
+    public function checkStockCartList($cartList){
         foreach ($cartList as $cartKey => $cartVal) {
-            if ($cartVal->goods_num > $cartVal->limit_num) {
-                throw new TpshopException('计算订单价格', 0, ['status' => 0, 'msg' => $cartVal->goods_name . '购买数量不能大于' . $cartVal->limit_num, 'result' => ['limit_num' => $cartVal->limit_num]]);
-            }
-            if ($cartVal['prom_type'] == 7) {
-                $combination_goods_where = ['combination_id' => $cartVal['prom_id'], 'goods_id' => $cartVal['goods_id']];
-                if ($cartVal['spec_key'] != '') {
-                    $spec_goods_price = Db::name('spec_goods_price')->where(['goods_id' => $cartVal['goods_id'], 'key' => $cartVal['spec_key']])->find();
-                    $combination_goods_where['item_id'] = $spec_goods_price['item_id'];
-                }
-                $combination = Combination::find($cartVal['prom_id']);
-                $combination_goods = CombinationGoods::where($combination_goods_where)->find();
-                if (empty($combination_goods) || ($combination_goods['price'] != $cartVal['member_goods_price'])) {
-                    throw new TpshopException('计算订单价格', 0, ['status' => 0, 'msg' => '搭配购' . $combination['title'] . '已变更，请重新加入']);
-                }
+            if ($cartVal['quantity'] > $cartVal['skus']['stock']) {
+                throw new TpshopException('', 0, $cartVal['quantity']. '购买数量不能大于' .$cartVal['skus']['stock']);
             }
         }
     }
@@ -1002,9 +942,11 @@ class CartLogic{
      * 清除用户购物车选中
      * @throws \think\Exception
      */
-    public function clear()
-    {
-        Db::name('cart')->where(['user_id' => $this->user_id, 'selected' => 1])->delete();
+    public function clear($cartid = ''){
+        if($cartid){
+            $where = "user_id = $this->user_id and id in($cartid)";
+        }
+        (new Cart())->where($where)->delete();
     }
 
     /**

@@ -4,8 +4,7 @@
 namespace app\common\model;
 
 
-class Order extends BaseModel
-{
+class Order extends BaseModel{
     /**
      * 生成订单
      * @param $uid
