@@ -26,34 +26,7 @@ class Cartitem extends BaseController{
         $cartlist1 -> setUserId($uid);
         $cartlist1 -> setCartcartory($category_id);
         $cartlist = $cartlist1->getCartList();//用户购物车
-        $arr =[];
-        foreach ($cartlist as $key => $val){
-            $arr[$key]['id'] = $val['id'];
-            $arr[$key]['shoptitle'] = $val['shoptitle'];
-            $arr[$key]['quantity'] = $val['quantity'];
-            $arr[$key]['skuprice'] = $val['price'];
-            $arr[$key]['product_id'] = $val['product_id'];
-            $arr[$key]['sku_id'] = $val['sku_id'];
-            $arr[$key]['specvalue'] = $val['specvalue'];
-            $arr[$key]['name'] = $val['product']['name'];
-            $arr[$key]['category_id'] = $val['product']['category_id'];
-            $arr[$key]['images'] = $val['product']['images'];
-            $arr[$key]['price'] = $val['product']['price'];
-            $arr[$key]['discount_price'] = $val['product']['discount_price'];
-            $arr[$key]['sales'] = $val['product']['sales'];
-            $arr[$key]['is_rush'] = $val['is_rush'];
-            if($val['is_rush'] == 1){
-                $arr[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-            }
-            $arr[$key]['product_spec_info'] = $val['product_spec_info'];
-            $arr[$key]['title'] = $val['skus']['title'];
-            if($val['skus']['stock'] == 0){
-                $arr[$key]['isstock'] = '已售完';//已售完
-            }else{
-                $arr[$key]['isstock'] = '在售中';
-            }
-        }
-        return apiBack('success', '获取成功', '10000',$arr);
+        return apiBack('success', '获取成功', '10000',$cartlist);
     }
 
     //添加商品到购物车
@@ -251,7 +224,6 @@ class Cartitem extends BaseController{
         $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cartList']);  //初始化数据。商品总额/节约金额/商品总共数量
 //        $userCouponList = $couponLogic->getUserAbleCouponList($uid, $cartGoodsId, $cartGoodsCatId);//用户可用的优惠券列表
         $cartList = array_merge($cartList,$cartPriceInfo);
-        $cartList['cartnum'] = $cartGoodsTotalNum;
         $cartList['couponsnum'] = 0; //优惠卷
         $cartList['integral'] = 0; //积分
         return apiBack('success', '获取成功', '10000',$cartList);
@@ -267,11 +239,14 @@ class Cartitem extends BaseController{
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
         $dining = $request -> post("dining/d",0);//用餐方式 1自提 0
 
+        $action = $request -> post("action"); // 立即购买
+        $cartid = $request -> post("cartid");
+
         $goods_id = $request -> post("pid/d"); // 商品id
         $skuid = $request -> post("skuid/d"); // 商品规格id
         $goods_num = $request -> post("quantity/d");// 商品数量
 
-        $price = $request -> post("price");//商品价格
+        $totle_price = floatval($request -> post("totle_price"));//商品总价
 
         $shop_id = $request -> post('shop_id/d');//自提点id
         $take_time = $request -> post('take_time/d');//自提时间
@@ -282,16 +257,13 @@ class Cartitem extends BaseController{
         $pay_points = $request -> post("pay_points/d", 0); //  使用积分
 
         $remark = $request -> post("remark/s", ''); // 备注
-        $totle_price = $price * $goods_num;//商品总价
+//        $totle_price = $price * $goods_num;//商品总价
 
         $invoice_title = $request -> post('invoice_title');  // 发票
         $taxpayer = $request -> post('taxpayer');       // 纳税人识别号
         $invoice_desc = $request -> post('invoice_desc');       // 发票内容
         $user_money = $request -> post("user_money/f", 0); //  使用余额
         $pay_pwd = $request -> post("pay_pwd/s", ''); // 支付密码
-
-        $action = $request -> post("action"); // 立即购买
-        $cartid = $request -> post("cartid");
 
 
 
@@ -309,7 +281,7 @@ class Cartitem extends BaseController{
                 $cartLogic->setGoodsBuyNum($goods_num);
                 $buyGoods = $cartLogic->buyNow();
                 $cartList = $buyGoods;
-                $result = $placeOrder->addNormalOrder($cartList,$addressid,$remark);
+                $result = $placeOrder->addNormalOrder($cartList,$addressid,$totle_price,$remark);
 
 //                $pay->payGoodsList($cartList);
             } else {

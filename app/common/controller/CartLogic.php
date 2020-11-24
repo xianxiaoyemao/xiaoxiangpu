@@ -58,13 +58,40 @@ class CartLogic extends Common {
             $haswhere['category_id'] = $this-> cartc_id;
             $cartlist = (new Cart) -> hasWhere('product', $haswhere) -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
         }
-        foreach ($cartlist as $key => $val){
-            //获取店铺信息
-            $cartlist[$key]['shoptitle'] = (new Shops())::where('id',$val['product']['shop_id']) -> value('title');
-            $cartlist[$key]['product_spec_info'] = json_decode($val['product']['product_spec_info'],1);
-        }
         $cartCheckAfterList = $this->checkCartList($cartlist);// 获取购物车商品
-        return $cartCheckAfterList;
+//        dump($cartCheckAfterList);die;
+        $arr = [];
+        foreach ($cartCheckAfterList as $key => $val){
+            //获取店铺信息
+            $arr[$key]['id'] = $val['id'];
+            $arr[$key]['shop_id'] = $val['product']['shop_id'];
+            $arr[$key]['bar_code'] = $val['product']['bar_code'];
+            $arr[$key]['shoptitle'] = (new Shops())::where('id', $val['product']['shop_id']) -> value('title');
+            $arr[$key]['quantity'] = $val['quantity'];
+            $arr[$key]['price'] = $val['price'];
+            $arr[$key]['product_id'] = $val['product_id'];
+            $arr[$key]['sku_id'] = $val['sku_id'];
+            $arr[$key]['specvalue'] = $val['specvalue'];
+            $arr[$key]['name'] = $val['product']['name'];
+            $arr[$key]['category_id'] = $val['product']['category_id'];
+            $arr[$key]['images'] = $val['product']['images'];
+//            $arr[$key]['price'] = $val['product']['price'];
+            $arr[$key]['discount_price'] = $val['price'] * ($val['product']['discount_price']/100);
+            $arr[$key]['sales'] = $val['product']['sales'];
+            $arr[$key]['is_rush'] = $val['is_rush'];
+            if($val['is_rush'] == 1){
+                $arr[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+            }
+            $arr[$key]['speckey'] = json_decode($val['product']['product_spec_info'],1)['name'];
+            $arr[$key]['title'] = $val['skus']['title'];
+            if($val['skus']['stock'] == 0){
+                $arr[$key]['isstock'] = '已售完';//已售完
+            }else{
+                $arr[$key]['isstock'] = '在售中';
+            }
+        }
+
+        return $arr;
     }
     /**
      * 过滤掉无效的购物车商品
