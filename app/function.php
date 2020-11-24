@@ -38,10 +38,6 @@ function array_allow_keys($array, $keys)
     return $newArr;
 }
 
-function encrypt($str){
-	return md5(config("AUTH_CODE").$str);
-}
-
 /**
  * 获取数组中的某一列
  * @param array $arr 数组
