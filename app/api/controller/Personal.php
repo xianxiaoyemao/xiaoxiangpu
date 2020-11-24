@@ -55,7 +55,8 @@ class Personal extends BaseController
         $score = $request->post('score');
         $uid = $request->post('uid');
         $user = User::where('id', $uid)->find();
-        $user->money += intval($score / $this->convert);
+        if ($user->score < $this->convert) return apiBack('fail', '积分不够，快去签到下单赚积分吧', '10004');
+        $user->money += intval($user->score / $this->convert);
         $user->score = $score % $this->convert;
         $user->save();
         return apiBack('success', '兑换成功', '10000');
