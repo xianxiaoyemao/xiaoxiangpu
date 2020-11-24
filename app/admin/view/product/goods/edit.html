@@ -141,15 +141,9 @@
         </div>
     </div>
     <div class="form-group">
-        <label class="control-label col-xs-12 col-sm-2">新品:</label>
+        <label class="control-label col-xs-12 col-sm-2">抢购商品:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[is_rush]', ['1'=>'是', '2'=>'不是'], $row.is_rush)}
-        </div>
-    </div>
-    <div class="form-group">
-        <label  class="control-label col-xs-12 col-sm-2">拼团人数:</label>
-        <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[spell_group]', ['1'=>'1人','2'=>'2人', '3'=>'3人', '4'=>'4人'], $row.spell_group)}
+            {:build_radios('row[is_rush]', ['0'=>'默认', '1'=>'限时抢购', '2'=>'团购', '3'=>'优惠促销','4'=>'预售','5'=>'虚拟','8'=>'砍价'], $row.is_rush)}
         </div>
     </div>
     <div class="form-group">

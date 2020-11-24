@@ -11,17 +11,23 @@ class Order extends BaseController
 {
     //创建订单
     public function createorder(Request $request){
-
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request->post('uid');
         $type = $request->post('type');
 //        $cartid = $request->post('cartids');
-        $pid = $request->post('pids');
-        $skuid = $request->post('skuid');
-        $price = $request->post('price');
+        $pid = $request->post('pids') ;
+        $price = $request->post('skuprice');
         $skuid = $request->post('skuid');
         $quantity = $request->post('quantity');
         $addressid = $request->post('addressid');
+        $specvalue = $request->post('specvalue');
+        if($pid == ''){
+            return apiBack('fail', '请选择商品id', '10004');
+        }
+        if($addressid == ''){
+           $addressone = (new Address)::where(['user_id'=>$uid,'is_defult'=>1])-> find();
+           $addressid = $addressone -> id;
+        }
         switch ($type){
             case 'cart':
                 //查询店铺id
@@ -33,15 +39,20 @@ class Order extends BaseController
                 break;
             case 'ljgm':
                 $order_no = $this -> createOrderNm();
-                $res = (new OrderModel) -> cacheKeyCreateOrder($uid,$order_no,$addressid,$pid,$skuid,$price,$quantity);
+                $res = (new OrderModel) -> cacheKeyCreateOrder($uid,$order_no,$addressid,$pid,$skuid,$price,$specvalue,$quantity);
+                switch ($res){
+                    case 0:
+                        return apiBack('fail', '库存不足', '10004');
+                        break;
+                    case 1:
+                        return apiBack('success', '添加订单成功', '10000',['order_no'=>$order_no]);
+                        break;
+                    case 2:
+                        return apiBack('fail', '添加订单失败', '10004');
+                        break;
+                }
                 break;
         }
-
-        dump($cartlist);die;
-
-
-
-//        $res = (new OrderModel) -> save($param);
     }
 
 

@@ -19,7 +19,9 @@ class Product extends BaseController{
         $type = $request->post('type');
 //        $cid = $request->post('cid') ?? 0;
         $where = "status=1";
-        $page = "";
+        $orderby = "createtime desc";
+        $page = $request->post('page') ?? 0;
+        $limit = 20;
         $cate = [];
         $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, cate_name');
         switch ($type){
@@ -42,15 +44,11 @@ class Product extends BaseController{
                 break;
         }
         $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,is_rush';
+//        $list = (new PModel)::productlist($where,$productsfild,$orderby,$page,$limit);
         $list = (new PModel)::with('shops')->where($where)
             -> field($productsfild)
             -> order('createtime desc')
             -> select()  -> toArray();
-//        foreach ($list as $key => $val){
-//            if($val['is_rush'] == 1){
-//                $list[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-//            }
-//        }
         $data =[
             'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
             'data' => $list,
@@ -78,11 +76,7 @@ class Product extends BaseController{
         if($pdetails['is_rush'] == 1){
             $pdetails['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
         }
-
-//        app() -> llen();
         //:with(['productdetails'=>function($query){$query->field('product_id,images_url,picdesc,introduce');}])
-//        ->where('id',$productid)
-//             -> field('id,name,images,price,discount_price,shop_id,sales,rating,review,product_spec_info,parea')
 //            -> find() ->toArray();
         $skulist = (new ProductSku)::where('product_id',$productid)  -> field('id as skuid,title,price as skuprice,stock') -> select()->toArray();
         foreach ($skulist as $key => $val){
@@ -122,6 +116,7 @@ class Product extends BaseController{
         //https://blog.csdn.net/yanhui_wei/article/details/8585509
 //        https://blog.csdn.net/weixin_30333885/article/details/98378934
 //        https://blog.csdn.net/Gekkoou/article/details/88714674
+//        https://blog.csdn.net/qq_42573785/article/details/105815508
         //点击添加购物车按钮时，传递过来两个参数
         $product_spec_id = isset ( $_GET ['spid'] ) ? intval ( $_GET ['spid'] ) : 0;
         //产品规格id：product_spec_id,对应product_spec_id表中product_spec_id字段的值

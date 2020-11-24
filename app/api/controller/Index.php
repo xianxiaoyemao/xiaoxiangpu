@@ -32,32 +32,17 @@ class Index extends BaseController
         $swiper = Adv::where('title', '首页轮播')->field('advurl')->select()->toArray();
         $swiper = array_column($swiper, 'advurl');
 
-        $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales';
+        $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,product_spec_info';
+        $orderby = "createtime desc";
         //秒杀商品
-        $skiimiao = (new Product)::where(['status'=>1,'is_rush'=>1])
-            -> field($productsfild)
-            -> order('createtime desc')
-            -> limit(0,3)
-            -> select() -> toArray();
+        $skiimiao = (new Product)::productlist(['status'=>1,'is_rush'=>1],$productsfild,$orderby,0,3);
         //0元购
-        $buyBy0 = (new Product)::where(['status'=>1,'buy0'=>1])
-            -> field($productsfild)
-            -> order('createtime desc')
-            -> limit(0,3)
-            -> select() -> toArray();
-
+        $buyBy0 = (new Product)::productlist(['status'=>1,'buy0'=>1],$productsfild,$orderby,0,3);
         //店长推荐chanpin
-        $shopproducts =  (new Product)::where(['status'=>1,'is_recommend'=>1,'category_id'=>2])
-            -> field($productsfild)
-            -> order('createtime desc')
-            -> limit(0,6)
-            -> select() -> toArray();
+        $shopproducts =  (new Product)::productlist(['status'=>1,'is_recommend'=>1,'category_id'=>2],$productsfild,$orderby,0,6);
         //新疆特产
-        $xjtcp =  (new Product)::where(['status'=>1,'category_id'=>3])
-            -> field($productsfild)
-            -> order('createtime desc')
-            -> limit(0,6)
-            -> select() -> toArray();
+        $xjtcp =  (new Product)::productlist(['status'=>1,'category_id'=>3],$productsfild,$orderby,0,6);
+
         $roll = ['xxx用户购买两份椒麻鸡', '王小二购买新疆特产一份', '张三购买椒麻鸡套餐两份', '李四购买椒麻鸡两份'];
         $data = [
             'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()] ,

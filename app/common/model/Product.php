@@ -42,6 +42,22 @@ class Product extends BaseModel
     public function cartitem(){
         return $this -> hasMany(Cart::class);
     }
+
+
+    public function productlist($where,$field,$orderby,$start,$end){
+      $retust =  Product::where($where)
+//          ::with(['skus'=>function($query){
+//          $query -> field('id,title,price,product_id')  -> select() -> toArray()[0];
+//      }])
+          -> field($field)
+          -> order($orderby)
+          -> limit($start,$end)
+          -> select() -> toArray();
+      foreach ($retust as $key => $val){
+          $retust[$key]['product_spec_info'] = json_decode($val['product_spec_info'],1);
+      }
+      return $retust;
+    }
 //    public function productdetails($productid){
 //        $details = $this -> with(['shops'=>function(Query $query){
 //            $query -> field('shop_id,title');
