@@ -52,12 +52,11 @@ class Personal extends BaseController
     public function convert (Request $request)
     {
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $score = $request->post('score');
         $uid = $request->post('uid');
         $user = User::where('id', $uid)->find();
         if ($user->score < $this->convert) return apiBack('fail', '积分不够，快去签到下单赚积分吧', '10004');
         $user->money += intval($user->score / $this->convert);
-        $user->score = $score % $this->convert;
+        $user->score = $user->score % $this->convert;
         $user->save();
         return apiBack('success', '兑换成功', '10000');
     }
