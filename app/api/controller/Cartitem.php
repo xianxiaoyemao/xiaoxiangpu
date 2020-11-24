@@ -250,8 +250,28 @@ class Cartitem extends BaseController{
         $cartGoodsCatId = get_arr_column($cartGoodsList,'category_id');
         $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cartList']);  //初始化数据。商品总额/节约金额/商品总共数量
 //        $userCouponList = $couponLogic->getUserAbleCouponList($uid, $cartGoodsId, $cartGoodsCatId);//用户可用的优惠券列表
-        $cartList = array_merge($cartList,$cartPriceInfo);
-        $cartList['cartnum'] = $cartGoodsTotalNum;
+        $arr = [];
+        foreach ($cartList['cartList'] as $key=> $val){
+            $arr[$key]['cartid'] = $val['id'];
+            $arr[$key]['user_id'] = $val['user_id'];
+            $arr[$key]['pid'] = $val['product_id'];
+            $arr[$key]['skuid'] = $val['sku_id'];
+            $arr[$key]['quantity'] = $val['quantity'];
+            $arr[$key]['price'] = $val['price'];
+            $arr[$key]['total_price'] = $val['price']*(int)$val['quantity'];
+            $arr[$key]['is_rush'] = $val['sku_id'];
+            $arr[$key]['name'] = $val['product']['name'];
+            $arr[$key]['bar_code'] = $val['product']['bar_code'];
+            $arr[$key]['images'] = $val['product']['images'];
+            $arr[$key]['speckey'] = json_decode($val['product']['product_spec_info'],1)['name'];
+            $arr[$key]['specvalue'] = $val['specvalue'];
+            $arr[$key]['shop_id'] = $val['product']['shop_id'];
+            $arr[$key]['shoptitle'] = $val['shoptitle'];
+            $arr[$key]['bar_code'] = $val['product']['bar_code'];
+            $arr[$key]['images'] = $val['product']['images'];
+        }
+        $arr1['cartList'] = $arr;
+        $cartList = array_merge($arr1,$cartPriceInfo);
         $cartList['couponsnum'] = 0; //优惠卷
         $cartList['integral'] = 0; //积分
         return apiBack('success', '获取成功', '10000',$cartList);
@@ -267,11 +287,14 @@ class Cartitem extends BaseController{
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
         $dining = $request -> post("dining/d",0);//用餐方式 1自提 0
 
+        $action = $request -> post("action"); // 立即购买
+        $cartid = $request -> post("cartid");
+
         $goods_id = $request -> post("pid/d"); // 商品id
         $skuid = $request -> post("skuid/d"); // 商品规格id
         $goods_num = $request -> post("quantity/d");// 商品数量
 
-        $price = $request -> post("price");//商品价格
+        $totle_price = floatval($request -> post("totle_price"));//商品总价
 
         $shop_id = $request -> post('shop_id/d');//自提点id
         $take_time = $request -> post('take_time/d');//自提时间
@@ -282,16 +305,13 @@ class Cartitem extends BaseController{
         $pay_points = $request -> post("pay_points/d", 0); //  使用积分
 
         $remark = $request -> post("remark/s", ''); // 备注
-        $totle_price = $price * $goods_num;//商品总价
+//        $totle_price = $price * $goods_num;//商品总价
 
         $invoice_title = $request -> post('invoice_title');  // 发票
         $taxpayer = $request -> post('taxpayer');       // 纳税人识别号
         $invoice_desc = $request -> post('invoice_desc');       // 发票内容
         $user_money = $request -> post("user_money/f", 0); //  使用余额
         $pay_pwd = $request -> post("pay_pwd/s", ''); // 支付密码
-
-        $action = $request -> post("action"); // 立即购买
-        $cartid = $request -> post("cartid");
 
 
 
@@ -309,7 +329,7 @@ class Cartitem extends BaseController{
                 $cartLogic->setGoodsBuyNum($goods_num);
                 $buyGoods = $cartLogic->buyNow();
                 $cartList = $buyGoods;
-                $result = $placeOrder->addNormalOrder($cartList,$addressid,$remark);
+                $result = $placeOrder->addNormalOrder($cartList,$addressid,$totle_price,$remark);
 
 //                $pay->payGoodsList($cartList);
             } else {
