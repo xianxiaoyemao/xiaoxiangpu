@@ -64,8 +64,8 @@ class Wechat extends BaseController
             $uid = $this->userModel-> id;
             $isMobile = false;
         }
-        if (!Cache::get('REQUESTTOKEN_' . $this->userModel -> id)) {
-            Cache::set('REQUESTTOKEN_' . $this->userModel -> id, $token, 9000);
+        if (!Cache::get('REQUESTTOKEN_' . $uid)) {
+            Cache::set('REQUESTTOKEN_' . $uid, $token, 9000);
         }
         $accessToken = encrypt($token, 'XIAOXIANGPU');
 
