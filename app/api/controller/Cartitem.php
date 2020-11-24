@@ -9,6 +9,7 @@
 namespace app\api\controller;
 use app\BaseController;
 use app\common\controller\CartLogic;
+use app\common\controller\PlaceOrder;
 use app\common\controller\Pay;
 use app\common\model\Cart;
 use app\common\model\ProductSku;
@@ -25,7 +26,6 @@ class Cartitem extends BaseController{
         $cartlist1 -> setUserId($uid);
         $cartlist1 -> setCartcartory($category_id);
         $cartlist = $cartlist1->getCartList();//用户购物车
-//        dump($cartlist);die;
         $arr =[];
         foreach ($cartlist as $key => $val){
             $arr[$key]['id'] = $val['id'];
@@ -201,21 +201,7 @@ class Cartitem extends BaseController{
         }
     }
 
-    //选中状态
-    public function cartselect(Request $request){
-        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $uid = $request -> post('uid/d');
-        $cartid = $request -> post('id/d');
-        $selected = $request -> post('selected/d');
-        if($selected == 1){
-            $result1 = (new Cart())::where(['id'=>$cartid,'user_id'=>$uid]) -> update(['selected' => 1]);
-        }else{
-            $result = (new Cart())::where(['id'=>$cartid,'user_id'=>$uid]) -> update(['selected' => 1]);
-        }
-        if($result1){
-            return apiBack('success', '选中成功', '10000');
-        }
-    }
+
 
 
     /**
@@ -223,7 +209,7 @@ class Cartitem extends BaseController{
      */
     public function cart2(Request $request){ //cartconfirm
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $uid = $request -> post('uid');
+        $uid = $request -> post('uid/d');
         $cartid = $request -> post('cartid');
         $action = $request -> post('action'); // 行为
         $pid = $request -> post('pid/d');// 商品id
@@ -235,10 +221,10 @@ class Cartitem extends BaseController{
 //        $couponLogic = new CouponLogic();
         //立即购买
         if($action == 'buy_now'){
-            $cartLogic->setGoodsModel($pid);
-            $cartLogic->setSpecvalue($specvalue);
-            $cartLogic->setProductSku($skuid);
-            $cartLogic->setGoodsBuyNum($quantity);
+            $cartLogic->setGoodsModel($pid)
+                -> setSpecvalue($specvalue)
+                ->setProductSku($skuid)
+                ->setGoodsBuyNum($quantity);
             $buyGoods = [];
             try{
                 $buyGoods = $cartLogic->buyNow();
@@ -252,7 +238,7 @@ class Cartitem extends BaseController{
 //            $setRedirectUrl = new UsersLogic();
 //            $setRedirectUrl->orderPageRedirectUrl($_SERVER['REQUEST_URI'],'',$goods_id,$goods_num,$item_id ,$action);
         }else{
-            if ($cartLogic->getUserCartOrderCount() == 0){
+            if(empty($cartid)){
                 return apiBack('fail', '你的购物车没有选中商品', '10004');
             }
             $cartList['cartList'] = $cartLogic->getCartList($cartid); // 获取用户选中的购物车商品
@@ -276,14 +262,15 @@ class Cartitem extends BaseController{
      */
     public function cartsubmit(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $uid = $request -> post('uid');
+        $uid = $request -> post('uid/d');
         $addressid = $request -> post("addressid/d"); //  收货地址id
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
         $dining = $request -> post("dining/d",0);//用餐方式 1自提 0
 
         $goods_id = $request -> post("pid/d"); // 商品id
-        $item_id = $request -> post("skuid/d"); // 商品规格id
+        $skuid = $request -> post("skuid/d"); // 商品规格id
         $goods_num = $request -> post("quantity/d");// 商品数量
+
         $price = $request -> post("price");//商品价格
 
         $shop_id = $request -> post('shop_id/d');//自提点id
@@ -304,55 +291,59 @@ class Cartitem extends BaseController{
         $pay_pwd = $request -> post("pay_pwd/s", ''); // 支付密码
 
         $action = $request -> post("action"); // 立即购买
-        $cartids = $request -> post("cartid");
+        $cartid = $request -> post("cartid");
 
 
 
-
-
-
-
-
-        $data = $request -> post('request.');
-        $bespeakForm = $request -> post('bespeak_form/a');
-        $from_terminal = $request -> post("from_terminal/s"); // 下单的终端设备 /H5或微信浏览器端
-
+//        $data = $request -> post('request.');
+//        $bespeakForm = $request -> post('bespeak_form/a');
+//        $from_terminal = $request -> post("from_terminal/s"); // 下单的终端设备 /H5或微信浏览器端
 //        $address = Db::name('user_address')->where("address_id", $address_id)->find();
         $cartLogic = new CartLogic();
-        $pay = new Pay();
-        $pay -> setUserId($uid);
+        $placeOrder = new PlaceOrder();
         try {
             $cartLogic->setUserId($uid);
             if ($action == 'buy_now') {
                 $cartLogic->setGoodsModel($goods_id);
-                $cartLogic->setProductSku($item_id);
+                $cartLogic->setProductSku($skuid);
                 $cartLogic->setGoodsBuyNum($goods_num);
                 $buyGoods = $cartLogic->buyNow();
-                $cartList[0] = $buyGoods;
-                dump($cartList);die;
-                $pay->payGoodsList($cartList);
+                $cartList = $buyGoods;
+                $result = $placeOrder->addNormalOrder($cartList,$addressid,$remark);
+
+//                $pay->payGoodsList($cartList);
             } else {
-                $userCartList = $cartLogic->getCartList(1);
-                dump($userCartList);die;
+                $userCartList = $cartLogic->getCartList($cartid);
                 $cartLogic->checkStockCartList($userCartList);
-                $pay->payCart($userCartList);
+
+//                $pay->payCart($userCartList);//判断购物车
             }
-            $pay->setUserId($uid)->setShopById($shop_id) ->useUserMoney($user_money);
+//            $pay->setUserId($uid) -> setShopById($shop_id) -> setAddressid($addressid) -> setremark($remark) -> setGoodsModel($goods_id);
+
+
+            dump($result);die;
+//            $placeOrder -> setUserId($uid) -> setShopById($shop_id);
+//            $placeOrder -> setShopById($shop_id);
+//            $placeOrder -> addNormalOrder();
+//            dump($placeOrder);die;
+//            dump(1);die;
+
                 //->usePayPoints($pay_points,false,'mobile');
             // 提交订单
             if ($_REQUEST['act'] == 'submit_order') {
-                $placeOrder = new PlaceOrder($pay);
+
+
                 $placeOrder->setMobile($mobile)->setUserAddress($address)->setConsignee($consignee)->setInvoiceTitle($invoice_title)
                     ->setUserNote($user_note)->setTaxpayer($taxpayer)->setInvoiceDesc($invoice_desc)->setPayPsw($pay_pwd)->setTakeTime($take_time)
                     ->setBespeakForm($bespeakForm)->setFromTerminal($from_terminal)->addNormalOrder();
-                $cartLogic->clear();
+                $cartLogic->clear($cartid);
                 $order = $placeOrder->getOrder();
                 $this->ajaxReturn(['status' => 1, 'msg' => '提交订单成功', 'result' => $order['order_sn']]);
             }
             return apiBack('success', '计算成功', '10000',$pay->toArray());
         } catch (TpshopException $t) {
             $error = $t->getErrorArr();
-            $this->ajaxReturn($error);
+            return apiBack('fail', $error, '10000');
         }
     }
     /*
@@ -530,6 +521,26 @@ class Cartitem extends BaseController{
         $result = (new CartLogic())->changeNum($cartid,$quantity);
         if($result){
             return apiBack('success', '更新数量成功', '10000');
+        }
+    }
+
+
+
+
+
+    //选中状态
+    public function cartselect(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $uid = $request -> post('uid/d');
+        $cartid = $request -> post('id/d');
+        $selected = $request -> post('selected/d');
+        if($selected == 1){
+            $result1 = (new Cart())::where(['id'=>$cartid,'user_id'=>$uid]) -> update(['selected' => 1]);
+        }else{
+            $result = (new Cart())::where(['id'=>$cartid,'user_id'=>$uid]) -> update(['selected' => 1]);
+        }
+        if($result1){
+            return apiBack('success', '选中成功', '10000');
         }
     }
 
