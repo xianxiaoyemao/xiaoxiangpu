@@ -38,3 +38,4 @@ Route::post('order/createorder', 'order/createorder');
 
 //我的
 Route::post('personal/index', 'personal/index');
+Route::post('personal/convert', 'personal/convert');
