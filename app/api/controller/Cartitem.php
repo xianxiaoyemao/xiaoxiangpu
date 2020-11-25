@@ -25,7 +25,12 @@ class Cartitem extends BaseController{
         $cartlist1 -> setUserId($uid);
         $cartlist1 -> setCartcartory($category_id);
         $cartlist = $cartlist1->getCartList();//用户购物车
-        return apiBack('success', '获取成功', '10000',$cartlist);
+        $cartPriceInfo = $cartlist1->getCartPriceInfo($cartlist);  //初始化数据。商品总额/节约金额/商品总共数量
+        $data = [
+            'total' => $cartPriceInfo['goods_num'],
+            'data' => $cartlist
+        ];
+        return apiBack('success', '获取成功', '10000',$data);
     }
 
     //添加商品到购物车
@@ -237,10 +242,7 @@ class Cartitem extends BaseController{
         $addressid = $request -> post("addressid/d"); //  收货地址id
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
         $dining = $request -> post("dining/d",0);//用餐方式 1自提 0
-
-        $action = $request -> post("action"); // 立即购买
         $cartid = $request -> post("cartid");
-
         $goods_id = $request -> post("pid/d"); // 商品id
         $skuid = $request -> post("skuid/d"); // 商品规格id
         $goods_num = $request -> post("quantity/d");// 商品数量
@@ -478,6 +480,7 @@ class Cartitem extends BaseController{
             return apiBack('success', '更新数量成功', '10000');
         }
     }
+
 
 
 
