@@ -9,7 +9,6 @@
 namespace app\api\controller;
 use app\BaseController;
 use app\common\controller\CartLogic;
-use app\common\controller\PlaceOrder;
 use app\common\controller\Pay;
 use app\common\model\Cart;
 use app\common\model\ProductSku;
@@ -194,18 +193,21 @@ class Cartitem extends BaseController{
 //        $couponLogic = new CouponLogic();
         //立即购买
         if($action == 'buy_now'){
+            if(!$pid)return apiBack('fail', '请选择商品', '10004');
+            if(!$specvalue)return apiBack('fail', '请选择规格属性', '10004');
+            if(!$skuid)return apiBack('fail', '请选择规格Id', '10004');
             $cartLogic->setGoodsModel($pid)
                 -> setSpecvalue($specvalue)
                 ->setProductSku($skuid)
                 ->setGoodsBuyNum($quantity);
-            $buyGoods = [];
+//            $buyGoods = [];
             try{
                 $buyGoods = $cartLogic->buyNow();
             }catch (TpshopException $t){
                 $error = $t->getErrorArr();
                 return apiBack('fail', $error['msg'], '10004');
             }
-            $cartList['cartList'][0] = $buyGoods;
+            $cartList['cart'][0] = $buyGoods;
             $cartGoodsTotalNum = $quantity;
 //            dump($cartGoodsTotalNum);die;
 //            $setRedirectUrl = new UsersLogic();
@@ -214,14 +216,11 @@ class Cartitem extends BaseController{
             if(empty($cartid)){
                 return apiBack('fail', '你的购物车没有选中商品', '10004');
             }
-            $cartList['cartList'] = $cartLogic->getCartList($cartid); // 获取用户选中的购物车商品
+            $cartList['cart'] = $cartLogic->getCartList($cartid); // 获取用户选中的购物车商品
 //            $cartList['cartList'] = $cartLogic->getCombination($cartList['cartList']);  //找出搭配购副商品
-            $cartGoodsTotalNum = count($cartList['cartList']);
         }
-        $cartGoodsList = get_arr_column($cartList['cartList'],'product');
-        $cartGoodsId = get_arr_column($cartGoodsList,'id');
-        $cartGoodsCatId = get_arr_column($cartGoodsList,'category_id');
-        $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cartList']);  //初始化数据。商品总额/节约金额/商品总共数量
+//        $cartGoodsList = get_arr_column($cartList['cart'],'product');
+        $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cart']);  //初始化数据。商品总额/节约金额/商品总共数量
 //        $userCouponList = $couponLogic->getUserAbleCouponList($uid, $cartGoodsId, $cartGoodsCatId);//用户可用的优惠券列表
         $cartList = array_merge($cartList,$cartPriceInfo);
         $cartList['couponsnum'] = 0; //优惠卷
@@ -259,63 +258,47 @@ class Cartitem extends BaseController{
         $remark = $request -> post("remark/s", ''); // 备注
 //        $totle_price = $price * $goods_num;//商品总价
 
-        $invoice_title = $request -> post('invoice_title');  // 发票
-        $taxpayer = $request -> post('taxpayer');       // 纳税人识别号
-        $invoice_desc = $request -> post('invoice_desc');       // 发票内容
-        $user_money = $request -> post("user_money/f", 0); //  使用余额
-        $pay_pwd = $request -> post("pay_pwd/s", ''); // 支付密码
-
-
-
+//        $invoice_title = $request -> post('invoice_title');  // 发票
+//        $taxpayer = $request -> post('taxpayer');       // 纳税人识别号
+//        $invoice_desc = $request -> post('invoice_desc');       // 发票内容
+//        $user_money = $request -> post("user_money/f", 0); //  使用余额
+//        $pay_pwd = $request -> post("pay_pwd/s", ''); // 支付密码
 //        $data = $request -> post('request.');
 //        $bespeakForm = $request -> post('bespeak_form/a');
 //        $from_terminal = $request -> post("from_terminal/s"); // 下单的终端设备 /H5或微信浏览器端
 //        $address = Db::name('user_address')->where("address_id", $address_id)->find();
         $cartLogic = new CartLogic();
-        $placeOrder = new PlaceOrder();
+        $placeOrder = new \app\common\model\Order();
         try {
             $cartLogic->setUserId($uid);
-            if ($action == 'buy_now') {
+            if($cartid == ''){
                 $cartLogic->setGoodsModel($goods_id);
                 $cartLogic->setProductSku($skuid);
                 $cartLogic->setGoodsBuyNum($goods_num);
                 $buyGoods = $cartLogic->buyNow();
-                $cartList = $buyGoods;
-                $result = $placeOrder->addNormalOrder($cartList,$addressid,$totle_price,$remark);
-
-//                $pay->payGoodsList($cartList);
+                $cartList[0] = $buyGoods;
             } else {
-                $userCartList = $cartLogic->getCartList($cartid);
-                $cartLogic->checkStockCartList($userCartList);
-
+                $cartList = $cartLogic->getCartList($cartid);
+                $cartLogic->checkStockCartList($cartList);
 //                $pay->payCart($userCartList);//判断购物车
             }
 //            $pay->setUserId($uid) -> setShopById($shop_id) -> setAddressid($addressid) -> setremark($remark) -> setGoodsModel($goods_id);
 
+            $order_sn = $placeOrder->addNormalOrder($uid,$cartList,$addressid,$totle_price,0,$remark,$dining);
+            if($order_sn){
+                $cartLogic->clear($cartid);
+                return apiBack('success', '计算成功', '10000',['order_sn'=>$order_sn]);
+            }
 
-            dump($result);die;
 //            $placeOrder -> setUserId($uid) -> setShopById($shop_id);
 //            $placeOrder -> setShopById($shop_id);
 //            $placeOrder -> addNormalOrder();
 //            dump($placeOrder);die;
 //            dump(1);die;
-
-                //->usePayPoints($pay_points,false,'mobile');
             // 提交订单
-            if ($_REQUEST['act'] == 'submit_order') {
-
-
-                $placeOrder->setMobile($mobile)->setUserAddress($address)->setConsignee($consignee)->setInvoiceTitle($invoice_title)
-                    ->setUserNote($user_note)->setTaxpayer($taxpayer)->setInvoiceDesc($invoice_desc)->setPayPsw($pay_pwd)->setTakeTime($take_time)
-                    ->setBespeakForm($bespeakForm)->setFromTerminal($from_terminal)->addNormalOrder();
-                $cartLogic->clear($cartid);
-                $order = $placeOrder->getOrder();
-                $this->ajaxReturn(['status' => 1, 'msg' => '提交订单成功', 'result' => $order['order_sn']]);
-            }
-            return apiBack('success', '计算成功', '10000',$pay->toArray());
         } catch (TpshopException $t) {
             $error = $t->getErrorArr();
-            return apiBack('fail', $error, '10000');
+            return apiBack('fail', $error, '10004');
         }
     }
     /*

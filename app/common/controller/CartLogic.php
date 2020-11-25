@@ -53,45 +53,84 @@ class CartLogic extends Common {
             $cartWhere .= " and id in($cartid)";
         }
         if($this-> cartc_id == 0){
-            $cartlist = (new Cart)  -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
+            $cartlist = (new Cart)  -> with(['product','skus']) ->where($cartWhere)  -> select() -> toArray();
         }else{
             $haswhere['category_id'] = $this-> cartc_id;
             $cartlist = (new Cart) -> hasWhere('product', $haswhere) -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
         }
         $cartCheckAfterList = $this->checkCartList($cartlist);// 获取购物车商品
-//        dump($cartCheckAfterList);die;
-        $arr = [];
-        foreach ($cartCheckAfterList as $key => $val){
-            //获取店铺信息
-            $arr[$key]['id'] = $val['id'];
-            $arr[$key]['shop_id'] = $val['product']['shop_id'];
-            $arr[$key]['bar_code'] = $val['product']['bar_code'];
-            $arr[$key]['shoptitle'] = (new Shops())::where('id', $val['product']['shop_id']) -> value('title');
-            $arr[$key]['quantity'] = $val['quantity'];
-            $arr[$key]['price'] = $val['price'];
-            $arr[$key]['product_id'] = $val['product_id'];
-            $arr[$key]['sku_id'] = $val['sku_id'];
-            $arr[$key]['specvalue'] = $val['specvalue'];
-            $arr[$key]['name'] = $val['product']['name'];
-            $arr[$key]['category_id'] = $val['product']['category_id'];
-            $arr[$key]['images'] = $val['product']['images'];
-//            $arr[$key]['price'] = $val['product']['price'];
-            $arr[$key]['discount_price'] = $val['price'] * ($val['product']['discount_price']/100);
-            $arr[$key]['sales'] = $val['product']['sales'];
-            $arr[$key]['is_rush'] = $val['is_rush'];
-            if($val['is_rush'] == 1){
-                $arr[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-            }
-            $arr[$key]['speckey'] = json_decode($val['product']['product_spec_info'],1)['name'];
-            $arr[$key]['title'] = $val['skus']['title'];
-            if($val['skus']['stock'] == 0){
-                $arr[$key]['isstock'] = '已售完';//已售完
-            }else{
-                $arr[$key]['isstock'] = '在售中';
-            }
+        $arr =[];
+        $result=[];
+        foreach($cartCheckAfterList as $v){
+            $result[$v['product']['shop_id']]['shopid'] = $v['product']['shop_id'];
+            $result[$v['product']['shop_id']]['shoptitle'] =  (new Shops())::where('id', $v['product']['shop_id']) -> value('title');
+            $result[$v['product']['shop_id']]['cartlist'][]=[
+                'cartid'=>$v['id'],
+                'pid'=>$v['product']['id'],
+                'name'=>$v['product']['name'],
+                'images'=>$v['product']['images'],
+                'sales'=>$v['product']['sales'],
+                'bar_code'=>$v['product']['bar_code'],
+                'price'=>$v['price'],
+                'quantity'=>$v['quantity'],
+                'speckey'=> json_decode($v['product']['product_spec_info'],1)['name'],
+                'specvalue'=>$v['specvalue'],
+                'skuid'=>$v['skus']['id'],
+                'skutitle' => $v['skus']['title'],
+                'is_rush'=>$v['is_rush'],
+                'stock' => $v['skus']['stock'],
+            ];
         }
-
-        return $arr;
+        $cartlist = array_merge($arr,$result);
+        foreach ($cartlist as $key => $val){
+            foreach ($val['cartlist'] as $k => $v){
+                if($v['stock'] == 0){
+                    $val['cartlist'][$k]['isstock'] = '已售完';//已售完
+                }else{
+                    $val['cartlist'][$k]['isstock'] = '在售中';
+                }
+                if($v['is_rush'] == 1){
+                    $val['cartlist'][$k]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+                }
+//                dump($val);die;
+            }
+            $cartlist[$key] = $val;
+        }
+        return $cartlist;
+//        dump($cartlist);die;
+//        $arr = [];
+//        foreach ($cartCheckAfterList as $key => $val){
+//            //获取店铺信息
+//            $arr[$key]['id'] = $val['id'];
+//            $arr[$key]['user_id'] = $val['user_id'];
+//            $arr[$key]['shop_id'] = $val['product']['shop_id'];
+//            $arr[$key]['bar_code'] = $val['product']['bar_code'];
+//            $arr[$key]['shoptitle'] = (new Shops())::where('id', $val['product']['shop_id']) -> value('title');
+//            $arr[$key]['quantity'] = $val['quantity'];
+//            $arr[$key]['price'] = $val['price'];
+//            $arr[$key]['product_id'] = $val['product_id'];
+//            $arr[$key]['sku_id'] = $val['sku_id'];
+//            $arr[$key]['speckey'] = json_decode($val['product']['product_spec_info'],1)['name'];
+//            $arr[$key]['specvalue'] = $val['specvalue'];
+//            $arr[$key]['name'] = $val['product']['name'];
+//            $arr[$key]['category_id'] = $val['product']['category_id'];
+//            $arr[$key]['images'] = $val['product']['images'];
+////            $arr[$key]['price'] = $val['product']['price'];
+//            $arr[$key]['discount_price'] = $val['price'] * ($val['product']['discount_price']/100);
+//            $arr[$key]['sales'] = $val['product']['sales'];
+//            $arr[$key]['is_rush'] = $val['is_rush'];
+//            $arr[$key]['stock'] = $val['skus']['stock'];
+//            if($val['is_rush'] == 1){
+//                $arr[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+//            }
+//
+//            $arr[$key]['title'] = $val['skus']['title'];
+//            if($val['skus']['stock'] == 0){
+//                $arr[$key]['isstock'] = '已售完';//已售完
+//            }else{
+//                $arr[$key]['isstock'] = '在售中';
+//            }
+//        }
     }
     /**
      * 过滤掉无效的购物车商品
@@ -483,26 +522,32 @@ class CartLogic extends Common {
         if (empty($this->goodsBuyNum)) {
             throw new TpshopException('立即购买', 0, '购买商品数量不能为0');
         }
-        $buyGoods = [
-            'user_id' => $this->user_id,
-            'product_id' => $this->goods['id'],
-            'sku_id' => $this->specGoodsPrice['id'],
-//            'speckey' => $this->specvalue,
+
+
+
+        $buyGoods[] = [
+            'pid' => $this->goods['id'],
+            'skuid' => $this->specGoodsPrice['id'],
+            'speckey' => json_decode($this->goods['product_spec_info'],1)['name'],
             'specvalue' => $this->specvalue,
             'price' => $this->specGoodsPrice['price'],
+            'skutitle' => $this->specGoodsPrice['title'],
+            'stock' => $this->specGoodsPrice['stock'],
             'quantity' => $this->goodsBuyNum, // 购买数量
             'createtime' => time(), // 加入购物车时间
             'is_rush' => $this->goods['is_rush'],   // 0 普通订单,1 限时抢购, 2 团购 , 3 促销优惠
+            'name' => $this->goods['name'],
+            'bar_code' => $this->goods['bar_code'],
+            'images' => $this->goods['images'],
+        ];
+        $shopdata = [
             'shop_id' => $this->goods['shop_id'],//店铺ID
             'shoptitle' => (new Shops())::where('id',$this->goods['shop_id']) -> value('title'),//店铺ID
-//            'prom_id' => 0,   // 活动id
-            'product' => $this->goods,
-            'skus' => $this->specGoodsPrice
+            'cartlist' => $buyGoods
         ];
 //        if($this->goods['is_rush'] == 1){
 //
 //        }
-//        dump($buyGoods);die;
         $store_count = $this->specGoodsPrice['stock'];
         if ($this->goodsBuyNum > $store_count) {
             throw new TpshopException('立即购买', 0, '商品库存不足，剩余' . $store_count);
@@ -513,7 +558,7 @@ class CartLogic extends Common {
 //        $buyGoods['cut_fee'] = $cart->getCutFeeAttr(0, $buyGoods);
 //        $buyGoods['goods_fee'] = $cart->getGoodsFeeAttr(0, $buyGoods);
 //        $buyGoods['total_fee'] = $cart->getTotalFeeAttr(0, $buyGoods);
-        return $buyGoods;
+        return $shopdata;
     }
 
 
@@ -791,24 +836,20 @@ class CartLogic extends Common {
      * @return array
      */
     public function getCartPriceInfo($cartList = null){
-        $total_fee = $goods_fee = $goods_num = 0;//初始化数据。商品总额/节约金额/商品总共数量
+        $total_price = $goods_fee = $goods_num = 0;//初始化数据。商品总额/节约金额/商品总共数量
         if ($cartList) {
             foreach ($cartList as $cartKey => $cartItem) {
-                $total_fee += $cartItem['price'] * $cartItem['quantity'];
-                $goods_fee += 0;
-                $goods_num += $cartItem['quantity'];
-//                if($cartItem['skus']){
-//                    foreach($cartItem['skus'] as $combinationCartKey=>$combinationCartItem){
-//                        $total_fee += $combinationCartItem['price'];
-//                        $goods_fee += $combinationCartItem['price'];
-//                        $goods_num += $combinationCartItem['quantity'];
-//                    }
-//                }
+                foreach ($cartItem['cartlist'] as $key => $val){
+                    $total_price += $val['price'] * $val['quantity'];
+                    $goods_fee += 0;
+                    $goods_num += $val['quantity'];
+
+                }
             }
         }
-        $total_fee = round($total_fee,2);
+        $total_price = round($total_price,2);
         $goods_fee = round($goods_fee,2);
-        return compact('total_fee', 'goods_fee', 'goods_num');
+        return compact('total_price', 'goods_fee', 'goods_num');
     }
 
 
@@ -959,8 +1000,8 @@ class CartLogic extends Common {
      */
     public function checkStockCartList($cartList){
         foreach ($cartList as $cartKey => $cartVal) {
-            if ($cartVal['quantity'] > $cartVal['skus']['stock']) {
-                throw new TpshopException('', 0, $cartVal['quantity']. '购买数量不能大于' .$cartVal['skus']['stock']);
+            if ($cartVal['quantity'] > $cartVal['stock']) {
+                throw new TpshopException('', 0, $cartVal['quantity']. '购买数量不能大于' .$cartVal['stock']);
             }
         }
     }
