@@ -297,9 +297,12 @@ class CartLogic extends CommonController {
     public function editCart($action,$skey,$number=1){
         switch ($action){
             case 'plus':
-                $this->_plusOne($skey,$number);
+                $this->_plusOne($skey);
                 break;
             case 'minus':
+                $this->_minusOne($skey);
+                break;
+            case 'input';
                 $this->_minusOne($skey,$number);
                 break;
         }
@@ -317,9 +320,9 @@ class CartLogic extends CommonController {
 
      * @param Int $skey
      */
-    private function _plusOne($skey,$number){
+    private function _plusOne($skey){
         //指定物品购买数量+1
-        (new Cart()) -> where('id',$skey) -> Inc('quantity',(int)$number) -> update();
+        (new Cart()) -> where('id',$skey) -> Inc('quantity') -> update();
     }
     /**
      * 函数：_minusOne
@@ -331,14 +334,14 @@ class CartLogic extends CommonController {
      * @param unknown_type $cartName
      * @param unknown_type $skey
      */
-    private function _minusOne($skey,$number){
+    private function _minusOne($skey){
         //查询购物车单个信息
         $quantity = (new Cart())::where('id',$skey) -> value('quantity');
         if($quantity < 2){
 //            return 2;
             throw new TpshopException('立即购买', 0, '商品数量不能小于1' );
         }
-        (new Cart()) -> where('id',$skey) -> dec('quantity',(int)$number) -> update();
+        (new Cart()) -> where('id',$skey) -> dec('quantity') -> update();
         //更新购物车信息
     }
 

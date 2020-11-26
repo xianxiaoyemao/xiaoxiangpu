@@ -19,10 +19,8 @@ class Cartitem extends BaseController{
     public function cartlist(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $uid = $request -> post('uid');
-        $category_id = $request -> post('cid') ?? 0;
         $cartlist1 = new CartLogic();
         $cartlist1 -> setUserId($uid);
-        $cartlist1 -> setCartcartory($category_id);
         $cartlist = $cartlist1->getCartList();//用户购物车
         $cartPriceInfo = $cartlist1->getCartPriceInfo($cartlist);  //初始化数据。商品总额/节约金额/商品总共数量
         $data = [
@@ -101,18 +99,14 @@ class Cartitem extends BaseController{
 
     public function updateCart(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $cartLogic = new CartLogic();
         $cartid = $request ->post('cartid');
-        $action = $request ->post('action');
         $number = $request ->post('number') ?? 1;
-        if(!$action) return apiBack('fail', '请选择所选的操作', '10004');
         if(!$cartid) return apiBack('fail', '请选择所选的商品', '10004');
-        try{
-            $cartLogic -> editCart($action,$cartid,$number);
+        $res = (new Cart)::where('id',$cartid) -> update(['quantity'=>(int)$number]);
+        if($res){
             return apiBack('success', '更新成功', '10004');
-        }catch (TpshopException $t){
-            $error = $t->getErrorArr();
-            return apiBack('fail', $error, '10004');
+        }else{
+            return apiBack('fail', "更新失败", '10004');
         }
     }
 
@@ -176,6 +170,7 @@ class Cartitem extends BaseController{
             $cartList['cart'] = $cartLogic->getCartList($cartid); // 获取用户选中的购物车商品
 //            $cartList['cartList'] = $cartLogic->getCombination($cartList['cartList']);  //找出搭配购副商品
         }
+        //
 //        $cartGoodsList = get_arr_column($cartList['cart'],'product');
         $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cart']);  //初始化数据。商品总额/节约金额/商品总共数量
 //        $userCouponList = $couponLogic->getUserAbleCouponList($uid, $cartGoodsId, $cartGoodsCatId);//用户可用的优惠券列表

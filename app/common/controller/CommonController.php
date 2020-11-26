@@ -1,5 +1,6 @@
 <?php
 namespace app\common\controller;
+use app\common\model\Address;
 use app\common\model\Cart;
 use app\common\model\Orders;
 use app\common\model\Product;
@@ -183,15 +184,12 @@ class CommonController{
         }
     }
 
-
-
     public static function insertLog($event,$type=0){
         //记录日志
         $data =['content'=>$event,'type'=>$type,'addtime'=>time(),'status' => 1];
-//        epre($data);
-
-
         (new UserLog)::create($data);
     }
+
+
 
 }
