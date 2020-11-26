@@ -29,6 +29,7 @@ Route::post('product/productdetails', 'product/productdetails');//商品详情
 Route::post('cartitem/cartlist', 'cartitem/cartlist');
 Route::post('cartitem/cartsave', 'cartitem/cartsave');
 Route::post('cartitem/cartdel', 'cartitem/cartdel');
+Route::post('cartitem/updateCart', 'cartitem/updateCart');//更改购物车信息
 
 Route::post('cartitem/cart2', 'cartitem/cart2');
 Route::post('cartitem/cartsubmit', 'cartitem/cartsubmit');//提交订单
