@@ -107,12 +107,19 @@ class Wechat extends BaseController
         $sessionKey = $request->post('session_key');
         $encryptedData = $request->post('encrypted_data');
         $iv = $request->post('iv');
+        $shareUid = $request->post('shareUid');
 
         $data = $this->decryptData($encryptedData, $iv, $sessionKey);
 
         $mobile = $data['phoneNumber'];
         $uid = $request->post('uid');
         $user = $this->userModel->where('id', $uid)->find();
+        //分享用户
+        if ($shareUid) {
+            $share_money = $this->configModel->where('name', 'share_money')->value('value');
+            $user->invitecode = $shareUid;
+            $user->money += $share_money;
+        }
         $user->mobile = $mobile;
         $user->save();
         return apiBack('success', '请求成功', '10000');
