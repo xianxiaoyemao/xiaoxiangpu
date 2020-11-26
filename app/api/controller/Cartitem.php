@@ -7,9 +7,11 @@
  */
 
 namespace app\api\controller;
+use app\admin\model\User;
 use app\BaseController;
 use app\common\controller\CartLogic;
 use app\common\model\Cart;
+use app\common\model\Address;
 use app\common\model\ProductSku;
 use app\common\model\Product;
 use app\Request;
@@ -22,12 +24,8 @@ class Cartitem extends BaseController{
         $cartlist1 = new CartLogic();
         $cartlist1 -> setUserId($uid);
         $cartlist = $cartlist1->getCartList();//用户购物车
-        $cartPriceInfo = $cartlist1->getCartPriceInfo($cartlist);  //初始化数据。商品总额/节约金额/商品总共数量
-        $data = [
-            'total' => count((new Cart)::where('user_id',$uid) -> select()),
-            'data' => $cartlist
-        ];
-        return apiBack('success', '获取成功', '10000',$data);
+        $cartlist['total'] = count((new Cart)::where('user_id',$uid) -> select());
+        return apiBack('success', '获取成功', '10000',$cartlist);
     }
 
     //添加商品到购物车
@@ -104,7 +102,7 @@ class Cartitem extends BaseController{
         if(!$cartid) return apiBack('fail', '请选择所选的商品', '10004');
         $res = (new Cart)::where('id',$cartid) -> update(['quantity'=>(int)$number]);
         if($res){
-            return apiBack('success', '更新成功', '10004');
+            return apiBack('success', '更新成功', '10000');
         }else{
             return apiBack('fail', "更新失败", '10004');
         }
@@ -158,25 +156,27 @@ class Cartitem extends BaseController{
                 $error = $t->getErrorArr();
                 return apiBack('fail', $error['msg'], '10004');
             }
-            $cartList['cart'][0] = $buyGoods;
-            $cartGoodsTotalNum = $quantity;
-//            dump($cartGoodsTotalNum);die;
-//            $setRedirectUrl = new UsersLogic();
-//            $setRedirectUrl->orderPageRedirectUrl($_SERVER['REQUEST_URI'],'',$goods_id,$goods_num,$item_id ,$action);
+            $cartList[0] = $buyGoods;
         }else{
             if(empty($cartid)){
                 return apiBack('fail', '你的购物车没有选中商品', '10004');
             }
-            $cartList['cart'] = $cartLogic->getCartList($cartid); // 获取用户选中的购物车商品
+            $cartList = $cartLogic->getCartList($cartid); // 获取用户选中的购物车商品 $cartList['cart']
 //            $cartList['cartList'] = $cartLogic->getCombination($cartList['cartList']);  //找出搭配购副商品
         }
-        //
+        //查询默认收货地址
+        $addressinfo = (new Address)::where(['user_id'=>$uid,'is_defult'=>1,'status'=>1]) -> field('id as addressid,contact_name,contact_phone,disarea,address') -> find();
+        if(empty($addressinfo)){return  false;}
+        $cartList['addressinfo'] = $addressinfo -> toArray();
+        //获取优惠卷数量
+//        $couponnum = count((new coupon)::where('user_id',$uid)->select());
+        $cartList['couponsnum'] =  0; //优惠卷  $couponnum
+        //获取用户积分
+        $cartList['integral'] = (new User)::where(['id'=>$uid]) -> value('score'); //积分
 //        $cartGoodsList = get_arr_column($cartList['cart'],'product');
-        $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cart']);  //初始化数据。商品总额/节约金额/商品总共数量
+//        $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cart']);  //初始化数据。商品总额/节约金额/商品总共数量
 //        $userCouponList = $couponLogic->getUserAbleCouponList($uid, $cartGoodsId, $cartGoodsCatId);//用户可用的优惠券列表
-        $cartList = array_merge($cartList,$cartPriceInfo);
-        $cartList['couponsnum'] = 0; //优惠卷
-        $cartList['integral'] = 0; //积分
+//        $cartList = array_merge($cartList,$addressinfo -> toArray());
         return apiBack('success', '获取成功', '10000',$cartList);
     }
 
