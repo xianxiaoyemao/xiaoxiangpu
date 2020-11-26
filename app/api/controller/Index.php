@@ -43,6 +43,13 @@ class Index extends BaseController
         //新疆特产
         $xjtcp =  (new Product)::productlist(['status'=>1,'category_id'=>3],$productsfild,$orderby,0,6);
 
+        $chicken_img = Config::where('name', 'share_chicken_img')->value('value');
+        $specialty_img = Config::where('name', 'share_specialty_img')->value('value');
+        $share_img = [
+            'chicken_img' => $chicken_img,
+            'specialty_img' => $specialty_img
+        ];
+
         $roll = ['xxx用户购买两份椒麻鸡', '王小二购买新疆特产一份', '张三购买椒麻鸡套餐两份', '李四购买椒麻鸡两份'];
         $data = [
             'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()] ,
@@ -51,7 +58,8 @@ class Index extends BaseController
             'dztj' => ['type'=>'jmj','data'=>$shopproducts],
             'xjtcp' => ['type'=>'xjtcp','data'=>$xjtcp],
             'roll' => $roll,
-            'buy0' => $buyBy0
+            'buy0' => $buyBy0,
+            'shareImg' => $share_img
         ];
         return apiBack('success', '成功', '10000', $data);
     }
@@ -80,7 +88,5 @@ class Index extends BaseController
         $user->save();
         return apiBack('success', '签到成功，获得' . $score . '积分', '10000');
     }
-
-
 
 }

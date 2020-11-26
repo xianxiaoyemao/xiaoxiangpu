@@ -6,6 +6,7 @@ use app\BaseController;
 //use app\Exceptions\InvalidRequestException;
 //use Illuminate\Http\Request;
 //use Illuminate\Pagination\LengthAwarePaginator;
+use app\common\model\Cart;
 use app\common\model\ProductDetails;
 use app\common\model\ProductSku;
 use think\facade\Db;
