@@ -9,7 +9,6 @@
 namespace app\api\controller;
 use app\BaseController;
 use app\common\controller\CartLogic;
-use app\common\controller\Pay;
 use app\common\model\Cart;
 use app\common\model\ProductSku;
 use app\common\model\Product;
@@ -27,7 +26,7 @@ class Cartitem extends BaseController{
         $cartlist = $cartlist1->getCartList();//用户购物车
         $cartPriceInfo = $cartlist1->getCartPriceInfo($cartlist);  //初始化数据。商品总额/节约金额/商品总共数量
         $data = [
-            'total' => $cartPriceInfo['goods_num'],
+            'total' => count((new Cart)::where('user_id',$uid) -> select()),
             'data' => $cartlist
         ];
         return apiBack('success', '获取成功', '10000',$data);
@@ -43,6 +42,7 @@ class Cartitem extends BaseController{
         $price = $request -> post('price');
         $specvalue = $request -> post('specvalue');
         $quantity = $request -> post('quantity') ?? 1;
+        if(empty($pid))  return apiBack('fail', '请选择要购买的商品', '10004');
         switch ($type){
             case 'list':
                 //查询商品
@@ -111,73 +111,6 @@ class Cartitem extends BaseController{
             return apiBack('fail', '删除失败', '10004');
         }
     }
-
-    /**
-     * 将商品加入购物车
-     */
-    public  function cartsave1(Request $request){
-        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $uid = $request -> post('uid');
-        $type = $request -> post('type');
-        $pid = $request -> post('product_id'); // 商品id
-        $skuid = $request -> post('skuid');// 商品规格id
-        $price = $request -> post('price');
-        $specvalue = $request -> post('specvalue');
-        $quantity = $request -> post('quantity') ?? 1;// 商品数量
-        if(empty($pid))  return apiBack('fail', '请选择要购买的商品', '10004');
-        if(empty($quantity))  return apiBack('fail', '购买商品数量不能为0', '10004');
-        $cartLogic = new CartLogic();
-        $cartLogic->setUserId($uid);
-        $cartLogic->setGoodsModel($pid);
-        $cartLogic->setProductSku($skuid);
-
-        switch ($type){
-            case 'list':
-                //查询商品
-                $pskulist = (new ProductSku)::where('product_id',$pid) -> field('id as skuid,price,stock') -> select() -> toArray();
-                //查询产品属性
-                $product_spec_info = (new Product())::where('id',$pid) -> find() -> value('product_spec_info');
-                $specvalue = json_decode($product_spec_info,1)['list'];
-                $data = [
-                    'user_id' => (int)$uid,
-                    'product_id' => (int)$pid,
-                    'sku_id' => (int)$pskulist[0]['skuid'],
-                    'quantity' => (int)$quantity,
-                    'specvalue'=> $specvalue[0],
-                    'price' => floatval($pskulist[0]['price']),
-                    'createtime' => time()
-                ];
-                $stock = $pskulist[0]['stock'];
-                break;
-            case 'details':
-                //查询
-                $skunum = (new ProductSku)::where('id',$skuid) -> field('stock') -> find() -> toArray();
-                $data = [
-                    'user_id' => (int)$uid,
-                    'product_id' => (int)$pid,
-                    'sku_id' => (int)$skuid,
-                    'quantity' => (int)$quantity,
-                    'specvalue'=> $specvalue,
-                    'price' => floatval($price),
-                    'createtime' => time()
-                ];
-                $stock = $skunum['stock'];
-                break;
-        }
-
-
-        $cartLogic->setGoodsBuyNum($data['quantity']);
-        try {
-            $cartLogic->addGoodsToCart();
-            return apiBack('success', '加入购物车成功', '10000');
-        } catch (TpshopException $t) {
-            $error = $t->getErrorArr();
-            if(!isset($error['status']))
-                $error['status'] = -1;
-            return apiBack('fail', '加入购物车失败', '10000');
-        }
-    }
-
 
 
 
@@ -250,7 +183,7 @@ class Cartitem extends BaseController{
         $totle_price = floatval($request -> post("totle_price"));//商品总价
 
         $shop_id = $request -> post('shop_id/d');//自提点id
-        $take_time = $request -> post('take_time/d');//自提时间
+        $take_time = $request -> post('take_time');//自提时间
         $consignee = $request -> post('consignee/s');//自提点收货人
         $mobile = $request -> post('mobile/s');//自提点联系方式
 
@@ -270,7 +203,7 @@ class Cartitem extends BaseController{
 //        $from_terminal = $request -> post("from_terminal/s"); // 下单的终端设备 /H5或微信浏览器端
 //        $address = Db::name('user_address')->where("address_id", $address_id)->find();
         $cartLogic = new CartLogic();
-        $placeOrder = new \app\common\model\Order();
+        $placeOrder = new \app\common\controller\PlaceOrder();
         try {
             $cartLogic->setUserId($uid);
             if($cartid == ''){
@@ -286,23 +219,32 @@ class Cartitem extends BaseController{
             }
 //            $pay->setUserId($uid) -> setShopById($shop_id) -> setAddressid($addressid) -> setremark($remark) -> setGoodsModel($goods_id);
 
-            $order_sn = $placeOrder->addNormalOrder($uid,$cartList,$addressid,$totle_price,0,$remark,$dining);
-            if($order_sn){
-                $cartLogic->clear($cartid);
-                return apiBack('success', '计算成功', '10000',['order_sn'=>$order_sn]);
-            }
+            $order_sn = $placeOrder->addNormalOrder($uid,$cartList,$addressid,0,$remark,$dining,$take_time);
 
-//            $placeOrder -> setUserId($uid) -> setShopById($shop_id);
-//            $placeOrder -> setShopById($shop_id);
-//            $placeOrder -> addNormalOrder();
-//            dump($placeOrder);die;
-//            dump(1);die;
-            // 提交订单
+            if(count($order_sn) == 0){
+                return apiBack('success', '库存不足', '10000',['order_sn'=>$order_sn]);
+            }else{
+                foreach ($order_sn as $v){
+                    dump($v);
+                }
+                return apiBack('success', '创建成功', '10000',['order_sn'=>$order_sn]);
+            }
         } catch (TpshopException $t) {
             $error = $t->getErrorArr();
             return apiBack('fail', $error, '10004');
         }
     }
+
+
+
+
+
+
+
+
+
+
+
     /*
      * 订单支付页面
      */
@@ -351,7 +293,7 @@ class Cartitem extends BaseController{
         }
         //如果是预约订单，需要校验预约人数
         if($is_virtual==2){
-            $pay = new Pay();
+            $pay = '';
             $PlaceOrder = new PlaceOrder($pay);
             try {
                 $PlaceOrder->checkBespeakTemplate($order['order_goods'],$order['shop'],strtotime($order['shopOrder'][0]['take_time']),$order['order_bespeak'][0]['template_unit_id']);

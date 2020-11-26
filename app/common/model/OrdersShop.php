@@ -4,7 +4,7 @@
 namespace app\common\model;
 
 
-class Log extends BaseModel
+class OrdersShop extends BaseModel
 {
 
 }

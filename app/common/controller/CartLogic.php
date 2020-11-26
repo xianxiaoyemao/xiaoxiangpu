@@ -29,7 +29,7 @@ use app\common\util\TpshopException;
  * Class CatsLogic
  * @package Home\Logic
  */
-class CartLogic extends Common {
+class CartLogic extends CommonController {
 
     protected $session_id;//session_id
     protected $user_id = 0;//user_id
@@ -71,21 +71,16 @@ class CartLogic extends Common {
                 'specvalue'=>$v['specvalue'],
                 'skuid'=>$v['skus']['id'],
                 'skutitle' => $v['skus']['title'],
-                'is_rush'=>$v['is_rush'],
+                'is_rush'=>$v['product']['is_rush'],
                 'stock' => $v['skus']['stock'],
             ];
         }
         $cartlist = array_merge($arr,$result);
         foreach ($cartlist as $key => $val){
             foreach ($val['cartlist'] as $k => $v){
-                if($v['stock'] <= 5){
-                    $val['cartlist'][$k]['isstock'] = '已售完';//已售完
-                }else{
-                    $val['cartlist'][$k]['isstock'] = '在售中';
-                }
                 if($v['is_rush'] == 1){
                     if(strtotime(C('skill_end')) - time() < 0){
-                        $val['cartlist'][$k]['isstock'] = "失效商品";
+                        $val['cartlist'][$k]['isfailure'] = 0;
                     }
                     $val['cartlist'][$k]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
                 }
@@ -362,7 +357,6 @@ class CartLogic extends Common {
     public function getCartPriceInfo($cartList = null){
         $total_price = $goods_fee = $goods_num = 0;//初始化数据。商品总额/节约金额/商品总共数量
         if ($cartList) {
-
             foreach ($cartList as $cartKey => $cartItem) {
                 foreach ($cartItem['cartlist'] as $key => $val){
                     $total_price += $val['price'] * $val['quantity'];
