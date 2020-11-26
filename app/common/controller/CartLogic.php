@@ -24,6 +24,7 @@ use app\common\model\ProductSku;
 use app\common\model\Shops;
 use app\common\model\User;
 use app\common\util\TpshopException;
+use think\facade\Db;
 /**
  * 购物车 逻辑定义
  * Class CatsLogic
@@ -72,7 +73,7 @@ class CartLogic extends CommonController {
                 'skuid'=>$v['skus']['id'],
                 'skutitle' => $v['skus']['title'],
                 'is_rush'=>$v['product']['is_rush'],
-                'stock' => $v['skus']['stock'],
+                'isstock' => $v['skus']['stock'],
             ];
         }
         $cartlist = array_merge($arr,$result);
@@ -82,6 +83,7 @@ class CartLogic extends CommonController {
                     if(strtotime(C('skill_end')) - time() < 0){
                         $val['cartlist'][$k]['isfailure'] = 0;
                     }
+                    $val['cartlist'][$k]['isfailure'] = 1;
                     $val['cartlist'][$k]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
                 }
 //                dump($val);die;
@@ -89,40 +91,6 @@ class CartLogic extends CommonController {
             $cartlist[$key] = $val;
         }
         return $cartlist;
-//        dump($cartlist);die;
-//        $arr = [];
-//        foreach ($cartCheckAfterList as $key => $val){
-//            //获取店铺信息
-//            $arr[$key]['id'] = $val['id'];
-//            $arr[$key]['user_id'] = $val['user_id'];
-//            $arr[$key]['shop_id'] = $val['product']['shop_id'];
-//            $arr[$key]['bar_code'] = $val['product']['bar_code'];
-//            $arr[$key]['shoptitle'] = (new Shops())::where('id', $val['product']['shop_id']) -> value('title');
-//            $arr[$key]['quantity'] = $val['quantity'];
-//            $arr[$key]['price'] = $val['price'];
-//            $arr[$key]['product_id'] = $val['product_id'];
-//            $arr[$key]['sku_id'] = $val['sku_id'];
-//            $arr[$key]['speckey'] = json_decode($val['product']['product_spec_info'],1)['name'];
-//            $arr[$key]['specvalue'] = $val['specvalue'];
-//            $arr[$key]['name'] = $val['product']['name'];
-//            $arr[$key]['category_id'] = $val['product']['category_id'];
-//            $arr[$key]['images'] = $val['product']['images'];
-////            $arr[$key]['price'] = $val['product']['price'];
-//            $arr[$key]['discount_price'] = $val['price'] * ($val['product']['discount_price']/100);
-//            $arr[$key]['sales'] = $val['product']['sales'];
-//            $arr[$key]['is_rush'] = $val['is_rush'];
-//            $arr[$key]['stock'] = $val['skus']['stock'];
-//            if($val['is_rush'] == 1){
-//                $arr[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-//            }
-//
-//            $arr[$key]['title'] = $val['skus']['title'];
-//            if($val['skus']['stock'] == 0){
-//                $arr[$key]['isstock'] = '已售完';//已售完
-//            }else{
-//                $arr[$key]['isstock'] = '在售中';
-//            }
-//        }
     }
     /**
      * 过滤掉无效的购物车商品
@@ -266,89 +234,6 @@ class CartLogic extends CommonController {
     }
 
 
-
-
-
-    /**
-     * 更改购物车的商品数量
-     * @param $cart_id |购物车id
-     * @param $goods_num |商品数量
-     * @return array
-     */
-    public function changeNum($cart_id, $goods_num)
-    {
-        $Cart = new Cart();
-        $cart = (new Cart)::find($cart_id);
-        $cart_goods_where = ['user_id' => $cart['user_id'], 'product_id' => $cart['product_id'], 'item_id' => $cart['item_id']];
-        if (!$this->user_id) {
-            $cart_goods_where['session_id'] = $this->session_id;
-        }
-        //判断属性库存 和购物车有几个
-        $cart_goods_where['id'] = array('<>',$cart_id);
-        $cart_goods_where['combination_group_id'] = array('<>',$cart_id);
-        $cart_goods_num_sum = Db::name('cart')->where($cart_goods_where)->sum('goods_num');
-        // $store_count = Db::name('spec_goods_price')->where(['item_id'=>$cart['item_id'],'goods_id'=>$cart['goods_id']])->value('store_count');
-        //if($store_count){
-        //    $cart->limit_num = $store_count;
-        // }
-
-        if ($goods_num + $cart_goods_num_sum > $cart->limit_num) {
-            return ['status' => 0, 'msg' => $cart->goods_name.$cart->spec_key_name.'商品数量不能大于' . $cart->limit_num, 'result' => ['limit_num' => $cart->limit_num]];
-        }
-        if ($goods_num > 200) {
-            $goods_num = 200;
-        }
-        $cart->goods_num = $goods_num;
-        if ($cart['prom_type'] == 0) {
-            $cartGoods = Goods::find($cart['goods_id']);
-            if (!empty($cartGoods['price_ladder'])) {
-                //如果有阶梯价格,就是用阶梯价格
-                $goodsLogic = new GoodsLogic();
-                $price_ladder = $cartGoods['price_ladder'];
-                $cart->goods_price = $cart->member_goods_price = $goodsLogic->getGoodsPriceByLadder($goods_num, $cartGoods['shop_price'], $price_ladder);
-            }
-            $cart->save();
-        }
-        if ($cart['prom_type'] == 7) {
-//            $carts = $Cart->where(['combination_group_id' => $cart['combination_group_id'], ['id' , '<>', $cart['id']]])->select();
-            //xwy-2018-6-4,加入购物车改了主商品的combination_group_id为0 ，这里只能能拿id
-            $carts = $Cart->where(['combination_group_id' => $cart['id'], ['id' , '<>', $cart['id']]])->select();
-            // 启动事务
-            Db::startTrans();
-            foreach ($carts as $cart_item) {
-                $cart_goods_where = ['user_id' => $cart_item['user_id'], 'goods_id' => $cart_item['goods_id'], 'item_id' => $cart_item['item_id']];
-                if (!$this->user_id) {
-                    $cart_goods_where['session_id'] = $this->session_id;
-                }
-                //判断属性库存 和购物车有几个
-                $cart_goods_where['id'] = array('<>',$cart_id);
-                $cart_goods_where['combination_group_id'] = array('<>',$cart_id);
-                $cart_goods_num_sum = Db::name('cart')->where($cart_goods_where)->sum('goods_num');
-                $store_count = Db::name('spec_goods_price')->where(['item_id'=>$cart_item['item_id'],'goods_id'=>$cart_item['goods_id']])->value('store_count');
-                if($store_count){
-                    $cart_item->limit_num = $store_count;
-                }
-                if($goods_num + $cart_goods_num_sum > $cart_item->limit_num){
-                    // 回滚事务
-                    Db::rollback();
-                    return ['status' => 0, 'msg' => $cart_item->goods_name.$cart_item->spec_key_name.'商品数量不能大于' . $cart_item->limit_num, 'result' => ['limit_num' => $cart_item->limit_num]];
-                }
-                $cart_item->goods_num = $goods_num;
-                $cart_item->save();
-            }
-            // 提交事务
-            Db::commit();
-        }
-        $cart->save();
-        return ['status' => 1, 'msg' => '修改商品数量成功', 'result' => ''];
-    }
-
-
-
-
-
-
-
     /**
      * 获取购物车的价格详情
      * @param $cartList |购物车列表
@@ -391,12 +276,70 @@ class CartLogic extends CommonController {
      * @throws \think\Exception
      */
     public function clear($cartid = ''){
+        $where = "user_id = $this->user_id";
         if($cartid){
-            $where = "user_id = $this->user_id and id in($cartid)";
+            $where .=" and id in($cartid)";
         }
         (new Cart())->where($where)->delete();
     }
 
+    /**
+     * 函数：editCart
+     * 功能：编辑购物车信息[物品购物数量+1-1]
+     * 简介：根据提供的购物车名$cartName及操作名$action结合指定购物车物品序号$skey对指定物品的购买数量进行+1-1操作
+     * 时间：2011年7月30日 23:09:27
+     * 作者：by zhjp
+     * Enter description here ...
+     * @param String $cartName
+     * @param String $action[plus+][minus-]
+     * @param Int $skey
+     */
+    public function editCart($action,$skey,$number=1){
+        switch ($action){
+            case 'plus':
+                $this->_plusOne($skey,$number);
+                break;
+            case 'minus':
+                $this->_minusOne($skey,$number);
+                break;
+        }
+        $this -> getCartList();
+        //更新购物车信息
+    }
 
+    /**
+     * 函数：_plusOne
+     * 功能：将物品的购买数量+1
+     * 简介：根据提供的购物车物品序号$skey将指定的商品数量+1
+     * 时间：2011年7月30日 23:24:26
+     * 作者：by zhjp
+     * Enter description here ...
+
+     * @param Int $skey
+     */
+    private function _plusOne($skey,$number){
+        //指定物品购买数量+1
+        (new Cart()) -> where('id',$skey) -> Inc('quantity',(int)$number) -> update();
+    }
+    /**
+     * 函数：_minusOne
+     * 功能：将物品的购买数量-1
+     * 简介：根据提供的购物车物品序号$skey将指定的商品数量-1
+     * 时间：2011年7月30日 23:27:19
+     * 作者：by zhjp
+     * Enter description here ...
+     * @param unknown_type $cartName
+     * @param unknown_type $skey
+     */
+    private function _minusOne($skey,$number){
+        //查询购物车单个信息
+        $quantity = (new Cart())::where('id',$skey) -> value('quantity');
+        if($quantity < 2){
+//            return 2;
+            throw new TpshopException('立即购买', 0, '商品数量不能小于1' );
+        }
+        (new Cart()) -> where('id',$skey) -> dec('quantity',(int)$number) -> update();
+        //更新购物车信息
+    }
 
 }

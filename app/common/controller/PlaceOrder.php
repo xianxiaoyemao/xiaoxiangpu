@@ -64,14 +64,16 @@ class PlaceOrder extends CommonController{
             if ($gstoke == 0) {
                 return;
             }
-            $store = (new ProductSku)::where('id', $val['skuid'])
-                ->update(['stock' => $gstoke - (int)$val['quantity']]);
+//            $store = (new ProductSku)::where('id', $val['skuid'])
+//                ->update(['stock' => $gstoke - (int)$val['quantity']]);
+            $store = (new ProductSku)::where('id', $val['skuid']) -> dec('stock',(int)$val['quantity']) -> update();
             //默认减1 setDec('num',2); setDec('stock',1)// 字段原值减2
             $product = (new Product())::where('id', $val['pid'])->field('name,inventory,sales')->find();
             if ($store) {//Db::name('product_sku')
                 //查询商品名称
-                (new Product)::where('id', $val['pid'])->
-                update(['inventory' => (int)$product['inventory'] - (int)$val['quantity'],'sales'=>(int) $product['sales'] + (int)$val['quantity']]);
+                (new Product)::where('id', $val['pid']) -> inc('sales',(int)$val['quantity']) -> dec('inventory',(int)$val['quantity']) -> update();
+//                (new Product)::where('id', $val['pid'])->
+//                update(['inventory' => (int)$product['inventory'] - (int)$val['quantity'],'sales'=>(int) $product['sales'] + (int)$val['quantity']]);
                 self::insertLog($product['name'] . '下单成功');
             } else {
                 self::insertLog($product['name'] . '下单失败');

@@ -98,16 +98,35 @@ class Cartitem extends BaseController{
         }
     }
 
+
+    public function updateCart(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $cartLogic = new CartLogic();
+        $cartid = $request ->post('cartid');
+        $action = $request ->post('action');
+        $number = $request ->post('number') ?? 1;
+        if(!$action) return apiBack('fail', '请选择所选的操作', '10004');
+        if(!$cartid) return apiBack('fail', '请选择所选的商品', '10004');
+        try{
+            $cartLogic -> editCart($action,$cartid,$number);
+            return apiBack('success', '更新成功', '10004');
+        }catch (TpshopException $t){
+            $error = $t->getErrorArr();
+            return apiBack('fail', $error, '10004');
+        }
+    }
+
     //删除购物车商品
     public function cartdel(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $cartid = $request ->post('ids');
-        if(empty($cartid)) return apiBack('fail', '请选择所删除的商品', '10004');
-        $where = 'id in('.$cartid.')';
-        $res = (new Cart)-> where($where)->delete();
-        if($res){
+        $uid = $request ->post('uid');
+        $cartLogic = new CartLogic();
+        $cartLogic->setUserId($uid);
+        try{
+            $cartLogic -> clear($cartid);
             return apiBack('success', '删除成功', '10000');
-        }else{
+        }catch (TpshopException $t){
             return apiBack('fail', '删除失败', '10004');
         }
     }
@@ -171,6 +190,8 @@ class Cartitem extends BaseController{
      */
     public function cartsubmit(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $mv = uniqid("XXP_"); //当然你可以加上前缀
+        echo $mv;die;
         $uid = $request -> post('uid/d');
         $addressid = $request -> post("addressid/d"); //  收货地址id
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
@@ -217,17 +238,23 @@ class Cartitem extends BaseController{
                 $cartLogic->checkStockCartList($cartList);
 //                $pay->payCart($userCartList);//判断购物车
             }
-//            $pay->setUserId($uid) -> setShopById($shop_id) -> setAddressid($addressid) -> setremark($remark) -> setGoodsModel($goods_id);
-
-            $order_sn = $placeOrder->addNormalOrder($uid,$cartList,$addressid,0,$remark,$dining,$take_time);
-
-            if(count($order_sn) == 0){
-                return apiBack('success', '库存不足', '10000',['order_sn'=>$order_sn]);
+            $orderids = $placeOrder->addNormalOrder($uid,$cartList,$addressid,0,$remark,$dining,$take_time);
+            if(count($orderids) == 0){
+                return apiBack('fail', '库存不足', '10004');
             }else{
-                foreach ($order_sn as $v){
-                    dump($v);
-                }
-                return apiBack('success', '创建成功', '10000',['order_sn'=>$order_sn]);
+                $ordepay = [
+                    'order_sn' => '',
+                    'order_ids' => $orderids,
+                    'is_defult' => $dining,
+                    'the_code' => $orderids,
+                    'pay_price' => floatval($totle_price),
+                    'createtime' => time()
+                ];
+                dump($ordepay);die;
+//                foreach ($order_sn as $v){
+//                    dump($v);
+//                }
+//                return apiBack('success', '创建成功', '10000',['order_sn'=>$order_sn]);
             }
         } catch (TpshopException $t) {
             $error = $t->getErrorArr();
