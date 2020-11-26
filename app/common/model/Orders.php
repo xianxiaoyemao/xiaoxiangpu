@@ -2,9 +2,40 @@
 
 
 namespace app\common\model;
+use app\common\util\TpshopException;
+use think\facade\Cache;
+use app\common\controller\CommonController;
+use think\facade\Db;
+class Orders extends BaseModel{
 
 
-class Order extends BaseModel{
+    /**
+     * 预售订单下单
+     * @param PreSell $preSell
+     */
+    public function addPreSellOrder(PreSell $preSell)
+    {
+        $this->preSell = $preSell;
+        $this->setPromType(4);
+        $this->setPromId($preSell['pre_sell_id']);
+        $this->check();
+        $this->queueInc();
+        $this->addOrder();
+        $this->addOrderGoods();
+        $reduce = tpCache('shopping.reduce');
+        $this->userAddOrder($this->order);
+        //Hook::listen('user_add_order', $this->order);//下单行为
+        if($reduce == 1 || empty($reduce)){
+            minus_stock($this->order);//下单减库存
+        }
+        //预售暂不至此积分余额优惠券支付
+        // 如果应付金额为0  可能是余额支付 + 积分 + 优惠券 这里订单支付状态直接变成已支付
+//            if ($this->order['order_amount'] == 0) {
+//                update_pay_status($this->order['order_sn']);
+//            }
+//        $this->changUserPointMoney();//扣除用户积分余额
+        $this->queueDec();
+    }
     /**
      * 生成订单
      * @param $uid

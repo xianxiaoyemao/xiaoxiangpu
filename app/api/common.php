@@ -10,7 +10,7 @@ error_reporting(0);
 use think\facade\Db;
 use think\facade\Cache;
 //use app\api\model\BusinessApplicationPlatform;
-use app\common\model\Log as LogModel;
+
 //use think\response\Json;
 header('Content-Type: text/html;charset=utf-8');
 header('Access-Control-Allow-Origin:*');
@@ -26,11 +26,7 @@ if(!is_dir(SHUJUCUNCHU)){
     mkdir(SHUJUCUNCHU,0777,true);
 }
 
-//记录日志
-function insertLog($event,$type=0){
-    $data =['content'=>$event,'type'=>$type,'addtime'=>time()];
-    (new LogModel) -> insert($data);
-}
+
 
 
 //判断系统平台

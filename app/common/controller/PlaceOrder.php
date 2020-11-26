@@ -1,30 +1,43 @@
 <?php
+
+
 namespace app\common\controller;
-use app\common\controller\Pay;
-use app\common\model\Order;
-//use app\common\model\PreSell;
+use app\common\model\Orders;
+use app\common\model\OrdersDetail;
+use app\common\model\OrdersShop;
+use app\common\model\Product;
+use app\common\model\ProductSku;
 use app\common\util\TpshopException;
 use think\facade\Cache;
-class PlaceOrder extends Common {
-
-//    public function __construct(Pay $pay){
-//        $this->pay = $pay;
-//        $this->order = new Order();
-//    }
-
-    public function addNormalOrder($cartList,$areaid,$totle_price,$remark=''){
-//        $this->check($cartList['product']['shop_id']);
-        $this->queueInc();
-        $this->addOrder($cartList['user_id'],$areaid,$totle_price,$remark);//$uid,$shop_id,$addressid,$remark
-        $this->addOrderGoods();
-//        $this->addShopOrder();
-//        $this->addOrderBespeak();
+use think\facade\Db;
+class PlaceOrder extends CommonController{
+    protected $orderid = null;
+    public function addNormalOrder($uid,$cartList,$areaid,$uf=0,$remark='',$dining=0,$take_time=0){
+        self::beginTrans();
+        try {
+            $this->queueInc();
+            $order_no = [];
+            foreach ($cartList as $key => $val){
+                $order_sn =  $this->addOrder($uid,$areaid,$val['cartlist'],$uf,$remark);//$uid,$shop_id,$addressid,$remark
+                if($dining == 0){
+                    $this->addOrderGoods($order_sn['orderid'],$val['cartlist']);
+                }else{
+                    $this->addShopOrder($order_sn['orderid'],$val['cartlist'],$take_time,$val['shopid']);
+                }
+                if($order_sn){
+                    array_push($order_no,$order_sn['order_sn']);
+                }else{
+                    $order_no = $order_no;
+                }
+            }
+            $this-> queueDec();
+            self::commitTrans();
+            return $order_no;
+        }catch  (\PDOException $e) {
+            self::rollbackTrans();
+            throw new TpshopException("订单入库", 0,  '生成订单时SQL执行错误错误原因：' . $e->getMessage());
+        }
     }
-
-    public function check($shopid){
-
-    }
-
     private function queueInc(){
         $queue = Cache::get('queue');
         if($queue >= 100){
@@ -32,7 +45,6 @@ class PlaceOrder extends Common {
         }
         Cache::inc('queue');
     }
-
     /**
      * 订单提交结束
      */
@@ -45,75 +57,111 @@ class PlaceOrder extends Common {
      * 插入订单表
      * @throws TpshopException
      */
-    private function addOrder($userid,$areaid,$totle_price,$remark){
+    private function addOrder($userid,$areaid,$cartList,$uf,$remark){
+        foreach ($cartList as $key => $val) {
+            //查询库存
+            $gstoke = (new ProductSku())::where('id', $val['skuid'])->value('stock');
+            if ($gstoke == 0) {
+                return;
+            }
+//            $store = (new ProductSku)::where('id', $val['skuid'])
+//                ->update(['stock' => $gstoke - (int)$val['quantity']]);
+            $store = (new ProductSku)::where('id', $val['skuid']) -> dec('stock',(int)$val['quantity']) -> update();
+            //默认减1 setDec('num',2); setDec('stock',1)// 字段原值减2
+            $product = (new Product())::where('id', $val['pid'])->field('name,inventory,sales')->find();
+            if ($store) {//Db::name('product_sku')
+                //查询商品名称
+                (new Product)::where('id', $val['pid']) -> inc('sales',(int)$val['quantity']) -> dec('inventory',(int)$val['quantity']) -> update();
+//                (new Product)::where('id', $val['pid'])->
+//                update(['inventory' => (int)$product['inventory'] - (int)$val['quantity'],'sales'=>(int) $product['sales'] + (int)$val['quantity']]);
+                self::insertLog($product['name'] . '下单成功');
+            } else {
+                self::insertLog($product['name'] . '下单失败');
+            }
+        }
+        //获取总金额
+        $totle_price = $this ->  getCartPriceInfo($cartList)['total_price'];
+        $order_sn = (new CommonController()) -> get_order_sn();
         $orderData = [
-            'order_sn' => $this ->get_order_sn(), // 订单编号
+            'order_sn' => $order_sn, // 订单编号
             'user_id' => $userid, // 用户id
             'addressid' => $areaid,
             'goods_price' => $totle_price,
-            'shipping_price' => 0,
-            'payment_price'=>0,
+            'shipping_price' => $uf,
+            'payment_price'=> floatval($totle_price) - floatval($uf),
             'status' => 1,
             'pay_status'=>2,
-            'add_time' => time(), // 下单时间
+            'createtime' => time(), // 下单时间
             'remark' => $remark
-            //'invoice_title' => ($this->invoiceDesc != '不开发票') ?  $invoice_title : '', //'发票抬头',
-            //'invoice_desc' => $this->invoiceDesc, //'发票内容',
-            //'goods_price' => $this->pay->getGoodsPrice(),//'商品价格',
-            //'shipping_price' => $this->pay->getShippingPrice(),//'物流价格',
-            //'real_shipping_price' => $this->pay->getRealShippingPrice(),//'真实物流价格'
-            //'user_money' => $this->pay->getUserMoney(),//'使用余额',
-            //'coupon_price' => $this->pay->getCouponPrice(),//'使用优惠券',
-            //'card_price'=>$this->pay->getCardPrice(),//使用购物卡
-            //'integral' => $this->pay->getPayPoints(), //'使用积分',
-            //'integral_money' => $this->pay->getIntegralMoney(),//'使用积分抵多少钱',
-            //'total_amount' => $this->pay->getTotalAmount(),// 订单总额
-            //'order_amount' => $this->pay->getOrderAmount(),//'应付款金额',
-            //'add_time' => time(), // 下单时间
-            //'from_terminal' => $this->from_terminal, //'下单的终端设备',
         ];
-        dump($orderData);die;
-
-
+        if($orderData["payment_price"] < 0){
+            throw new TpshopException("订单入库", 0,  '订单金额不能小于0');
+        }
+        $res = (new Orders)::create($orderData);
+        $data = ['orderid'=> $res -> id,'order_sn' => $order_sn];
+        return $data;
     }
-
-
+    /**
+     * 获取购物车的价格详情
+     * @param $cartList |购物车列表
+     * @return array
+     */
+    public function getCartPriceInfo($cartList = null){
+        $total_price = $goods_fee = $goods_num = 0;//初始化数据。商品总额/节约金额/商品总共数量
+        if ($cartList) {
+            foreach ($cartList as $cartKey => $val) {
+                $total_price += $val['price'] * $val['quantity'];
+                $goods_fee += 0;
+                $goods_num += $val['quantity'];
+            }
+        }
+        $total_price = round($total_price,2);
+        $goods_fee = round($goods_fee,2);
+        return compact('total_price', 'goods_fee', 'goods_num');
+    }
     /**
      * 插入订单商品表
      */
-    private function addOrderGoods(){
-
-    }
-
-    private function addShopOrder(){
-
-    }
-
-    /**
-     * 预售订单下单
-     * @param PreSell $preSell
-     */
-    public function addPreSellOrder(PreSell $preSell)
-    {
-        $this->preSell = $preSell;
-        $this->setPromType(4);
-        $this->setPromId($preSell['pre_sell_id']);
-        $this->check();
-        $this->queueInc();
-        $this->addOrder();
-        $this->addOrderGoods();
-        $reduce = tpCache('shopping.reduce');
-        $this->userAddOrder($this->order);
-        //Hook::listen('user_add_order', $this->order);//下单行为
-        if($reduce == 1 || empty($reduce)){
-            minus_stock($this->order);//下单减库存
+    private function addOrderGoods($orderid,$cartList){
+        $orderGoodsAllData = [];
+        foreach ($cartList as $key => $val) {
+            $ordergooddata = [
+                'order_id' => $orderid,
+                'product_id' => $val['pid'],
+                'skuid' => $val['skuid'],
+                'price' => $val['price'],
+                'speckey' => $val['speckey'],
+                'specvalue' => $val['specvalue'],
+                'number' => $val['quantity'],
+                'total_price' => $val['price'] * (int)$val['quantity'],
+                'createtime' => time()
+            ];
+            array_push($orderGoodsAllData, $ordergooddata);
         }
-        //预售暂不至此积分余额优惠券支付
-        // 如果应付金额为0  可能是余额支付 + 积分 + 优惠券 这里订单支付状态直接变成已支付
-//            if ($this->order['order_amount'] == 0) {
-//                update_pay_status($this->order['order_sn']);
-//            }
-//        $this->changUserPointMoney();//扣除用户积分余额
-        $this->queueDec();
+        (new OrdersDetail)-> saveAll($orderGoodsAllData);
     }
+
+    private function addShopOrder($orderid,$cartList,$task_time,$shop_id){
+        $orderGoodsAllData = [];
+        foreach ($cartList as $key => $val) {
+            $ordergooddata = [
+                'order_id' => $orderid,
+                'product_id' => $val['pid'],
+                'skuid' => $val['skuid'],
+                'price' => $val['price'],
+                'speckey' => $val['speckey'],
+                'specvalue' => $val['specvalue'],
+                'number' => $val['quantity'],
+                'task_time' => $task_time,
+                'shop_id' => $shop_id,
+                'createtime' => time()
+            ];
+            array_push($orderGoodsAllData, $ordergooddata);
+        }
+//        (new UserLog()) -> saveAll($orderlog);
+//        echo  (new UserLog()) -> getLastSql();die;
+//        epre($orderlog);
+        (new OrdersShop()) -> insertAll($orderGoodsAllData);
+    }
+
 }

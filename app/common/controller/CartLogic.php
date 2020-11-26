@@ -24,12 +24,13 @@ use app\common\model\ProductSku;
 use app\common\model\Shops;
 use app\common\model\User;
 use app\common\util\TpshopException;
+use think\facade\Db;
 /**
  * 购物车 逻辑定义
  * Class CatsLogic
  * @package Home\Logic
  */
-class CartLogic extends Common {
+class CartLogic extends CommonController {
 
     protected $session_id;//session_id
     protected $user_id = 0;//user_id
@@ -37,9 +38,6 @@ class CartLogic extends Common {
     protected $userGoodsTypeCount = 0;//用户购物车的全部商品种类
     protected $userCouponNumArr; //用户符合购物车店铺可用优惠券数量
     protected $combination;
-
-
-
 
 
     /**
@@ -52,46 +50,52 @@ class CartLogic extends Common {
         if ($cartid) {
             $cartWhere .= " and id in($cartid)";
         }
-        if($this-> cartc_id == 0){
-            $cartlist = (new Cart)  -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
-        }else{
-            $haswhere['category_id'] = $this-> cartc_id;
-            $cartlist = (new Cart) -> hasWhere('product', $haswhere) -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
-        }
+//      $haswhere['category_id'] = $this-> cartc_id;
+//      $cartlist = (new Cart) -> hasWhere('product', $haswhere) -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
+        $cartlist = (new Cart)  -> with(['product','skus']) ->where($cartWhere)  -> select() -> toArray();
         $cartCheckAfterList = $this->checkCartList($cartlist);// 获取购物车商品
-//        dump($cartCheckAfterList);die;
-        $arr = [];
-        foreach ($cartCheckAfterList as $key => $val){
-            //获取店铺信息
-            $arr[$key]['id'] = $val['id'];
-            $arr[$key]['shop_id'] = $val['product']['shop_id'];
-            $arr[$key]['bar_code'] = $val['product']['bar_code'];
-            $arr[$key]['shoptitle'] = (new Shops())::where('id', $val['product']['shop_id']) -> value('title');
-            $arr[$key]['quantity'] = $val['quantity'];
-            $arr[$key]['price'] = $val['price'];
-            $arr[$key]['product_id'] = $val['product_id'];
-            $arr[$key]['sku_id'] = $val['sku_id'];
-            $arr[$key]['specvalue'] = $val['specvalue'];
-            $arr[$key]['name'] = $val['product']['name'];
-            $arr[$key]['category_id'] = $val['product']['category_id'];
-            $arr[$key]['images'] = $val['product']['images'];
-//            $arr[$key]['price'] = $val['product']['price'];
-            $arr[$key]['discount_price'] = $val['price'] * ($val['product']['discount_price']/100);
-            $arr[$key]['sales'] = $val['product']['sales'];
-            $arr[$key]['is_rush'] = $val['is_rush'];
-            if($val['is_rush'] == 1){
-                $arr[$key]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-            }
-            $arr[$key]['speckey'] = json_decode($val['product']['product_spec_info'],1)['name'];
-            $arr[$key]['title'] = $val['skus']['title'];
-            if($val['skus']['stock'] == 0){
-                $arr[$key]['isstock'] = '已售完';//已售完
-            }else{
-                $arr[$key]['isstock'] = '在售中';
-            }
+        $procdut =  $this -> getGoodsprice($cartlist);
+        $arr =[];
+        $result=[];
+        foreach($cartCheckAfterList as $v){
+            $result[$v['product']['shop_id']]['shopid'] = $v['product']['shop_id'];
+            $result[$v['product']['shop_id']]['shoptitle'] =  (new Shops())::where('id', $v['product']['shop_id']) -> value('title');
+            $result[$v['product']['shop_id']]['cartlist'][]=[
+                'cartid'=>$v['id'],
+                'pid'=>$v['product']['id'],
+                'name'=>$v['product']['name'],
+                'images'=>$v['product']['images'],
+                'sales'=>$v['product']['sales'],
+                'bar_code'=>$v['product']['bar_code'],
+                'price'=>$v['price'],
+                'quantity'=>$v['quantity'],
+                'speckey'=> json_decode($v['product']['product_spec_info'],1)['name'],
+                'specvalue'=>$v['specvalue'],
+                'skuid'=>$v['skus']['id'],
+                'skutitle' => $v['skus']['title'],
+                'is_rush'=>$v['product']['is_rush'],
+                'isstock' => $v['skus']['stock'],
+            ];
         }
-
-        return $arr;
+        $cartlist = array_merge($arr,$result);
+        foreach ($cartlist as $key => $val){
+            foreach ($val['cartlist'] as $k => $v){
+                if($v['is_rush'] == 1){
+                    if(strtotime(C('skill_end')) - time() < 0){
+                        $val['cartlist'][$k]['isfailure'] = 0;
+                    }
+                    $val['cartlist'][$k]['isfailure'] = 1;
+                    $val['cartlist'][$k]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
+                }
+            }
+            $cartlist[$key] = $val;
+        }
+        $data = [
+            'total_price' => $procdut['total_price'],
+            'goods_num' => $procdut['goods_num'],
+            'data' => $cartlist
+        ];
+        return $data;
     }
     /**
      * 过滤掉无效的购物车商品
@@ -109,8 +113,16 @@ class CartLogic extends Common {
         return $cartList;
     }
 
-
-
+    //获取商品总价和商品总数量
+    public function getGoodsprice($cartCheckAfterList){
+        $total_price = $goods_num = 0;
+        foreach ($cartCheckAfterList as $key => $val){
+            $goods_num += (int)$val['quantity'];
+            $total_price += $val['price'] * (int)$val['quantity'];
+        }
+        $total_price = round($total_price,2);
+        return compact('total_price', 'goods_num');
+    }
 
     /**
      * 加入购物车入口
@@ -139,337 +151,32 @@ class CartLogic extends Common {
      * 购物车添加普通商品
      */
     private function addNormalCart(){
-        if (empty($this->specGoodsPrice)) {
-            $price = $this->goods['price'];
-            $store_count = $this->goods['inventory'];
-        } else {
-            //如果有规格价格，就使用规格价格，否则使用本店价。
-            $price = $this->specGoodsPrice['price'];
-            $store_count = $this->specGoodsPrice['store'];
-        }
-        // 查询购物车是否已经存在这商品
-        $cart_where = ['user_id' => $this->user_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: ''), 'prom_type' => 0];
-        if (!$this->user_id) {
-            $cart_where['session_id'] = $this->session_id;
-        }
-        $userCartGoods = Cart::where($cart_where)->find();
-        //统计所有的商品
-        //不止判断普通商品，还要统计同商品的其他类型
-        $cart_whereCount = ['user_id' => $this->user_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: '')];
-        // 未登录时判断
-        if (!$this->user_id) {
-            $cart_whereCount['session_id'] = $this->session_id;
-        }
-        $userCartGoodsSum = Db::name('cart')->where($cart_whereCount)->sum('goods_num');
-        //判断库存
-        $userWantGoodsNum = $this->goodsBuyNum + $userCartGoodsSum;//本次要购买的数量加上购物车的本身存在的数量
-        if ($userWantGoodsNum > 200) {
-            $userWantGoodsNum = 200;
-        }
-        if ($userWantGoodsNum > $store_count) {
-            $userCartGoodsNum = empty($userCartGoodsSum) ? 0 : $userCartGoodsSum;///获取用户购物车的抢购商品数量
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '商品库存不足，剩余' . $store_count . ',当前购物车已有' . $userCartGoodsNum . '件']);
-        }
 
-        // 如果该商品已经存在购物车
-        if ($userCartGoods) {
-            $userCartGoods['goods_num'] = $userCartGoodsSum?$userCartGoodsSum:0;
-            $userWantGoodsNum = $this->goodsBuyNum + $userCartGoods['goods_num'];//本次要购买的数量加上购物车的本身存在的数量
-            //如果有阶梯价格,就是用阶梯价格
-            if (!empty($this->goods['price_ladder'])) {
-                $goodsLogic = new GoodsLogic();
-                $price_ladder = $this->goods['price_ladder'];
-                $price = $goodsLogic->getGoodsPriceByLadder($userWantGoodsNum, $this->goods['shop_price'], $price_ladder);
-            }
-            if ($userWantGoodsNum > 200) {
-                $userWantGoodsNum = 200;
-            }
-            if ($userWantGoodsNum > $store_count) {
-                $userCartGoodsNum = empty($userCartGoods['goods_num']) ? 0 : $userCartGoods['goods_num'];///获取用户购物车的抢购商品数量
-                throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '商品库存不足，剩余' . $store_count . ',当前购物车已有' . $userCartGoodsNum . '件']);
-            }
-            $cartResult = $userCartGoods->save(['goods_num' => $userWantGoodsNum, 'goods_price' => $price, 'member_goods_price' => $price]);
-        } else {
-            //如果该商品没有存在购物车
-            if ($this->goodsBuyNum > $store_count) {
-                throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '商品库存不足，剩余' . $store_count]);
-            }
-            //如果有阶梯价格,就是用阶梯价格
-            if (!empty($this->goods['price_ladder'])) {
-                $goodsLogic = new GoodsLogic();
-                $price_ladder = $this->goods['price_ladder'];
-                $price = $goodsLogic->getGoodsPriceByLadder($this->goodsBuyNum, $this->goods['shop_price'], $price_ladder);
-            }
-            $cartAddData = array(
-                'user_id' => $this->user_id,   // 用户id
-                'session_id' => $this->session_id,   // sessionid
-                'goods_id' => $this->goods['goods_id'],   // 商品id
-                'goods_sn' => $this->goods['goods_sn'],   // 商品货号
-                'goods_name' => $this->goods['goods_name'],   // 商品名称
-                'market_price' => $this->goods['market_price'],   // 市场价
-                'goods_price' => $price,  // 原价
-                'member_goods_price' => $price,  // 会员折扣价 默认为 购买价
-                'goods_num' => $this->goodsBuyNum, // 购买数量
-                'add_time' => time(), // 加入购物车时间
-                'prom_type' => 0,   // 0 普通订单,1 限时抢购, 2 团购 , 3 促销优惠
-                'prom_id' => 0,   // 活动id
-            );
-            if ($this->specGoodsPrice) {
-                $cartAddData['item_id'] = $this->specGoodsPrice['item_id'];
-                $cartAddData['spec_key'] = $this->specGoodsPrice['key'];
-                $cartAddData['spec_key_name'] = $this->specGoodsPrice['key_name']; // 规格 key_name
-                $cartAddData['sku'] = $this->specGoodsPrice['sku']; //商品条形码
-            }
-            $cartResult = Db::name('Cart')->insertGetId($cartAddData);
-        }
-        if ($cartResult === false) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '加入购物车失败']);
-        }
     }
 
     /**
      * 购物车添加秒杀商品
      */
-    private function addFlashSaleCart()
-    {
-        $flashSaleLogic = new FlashSaleLogic($this->goods, $this->specGoodsPrice);
-        $flashSale = $flashSaleLogic->getPromModel();
-        $flashSaleIsEnd = $flashSaleLogic->checkActivityIsEnd();
-        if ($flashSaleIsEnd) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '秒杀活动已结束']);
-        }
-        $flashSaleIsAble = $flashSaleLogic->checkActivityIsAble();
-        if (!$flashSaleIsAble) {
-            //活动没有进行中，走普通商品下单流程
-            $this->addNormalCart();
-            return;
-        } else {
-            //活动进行中
-            if ($this->user_id == 0) {
-                throw new TpshopException("加入购物车", 0, ['status' => -101, 'msg' => '购买活动商品必须先登录']);
-            }
-        }
-        if ($this->goodsBuyNum > $flashSale['buy_limit']) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0,'msg' => '每人限购' . $flashSale['buy_limit'] . '件']);
-        }
-        //获取用户购物车的抢购商品 //加入有活动的商品购物车之前先将没有活动得该商品清除
-        if (!$this->user_id) {
-            Db::name('cart')->where('user_id',$this->user_id)->where('goods_id',$this->goods['goods_id'])->where('session_id',$this->session_id)->where('prom_type','<>',1)->delete();
-            $userCartGoods = Cart::get(['user_id' => $this->user_id, 'session_id' => $this->session_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: '')]);
-        } else {
-            Db::name('cart')->where('user_id',$this->user_id)->where('goods_id',$this->goods['goods_id'])->where('prom_type','<>',1)->delete();
-            $userCartGoods = Cart::where(['user_id' => $this->user_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: '')])->find();
-        }
-        $userCartGoodsNum = empty($userCartGoods['goods_num']) ? 0 : $userCartGoods['goods_num'];///获取用户购物车的抢购商品数量
-        $userFlashOrderGoodsNum = $flashSaleLogic->getUserFlashOrderGoodsNum($this->user_id); //获取用户抢购已购商品数量
-        $flashSalePurchase = $flashSale['goods_num'] - $flashSale['buy_num'];//抢购剩余库存
-        $userBuyGoodsNum = $this->goodsBuyNum + $userFlashOrderGoodsNum + $userCartGoodsNum;
-        if ($userBuyGoodsNum > $flashSale['buy_limit']) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0,'msg' => '每人限购' . $flashSale['buy_limit'] . '件，您已下单' . $userFlashOrderGoodsNum . '件' . '购物车已有' . $userCartGoodsNum . '件']);
-        }
-        $userWantGoodsNum = $this->goodsBuyNum + $userCartGoodsNum;//本次要购买的数量加上购物车的本身存在的数量
-        if ($userWantGoodsNum > 200) {
-            $userWantGoodsNum = 200;
-        }
-        if ($userWantGoodsNum > $flashSalePurchase) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0,'msg' => '商品库存不足，剩余' . $flashSalePurchase . ',当前购物车已有' . $userCartGoodsNum . '件']);
-        }
-        // 如果该商品已经存在购物车
-        if ($userCartGoods) {
-            $cartResult = $userCartGoods->save(['goods_num' => $userWantGoodsNum]);
-        } else {
-            $cartAddFlashSaleData = array(
-                'user_id' => $this->user_id,   // 用户id
-                'session_id' => $this->session_id,   // sessionid
-                'goods_id' => $this->goods['goods_id'],   // 商品id
-                'goods_sn' => $this->goods['goods_sn'],   // 商品货号
-                'goods_name' => $this->goods['goods_name'],   // 商品名称
-                'market_price' => $this->goods['market_price'],   // 市场价
-                'member_goods_price' => $flashSale['price'],  // 会员折扣价 默认为 购买价
-                'goods_num' => $userWantGoodsNum, // 购买数量
-                'add_time' => time(), // 加入购物车时间
-                'prom_type' => 1,   // 0 普通订单,1 限时抢购, 2 团购 , 3 促销优惠
-            );
-            //商品有规格
-            if ($this->specGoodsPrice) {
-                $cartAddFlashSaleData['spec_key'] = $this->specGoodsPrice['key'];
-                $cartAddFlashSaleData['item_id'] = $this->specGoodsPrice['item_id'];
-                $cartAddFlashSaleData['spec_key_name'] = $this->specGoodsPrice['key_name']; // 规格 key_name
-                $cartAddFlashSaleData['sku'] = $this->specGoodsPrice['sku']; //商品条形码
-                $cartAddFlashSaleData['goods_price'] = $this->specGoodsPrice['price'];   // 规格价
-                $cartAddFlashSaleData['prom_id'] = $this->specGoodsPrice['prom_id']; // 活动id
-            } else {
-                $cartAddFlashSaleData['goods_price'] = $this->goods['shop_price'];   // 原价
-                $cartAddFlashSaleData['prom_id'] = $this->goods['prom_id'];// 活动id
-            }
-            $cartResult = Db::name('Cart')->insertGetId($cartAddFlashSaleData);
-        }
-        if ($cartResult === false) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '加入购物车失败']);
-        }
+    private function addFlashSaleCart(){
+
+
     }
 
     /**
      *  购物车添加团购商品
      */
-    private function addGroupBuyCart()
-    {
-        $groupBuyLogic = new GroupBuyLogic($this->goods, $this->specGoodsPrice);
-        $groupBuy = $groupBuyLogic->getPromModel();
-        //活动是否已经结束
-        if ($groupBuy['is_end'] == 1 || empty($groupBuy)) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '团购活动已结束']);
-        }
-        $groupBuyIsAble = $groupBuyLogic->checkActivityIsAble();
-        if (!$groupBuyIsAble) {
-            //活动没有进行中，走普通商品下单流程
-            $this->addNormalCart();
-            return;
-        } else {
-            //活动进行中
-            if ($this->user_id == 0) {
-                throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '购买活动商品必须先登录']);
-            }
-        }
-        //获取用户购物车的团购商品
-        if (!$this->user_id) {
-            $userCartGoods = Cart::get(['user_id' => $this->user_id, 'session_id' => $this->session_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: '')]);
-        } else {
-            $userCartGoods = Cart::where(['user_id' => $this->user_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: '')])->find();
-        }
-        $userCartGoodsNum = empty($userCartGoods['goods_num']) ? 0 : $userCartGoods['goods_num'];///获取用户购物车的团购商品数量
-        $userWantGoodsNum = $userCartGoodsNum + $this->goodsBuyNum;//购物车加上要加入购物车的商品数量
-        $groupBuyPurchase = $groupBuy['goods_num'] - $groupBuy['buy_num'];//团购剩余库存
-        if ($userWantGoodsNum > 200) {
-            $userWantGoodsNum = 200;
-        }
-        if ($userWantGoodsNum > $groupBuyPurchase) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '商品库存不足，剩余' . $groupBuyPurchase . ',当前购物车已有' . $userCartGoodsNum . '件']);
-        }
-        // 如果该商品已经存在购物车
-        if ($userCartGoods) {
-            $cartResult = $userCartGoods->save(['goods_num' => $userWantGoodsNum]);
-        } else {
-            $cartAddFlashSaleData = array(
-                'user_id' => $this->user_id,   // 用户id
-                'session_id' => $this->session_id,   // sessionid
-                'goods_id' => $this->goods['goods_id'],   // 商品id
-                'goods_sn' => $this->goods['goods_sn'],   // 商品货号
-                'goods_name' => $this->goods['goods_name'],   // 商品名称
-                'market_price' => $this->goods['market_price'],   // 市场价
-                'member_goods_price' => $groupBuy['price'],  // 会员折扣价 默认为 购买价
-                'goods_num' => $userWantGoodsNum, // 购买数量
-                'add_time' => time(), // 加入购物车时间
-                'prom_type' => 2,   // 0 普通订单,1 限时抢购, 2 团购 , 3 促销优惠
-            );
-            //商品有规格
-            if ($this->specGoodsPrice) {
-                $cartAddFlashSaleData['spec_key'] = $this->specGoodsPrice['key'];
-                $cartAddFlashSaleData['item_id'] = $this->specGoodsPrice['item_id'];
-                $cartAddFlashSaleData['spec_key_name'] = $this->specGoodsPrice['key_name']; // 规格 key_name
-                $cartAddFlashSaleData['sku'] = $this->specGoodsPrice['sku']; //商品条形码
-                $cartAddFlashSaleData['goods_price'] = $this->specGoodsPrice['price'];   // 规格价
-                $cartAddFlashSaleData['prom_id'] = $this->specGoodsPrice['prom_id']; // 活动id
-            } else {
-                $cartAddFlashSaleData['goods_price'] = $this->goods['shop_price'];   // 原价
-                $cartAddFlashSaleData['prom_id'] = $this->goods['prom_id'];// 活动id
-            }
-            $cartResult = Db::name('Cart')->insertGetId($cartAddFlashSaleData);
-        }
-        if ($cartResult === false) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '加入购物车失败']);
-        }
+    private function addGroupBuyCart(){
+
+
     }
 
     /**
      *  购物车添加优惠促销商品
      */
-    private function addPromGoodsCart()
-    {
-        $promGoodsLogic = new PromGoodsLogic($this->goods, $this->specGoodsPrice);
-        $promGoods = $promGoodsLogic->getPromModel();
-        //活动是否存在，是否关闭，是否处于有效期
-        if ($promGoodsLogic->checkActivityIsEnd() || !$promGoodsLogic->checkActivityIsAble()) {
-            //活动不存在，已关闭，不处于有效期,走添加普通商品流程
-            $this->addNormalCart();
-            return;
-        } else {
-            //活动进行中
-            if ($this->user_id == 0) {
-                throw new TpshopException("加入购物车", 0, ['status' => -101, 'msg' => '购买活动商品必须先登录']);
-            }
-        }
-//        halt(($promGoodsLogic->checkActivityIsEnd() || !$promGoodsLogic->checkActivityIsAble()));
-        //如果有规格价格，就使用规格价格，否则使用本店价。
-        if ($this->specGoodsPrice) {
-            $priceBefore = $this->specGoodsPrice['price'];
-            $storeCount = $this->specGoodsPrice['store_count'];
-        } else {
-            $priceBefore = $this->goods['shop_price'];
-            $storeCount = $this->goods['store_count'];
-        }
-        //计算优惠价格
-        $priceAfter = $promGoodsLogic->getPromotionPrice($priceBefore);
-        // 查询购物车是否已经存在这商品
-        if (!$this->user_id) {
-            $userCartGoods = Cart::get(['user_id' => $this->user_id, 'session_id' => $this->session_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: '')]);
-        } else {
-            $userCartGoods = Cart::where(['user_id' => $this->user_id, 'goods_id' => $this->goods['goods_id'], 'spec_key' => ($this->specGoodsPrice['key'] ?: '')])->find();
-        }
+    private function addPromGoodsCart(){
 
-        $userCartGoodsNum = empty($userCartGoods['goods_num']) ? 0 : $userCartGoods['goods_num']; ///获取用户购物车的促销商品数量
-        $userWantGoodsNum = $this->goodsBuyNum + $userCartGoods['goods_num']; //本次要购买的数量加上购物车的本身存在的数量
-        $UserPromOrderGoodsNum = $promGoodsLogic->getUserPromOrderGoodsNum($this->user_id); //获取用户促销已购商品数量
-        $userBuyGoodsNum = $userWantGoodsNum + $UserPromOrderGoodsNum; //本次要购买的数量+购物车本身数量+已经买
-        if ($userBuyGoodsNum > $promGoods['buy_limit']) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' => '每人限购' . $promGoods['buy_limit'] . '件，您已下单' . $UserPromOrderGoodsNum . '件，' . '购物车已有' . $userCartGoodsNum . '件']);
-        }
-        $userWantGoodsNum = $this->goodsBuyNum + $userCartGoodsNum;//本次要购买的数量加上购物车的本身存在的数量
-        if ($userWantGoodsNum > 200) {
-            $userWantGoodsNum = 200;
-        }
-        if ($userWantGoodsNum > $storeCount) {   //用户购买量不得超过库存
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' =>'商品活动库存不足，剩余' . $storeCount . ',当前购物车已有' . $userCartGoodsNum . '件']);
-        }
-        // 如果该商品已经存在购物车
-        if ($userCartGoods) {
-            /* $userWantGoodsNum = $this->goodsBuyNum + $userCartGoods['goods_num'];//本次要购买的数量加上购物车的本身存在的数量
-             if($userWantGoodsNum > 200){
-                 $userWantGoodsNum = 200;
-             }*/
-            $cartResult = $userCartGoods->save(['goods_num' => $userWantGoodsNum, 'goods_price' => $priceBefore, 'member_goods_price' => $priceAfter]);
-        } else {
-            $cartAddData = array(
-                'user_id' => $this->user_id,   // 用户id
-                'session_id' => $this->session_id,   // sessionid
-                'goods_id' => $this->goods['goods_id'],   // 商品id
-                'goods_sn' => $this->goods['goods_sn'],   // 商品货号
-                'goods_name' => $this->goods['goods_name'],   // 商品名称
-                'market_price' => $this->goods['market_price'],   // 市场价
-                'goods_price' => $priceBefore,  // 原价
-                'member_goods_price' => $priceAfter,  // 会员折扣价 默认为 购买价
-                'goods_num' => $this->goodsBuyNum, // 购买数量
-                'add_time' => time(), // 加入购物车时间
-                'prom_type' => 3,   // 0 普通订单,1 限时抢购, 2 团购 , 3 促销优惠
-            );
-            //商品有规格
-            if ($this->specGoodsPrice) {
-                $cartAddData['item_id'] = $this->specGoodsPrice['item_id'];
-                $cartAddData['spec_key'] = $this->specGoodsPrice['key'];
-                $cartAddData['spec_key_name'] = $this->specGoodsPrice['key_name']; // 规格 key_name
-                $cartAddData['sku'] = $this->specGoodsPrice['sku']; //商品条形码
-                $cartAddData['prom_id'] = $this->specGoodsPrice['prom_id']; // 活动id
-            } else {
-                $cartAddData['prom_id'] = $this->goods['prom_id'];// 活动id
-            }
-            $cartResult = Db::name('Cart')->insertGetId($cartAddData);
-        }
-        if ($cartResult === false) {
-            throw new TpshopException("加入购物车", 0, ['status' => 0, 'msg' =>'加入购物车失败']);
-        }
+
     }
-
-
 
     /**
      * 立即购买
@@ -483,37 +190,42 @@ class CartLogic extends Common {
         if (empty($this->goodsBuyNum)) {
             throw new TpshopException('立即购买', 0, '购买商品数量不能为0');
         }
-        $buyGoods = [
-            'user_id' => $this->user_id,
-            'product_id' => $this->goods['id'],
-            'sku_id' => $this->specGoodsPrice['id'],
-//            'speckey' => $this->specvalue,
+        $buyGoods[] = [
+            'pid' => $this->goods['id'],
+            'skuid' => $this->specGoodsPrice['id'],
+            'speckey' => json_decode($this->goods['product_spec_info'],1)['name'],
             'specvalue' => $this->specvalue,
             'price' => $this->specGoodsPrice['price'],
+            'skutitle' => $this->specGoodsPrice['title'],
+            'stock' => $this->specGoodsPrice['stock'],
             'quantity' => $this->goodsBuyNum, // 购买数量
             'createtime' => time(), // 加入购物车时间
             'is_rush' => $this->goods['is_rush'],   // 0 普通订单,1 限时抢购, 2 团购 , 3 促销优惠
-            'shop_id' => $this->goods['shop_id'],//店铺ID
-            'shoptitle' => (new Shops())::where('id',$this->goods['shop_id']) -> value('title'),//店铺ID
-//            'prom_id' => 0,   // 活动id
-            'product' => $this->goods,
-            'skus' => $this->specGoodsPrice
+            'name' => $this->goods['name'],
+            'bar_code' => $this->goods['bar_code'],
+            'images' => $this->goods['images'],
         ];
+
 //        if($this->goods['is_rush'] == 1){
 //
 //        }
-//        dump($buyGoods);die;
         $store_count = $this->specGoodsPrice['stock'];
         if ($this->goodsBuyNum > $store_count) {
             throw new TpshopException('立即购买', 0, '商品库存不足，剩余' . $store_count);
         }
+        $shopdata = [
+            'shop_id' => $this->goods['shop_id'],//店铺ID
+            'shoptitle' => (new Shops())::where('id',$this->goods['shop_id']) -> value('title'),//店铺ID
+            'cartlist' => $buyGoods
+        ];
+        $procdut =  $this -> getGoodsprice($buyGoods);
 
-//        $cart = new Cart();
-//        $buyGoods['member_goods_price']?$buyGoods['member_goods_price']=round($buyGoods['member_goods_price'],2):'';
-//        $buyGoods['cut_fee'] = $cart->getCutFeeAttr(0, $buyGoods);
-//        $buyGoods['goods_fee'] = $cart->getGoodsFeeAttr(0, $buyGoods);
-//        $buyGoods['total_fee'] = $cart->getTotalFeeAttr(0, $buyGoods);
-        return $buyGoods;
+        $data = [
+            'total_price' => $procdut['total_price'],
+            'goods_num' => $procdut['goods_num'],
+            'data' => $shopdata
+        ];
+        return $data;
     }
 
 
@@ -534,256 +246,6 @@ class CartLogic extends Common {
         return $goods_num;
     }
 
-    /**
-     * 获取用户购物车商品总数
-     * @return float|int
-     */
-
-    public function getUserCartGoodsTypeNum()
-    {
-        if ($this->user_id) {
-            $goods_num = Db::name('cart')->where(['user_id' => $this->user_id])->count();
-        } else {
-            $goods_num = Db::name('cart')->where(['session_id' => $this->session_id])->count();
-        }
-        return empty($goods_num) ? 0 : $goods_num;
-    }
-
-
-
-
-    /**
-     * 将cart_list转成数组
-     * @param $cart_list
-     * @return array
-     */
-    public function cartListToArray($cart_list){
-        if($cart_list){
-            $cart_list = $cart_list->hidden(['goods'])->append(['combination_cart', 'cut_fee', 'total_fee', 'goods_fee', 'combination'])->toArray();
-            foreach($cart_list as $cart_key=>$cart_value){
-                foreach($cart_value['combination_cart'] as $combination_cart => $combination_cart_value){
-                    $cart_list[$cart_key]['combination_cart'] = $cart_value['combination_cart']->append(['cut_fee','total_fee', 'goods_fee'])->toArray();
-                }
-            }
-            return $cart_list;
-        }else{
-            return [];
-        }
-    }
-
-
-
-
-
-
-    /**
-     * 用户登录后 对购物车操作
-     * modify：login_cart_handle
-     */
-    public function doUserLoginHandle()
-    {
-        if (empty($this->session_id) || empty($this->user_id)) {
-            return;
-        }
-        //登录后将购物车的商品的 user_id 改为当前登录的id
-
-        Db::name('cart')->where(['session_id' => $this->session_id,'user_id' => 0])->update(['user_id' => $this->user_id]);
-        $cart = new Cart();
-        // 查找购物车两件完全相同的商品
-        $cart_id_arr = $cart->field('id')->where(['user_id' => $this->user_id])->group('goods_id,spec_key')->having('count(goods_id) > 1')->select();
-        if (!$cart_id_arr->isEmpty()) {
-            $cart_id_arr = get_arr_column($cart_id_arr, 'id');
-            DB::name('cart')->delete($cart_id_arr); // 删除购物车完全相同的商品
-        }
-    }
-
-    /**
-     * 更改购物车的商品数量
-     * @param $cart_id |购物车id
-     * @param $goods_num |商品数量
-     * @return array
-     */
-    public function changeNum($cart_id, $goods_num)
-    {
-        $Cart = new Cart();
-        $cart = (new Cart)::find($cart_id);
-        $cart_goods_where = ['user_id' => $cart['user_id'], 'product_id' => $cart['product_id'], 'item_id' => $cart['item_id']];
-        if (!$this->user_id) {
-            $cart_goods_where['session_id'] = $this->session_id;
-        }
-        //判断属性库存 和购物车有几个
-        $cart_goods_where['id'] = array('<>',$cart_id);
-        $cart_goods_where['combination_group_id'] = array('<>',$cart_id);
-        $cart_goods_num_sum = Db::name('cart')->where($cart_goods_where)->sum('goods_num');
-        // $store_count = Db::name('spec_goods_price')->where(['item_id'=>$cart['item_id'],'goods_id'=>$cart['goods_id']])->value('store_count');
-        //if($store_count){
-        //    $cart->limit_num = $store_count;
-        // }
-
-        if ($goods_num + $cart_goods_num_sum > $cart->limit_num) {
-            return ['status' => 0, 'msg' => $cart->goods_name.$cart->spec_key_name.'商品数量不能大于' . $cart->limit_num, 'result' => ['limit_num' => $cart->limit_num]];
-        }
-        if ($goods_num > 200) {
-            $goods_num = 200;
-        }
-        $cart->goods_num = $goods_num;
-        if ($cart['prom_type'] == 0) {
-            $cartGoods = Goods::find($cart['goods_id']);
-            if (!empty($cartGoods['price_ladder'])) {
-                //如果有阶梯价格,就是用阶梯价格
-                $goodsLogic = new GoodsLogic();
-                $price_ladder = $cartGoods['price_ladder'];
-                $cart->goods_price = $cart->member_goods_price = $goodsLogic->getGoodsPriceByLadder($goods_num, $cartGoods['shop_price'], $price_ladder);
-            }
-            $cart->save();
-        }
-        if ($cart['prom_type'] == 7) {
-//            $carts = $Cart->where(['combination_group_id' => $cart['combination_group_id'], ['id' , '<>', $cart['id']]])->select();
-            //xwy-2018-6-4,加入购物车改了主商品的combination_group_id为0 ，这里只能能拿id
-            $carts = $Cart->where(['combination_group_id' => $cart['id'], ['id' , '<>', $cart['id']]])->select();
-            // 启动事务
-            Db::startTrans();
-            foreach ($carts as $cart_item) {
-                $cart_goods_where = ['user_id' => $cart_item['user_id'], 'goods_id' => $cart_item['goods_id'], 'item_id' => $cart_item['item_id']];
-                if (!$this->user_id) {
-                    $cart_goods_where['session_id'] = $this->session_id;
-                }
-                //判断属性库存 和购物车有几个
-                $cart_goods_where['id'] = array('<>',$cart_id);
-                $cart_goods_where['combination_group_id'] = array('<>',$cart_id);
-                $cart_goods_num_sum = Db::name('cart')->where($cart_goods_where)->sum('goods_num');
-                $store_count = Db::name('spec_goods_price')->where(['item_id'=>$cart_item['item_id'],'goods_id'=>$cart_item['goods_id']])->value('store_count');
-                if($store_count){
-                    $cart_item->limit_num = $store_count;
-                }
-                if($goods_num + $cart_goods_num_sum > $cart_item->limit_num){
-                    // 回滚事务
-                    Db::rollback();
-                    return ['status' => 0, 'msg' => $cart_item->goods_name.$cart_item->spec_key_name.'商品数量不能大于' . $cart_item->limit_num, 'result' => ['limit_num' => $cart_item->limit_num]];
-                }
-                $cart_item->goods_num = $goods_num;
-                $cart_item->save();
-            }
-            // 提交事务
-            Db::commit();
-        }
-        $cart->save();
-        return ['status' => 1, 'msg' => '修改商品数量成功', 'result' => ''];
-    }
-
-    /**
-     * 删除购物车商品
-     * @param array $cart_ids
-     * @return int
-     * @throws \think\Exception
-     * $unique_Id 删除提供给API调用的
-     */
-    public function delete($cart_ids = array())
-    {
-        //pc和mobile调用
-        if ($this->user_id) {
-            $cartWhere['user_id'] = $this->user_id;
-        } else {
-            $cartWhere['session_id'] = $this->session_id;
-            $user['user_id'] = 0;
-        }
-        $Cart = new Cart();
-        $delete_cart_list = $Cart->where($cartWhere)->where('id', 'IN', $cart_ids)->select();
-        $delete_cart_combination_group_id = $delete_cart_ids = [];
-        foreach ($delete_cart_list as $cart) {
-            if ($cart['prom_type'] == 7) {
-                if ($cart['combination_group_id'] == 0) {
-                    //主商品删除
-                    array_push($delete_cart_combination_group_id, $cart['id']);
-                    array_push($delete_cart_ids, $cart['id']);
-                } else {
-                    //副商品删除
-                    array_push($delete_cart_ids, $cart['id']);
-                    $combination_group_num = Db::name('cart')->where(['combination_group_id' => $cart['combination_group_id']])->count('id');
-                    if ($combination_group_num <= 1) {
-                        array_push($delete_cart_combination_group_id, $cart['combination_group_id']);
-                        array_push($delete_cart_ids, $cart['combination_group_id']);
-                    }
-                }
-            } else {
-                array_push($delete_cart_ids, $cart['id']);
-            }
-        }
-        $delete = Db::name('cart')
-            ->where($cartWhere)
-            ->where(function ($query) use ($delete_cart_ids, $delete_cart_combination_group_id) {
-                if ($delete_cart_combination_group_id) {
-                    $query->where('id', 'IN', $delete_cart_ids)->whereOr('combination_group_id', 'IN', $delete_cart_combination_group_id);
-                } else {
-                    $query->where('id', 'IN', $delete_cart_ids);
-                }
-
-            })
-            ->delete();
-        return $delete;
-    }
-
-    /**
-     * 更新购物车的，会员折扣价,
-     * @param $user
-     * @throws \think\Exception
-     */
-    public function updateCartPrice($user){
-        if ($user) {
-            $discount = (empty((float)$user['discount'])) ? 1 : $user['discount'];
-            if ($discount != 1) {
-                $cart_where = [
-                    'user_id'=>$user['user_id'],
-                    'prom_type'=>0,
-                ];
-                // 把购物车的普通商品都更新折扣价,会员从一个等级改成另一个等级也可以更新
-                $goods_ids = Db::name('cart')->where($cart_where)->value('goods_id');
-                if($goods_ids){
-                    Db::name('cart')->where($cart_where)->update(['member_goods_price' => Db::raw('goods_price*' . $discount)]);
-                }
-            }
-        }
-    }
-
-    /**
-     * 更新购物车，并返回计算结果
-     * @param array $cart
-     */
-    public function AsyncUpdateCart($cart = [])
-    {
-        if(empty($cart)){
-            return;
-        }
-        $cartSelectedId = $cartNoSelectedId = [];
-        foreach ($cart as $key => $val) {
-            if ($cart[$key]['selected'] == 1) {
-                $cartSelectedId[] = $cart[$key]['id'];
-            } else {
-                $cartNoSelectedId[] = $cart[$key]['id'];
-            }
-        }
-        $Cart = new Cart();
-        if ($this->user_id) {
-            $cartWhere['user_id'] = $this->user_id;
-        } else {
-            $cartWhere['session_id'] = $this->session_id;
-        }
-        if (!empty($cartNoSelectedId)) {
-            $Cart->where('id', 'IN', $cartNoSelectedId)->where($cartWhere)->update(['selected' => 0]);
-        }
-        if (!empty($cartSelectedId)) {
-            $cartList = $Cart->where('id', 'IN', $cartSelectedId)->where($cartWhere)->select();
-            //查出搭配购的商品
-            foreach ($cartList as $cartKey => $cartVal) {
-                $cartVal->save(['selected' => 1]);
-                if ($cartVal['prom_type'] == 7) {
-                    //加入购物车改了主商品的combination_group_id为0 ，这里只能能拿id
-                    $Cart->where(['combination_group_id' => $cartVal['id'], ['id' , '<>', $cartVal['id']]])->update(['selected' => 1]);
-                }
-            }
-        }
-    }
-
 
     /**
      * 获取购物车的价格详情
@@ -791,166 +253,23 @@ class CartLogic extends Common {
      * @return array
      */
     public function getCartPriceInfo($cartList = null){
-        $total_fee = $goods_fee = $goods_num = 0;//初始化数据。商品总额/节约金额/商品总共数量
+        $total_price = $goods_fee = $goods_num = 0;//初始化数据。商品总额/节约金额/商品总共数量
         if ($cartList) {
             foreach ($cartList as $cartKey => $cartItem) {
-                $total_fee += $cartItem['price'] * $cartItem['quantity'];
-                $goods_fee += 0;
-                $goods_num += $cartItem['quantity'];
-//                if($cartItem['skus']){
-//                    foreach($cartItem['skus'] as $combinationCartKey=>$combinationCartItem){
-//                        $total_fee += $combinationCartItem['price'];
-//                        $goods_fee += $combinationCartItem['price'];
-//                        $goods_num += $combinationCartItem['quantity'];
-//                    }
-//                }
+                foreach ($cartItem['cartlist'] as $key => $val){
+                    $total_price += $val['price'] * $val['quantity'];
+                    $goods_fee += 0;
+                    $goods_num += $val['quantity'];
+                }
             }
         }
-        $total_fee = round($total_fee,2);
+        $total_price = round($total_price,2);
         $goods_fee = round($goods_fee,2);
-        return compact('total_fee', 'goods_fee', 'goods_num');
+        return compact('total_price', 'goods_fee', 'goods_num');
     }
 
 
 
-
-
-
-
-
-
-    /**
-     * 转换购物车的优惠券数据
-     * @param $cartList |购物车商品
-     * @param $userCouponList |用户优惠券列表
-     * @return mixedable
-     */
-    public function getCouponCartList($cartList, $userCouponList)
-    {
-        $userCouponArray = $userCouponList;//->toArray();  //用户的优惠券
-        $couponNewList = [];
-        $coupon_num = 0;
-        foreach ($userCouponArray as $couponKey => $couponItem) {
-            if ($userCouponArray[$couponKey]['coupon']['use_type'] == 0) { //全店使用优惠券
-                if ($cartList['total_fee'] >= $userCouponArray[$couponKey]['coupon']['condition']) {  //订单商品总价是否符合优惠券购买价格
-                    $userCouponArray[$couponKey]['coupon']['able'] = 1;
-                    $coupon_num += 1;
-                } else {
-                    $userCouponArray[$couponKey]['coupon']['able'] = 0;
-                }
-            } elseif ($userCouponArray[$couponKey]['coupon']['use_type'] == 1) { //指定商品优惠券
-                $pointGoodsPrice = 0;//指定商品的购买总价
-                $couponGoodsId = get_arr_column($userCouponArray[$couponKey]['coupon']['goods_coupon'], 'goods_id');
-                if($cartList['cartList']){
-                    foreach ($cartList['cartList'] as $tKey => $Item) {
-                        if (in_array($Item['goods_id'], $couponGoodsId)) {
-                            $pointGoodsPrice += $Item['member_goods_price'] * $Item['goods_num'];  //用会员折扣价统计每个商品的总价
-                        }
-                    }
-                    if ($pointGoodsPrice >= $userCouponArray[$couponKey]['coupon']['condition']) {
-                        $userCouponArray[$couponKey]['coupon']['able'] = 1;
-                        $coupon_num += 1;
-                    } else {
-                        $userCouponArray[$couponKey]['coupon']['able'] = 0;
-                    }
-                }
-
-            } elseif ($userCouponArray[$couponKey]['coupon']['use_type'] == 2) { //指定商品分类优惠券
-
-                $pointGoodsCatPrice = 0;//指定商品分类的购买总价
-                $couponGoodsCatId = get_arr_column($userCouponArray[$couponKey]['coupon']['goods_coupon'], 'goods_category_id');
-
-                foreach ($cartList['cartList'] as $tKey => $Item) {
-                    //追溯上级分类，优惠券
-                    $cat_id_arr = is_array($Item['goods']['cat_id']) ? $Item['goods']['cat_id'] : [$Item['goods']['cat_id']];
-                    $all_cat = Db::name('goods_category')->where([['id','in',$cat_id_arr]])->field('parent_id_path')->select();
-                    $arr = [];
-                    foreach ($all_cat as $k=>$v)
-                    {
-                        $arr = array_merge($arr,explode('_',$v['parent_id_path']));
-                    }
-                    $couponGoodsCatId = $arr;
-                    if (in_array($Item['goods']['cat_id'], $couponGoodsCatId)) {
-                        $pointGoodsCatPrice += $Item['member_goods_price'] * $Item['goods_num']; //用会员折扣价统计每个商品的总价
-                    }
-                }
-                if ($pointGoodsCatPrice >= $userCouponArray[$couponKey]['coupon']['condition']) {
-                    $userCouponArray[$couponKey]['coupon']['able'] = 1;
-                    $coupon_num += 1;
-                } else {
-                    $userCouponArray[$couponKey]['coupon']['able'] = 0;
-                }
-            } else {
-                $userCouponList[$couponKey]['coupon']['able'] = 1;
-            }
-            $couponNewList[] = $userCouponArray[$couponKey];
-        }
-        $this->userCouponNumArr['usable_num'] = $coupon_num;
-        return $couponNewList;
-    }
-
-    /**
-     * 获取可用的购物车优惠券返回。不可用的过滤掉。
-     * @param $cartList |购物车商品
-     * @param $userCouponList |用户优惠券列表
-     * @return mixedable
-     */
-    public function getCouponAbleCartList($cartList, $userCouponList)
-    {
-        $userCouponArray = $userCouponList->toArray();  //用户的优惠券
-        $couponNewList = [];
-        foreach ($userCouponArray as $couponKey => $couponItem) {
-            if ($userCouponArray[$couponKey]['coupon']['use_type'] == 0) { //全店使用优惠券
-                if ($cartList['total_fee'] >= $userCouponArray[$couponKey]['coupon']['condition']) {  //订单商品总价是否符合优惠券购买价格
-                    $coupon = $this->getApiCoupon($userCouponArray[$couponKey]);
-                    array_push($couponNewList, $coupon);
-                }
-            } elseif ($userCouponArray[$couponKey]['coupon']['use_type'] == 1) { //指定商品优惠券
-                $pointGoodsPrice = 0;//指定商品的购买总价
-                $couponGoodsId = get_arr_column($userCouponArray[$couponKey]['coupon']['goods_coupon'], 'goods_id');
-                foreach ($cartList['cartList'] as $tKey => $Item) {
-                    if (in_array($Item['goods_id'], $couponGoodsId)) {
-                        $pointGoodsPrice += $Item['member_goods_price'] * $Item['goods_num'];  //用会员折扣价统计每个商品的总价
-                    }
-                }
-                if ($pointGoodsPrice >= $userCouponArray[$couponKey]['coupon']['condition']) {
-                    $coupon = $this->getApiCoupon($userCouponArray[$couponKey]);
-                    array_push($couponNewList, $coupon);
-                }
-            } elseif ($userCouponArray[$couponKey]['coupon']['use_type'] == 2) { //指定商品分类优惠券
-                $pointGoodsCatPrice = 0;//指定商品分类的购买总价
-                $couponGoodsCatId = get_arr_column($userCouponArray[$couponKey]['coupon']['goods_coupon'], 'goods_category_id');
-                foreach ($cartList['cartList'] as $tKey => $Item) {
-                    if (in_array($Item['goods']['cat_id'], $couponGoodsCatId)) {
-                        $pointGoodsCatPrice += $Item['member_goods_price'] * $Item['goods_num']; //用会员折扣价统计每个商品的总价
-                    }
-                }
-                if ($pointGoodsCatPrice >= $userCouponArray[$couponKey]['coupon']['condition']) {
-                    $coupon = $this->getApiCoupon($userCouponArray[$couponKey]);
-                    array_push($couponNewList, $coupon);
-                }
-            } else {
-                array_push($couponNewList, $userCouponArray[$couponKey]);
-            }
-        }
-        return $couponNewList;
-    }
-
-    private function getApiCoupon($userCoupon)
-    {
-        $coupon['id'] = $userCoupon['id'];
-        $coupon['cid'] = $userCoupon['cid'];
-        $coupon['name'] = $userCoupon['coupon']['name'];
-        $coupon['money'] = $userCoupon['coupon']['money'];
-        $coupon['condition'] = $userCoupon['coupon']['condition'];
-        $coupon['use_type_title'] = $userCoupon['coupon']['use_type_title'];
-        return $coupon;
-    }
-
-    public function getUserCouponNumArr()
-    {
-        return $this->userCouponNumArr;
-    }
 
     /**
      * 检查购物车数据是否满足库存购买
@@ -959,8 +278,8 @@ class CartLogic extends Common {
      */
     public function checkStockCartList($cartList){
         foreach ($cartList as $cartKey => $cartVal) {
-            if ($cartVal['quantity'] > $cartVal['skus']['stock']) {
-                throw new TpshopException('', 0, $cartVal['quantity']. '购买数量不能大于' .$cartVal['skus']['stock']);
+            if ($cartVal['quantity'] > $cartVal['stock']) {
+                throw new TpshopException('', 0, $cartVal['quantity']. '购买数量不能大于' .$cartVal['stock']);
             }
         }
     }
@@ -970,192 +289,73 @@ class CartLogic extends Common {
      * @throws \think\Exception
      */
     public function clear($cartid = ''){
+        $where = "user_id = $this->user_id";
         if($cartid){
-            $where = "user_id = $this->user_id and id in($cartid)";
+            $where .=" and id in($cartid)";
         }
         (new Cart())->where($where)->delete();
     }
 
     /**
-     * @param $combination_goods |array 每个item必须goods_id和item_id键
-     * @throws TpshopException
+     * 函数：editCart
+     * 功能：编辑购物车信息[物品购物数量+1-1]
+     * 简介：根据提供的购物车名$cartName及操作名$action结合指定购物车物品序号$skey对指定物品的购买数量进行+1-1操作
+     * 时间：2011年7月30日 23:09:27
+     * 作者：by zhjp
+     * Enter description here ...
+     * @param String $cartName
+     * @param String $action[plus+][minus-]
+     * @param Int $skey
      */
-    public function addCombinationToCart($combination_goods)
-    {
-        if (empty($this->combination)) {
-            throw new TpshopException('搭配购加入购物车', 0, ['status' => 0, 'msg' => '搭配购套餐不存在']);
+    public function editCart($action,$skey,$number=1){
+        switch ($action){
+            case 'plus':
+                $this->_plusOne($skey);
+                break;
+            case 'minus':
+                $this->_minusOne($skey);
+                break;
+            case 'input';
+                $this->_minusOne($skey,$number);
+                break;
         }
-        $combination_goods_list = [];
-        foreach ($combination_goods as $item) {
-            //判断配送地区
-            $this->dispatching($item['goods_id'],$item['region_id']);
-            $combination_goods_item = CombinationGoods::where(['combination_id' => $this->combination['combination_id'], 'goods_id' => $item['goods_id'], 'item_id' => $item['item_id']])->find();
-            if ($combination_goods_item['is_master'] == 1) {
-                array_unshift($combination_goods_list, $combination_goods_item);//主商品插入头部
-            } else {
-                array_push($combination_goods_list, $combination_goods_item);
-            }
-        }
-        $combination_goods_count = count($combination_goods_list);
-        if ($combination_goods_count <= 1) {
-            throw new TpshopException('搭配购加入购物车', 0, ['status' => 0, 'msg' => '请选择两件商品']);
-        }
-        if ($combination_goods_list[0]['is_master'] != 1) {
-            throw new TpshopException('搭配购加入购物车', 0, ['status' => 0, 'msg' => '没有选择主商品']);
-        }
-        $userCartCount = $this->getUserCartGoodsTypeNum();
-        if (($userCartCount + $combination_goods_count) > 20) {
-            throw new TpshopException('搭配购加入购物车', 0, ['status' => 0, 'msg' => '购物车最多只能放20种商品']);
-        }
-        $cart_combination_goods_list = [];
-        foreach ($combination_goods_list as $combination_goods_item) {
-            $cart_goods_where = ['user_id' => $this->user_id, 'goods_id' => $combination_goods_item['goods_id']];
-            if (!$this->user_id) {
-                $cart_goods_where['session_id'] = $this->session_id;
-            }
-            $cart_combination_goods_item = [
-                'user_id' => $this->user_id,   // 用户id
-                'session_id' => $this->session_id,   // sessionid
-                'goods_id' => $combination_goods_item['goods_id'],   // 商品id
-                'goods_sn' => $combination_goods_item['goods']['goods_sn'],   // 商品货号
-                'goods_name' => $combination_goods_item['goods_name'],   // 商品名称
-                'market_price' => $combination_goods_item['goods']['market_price'],   // 市场价
-                'goods_price' => $combination_goods_item['original_price'],
-                'member_goods_price' => $combination_goods_item['price'],
-                'goods_num' => $this->goodsBuyNum, // 购买数量
-                'sku' => $combination_goods_item['goods']['sku'],
-                'item_id' => $combination_goods_item['item_id'],
-                'add_time' => time(), // 加入购物车时间
-                'prom_type' => 7,   //搭配购
-                'prom_id' => $this->combination['combination_id'],   //搭配购
-                'spec_key' => '',
-                'spec_key_name' => '',
-            ];
-            $store_count = $combination_goods_item['goods']['store_count'];
-            if (!empty($combination_goods_item['spec_goods_price'])) {
-                $store_count = $combination_goods_item['spec_goods_price']['store_count'];
-                $cart_combination_goods_item['spec_key'] = $cart_goods_where['spec_key'] = $combination_goods_item['spec_goods_price']['key'];
-                $cart_combination_goods_item['spec_key_name'] = $combination_goods_item['spec_goods_price']['key_name'];
-                $cart_combination_goods_item['sku'] = $combination_goods_item['spec_goods_price']['sku'];
-            }
-            $cart_goods_num_sum = Db::name('cart')->where($cart_goods_where)->sum('goods_num');
-            if (($cart_goods_num_sum + $this->goodsBuyNum) > $store_count) {
-//                throw new TpshopException('搭配购加入购物车', 0, ['status' => 0, 'msg' => $combination_goods_item['goods_name'] . ' ' . $combination_goods_item['key_name'] . '商品库存不足，剩余' . $store_count]);
-                throw new TpshopException('搭配购加入购物车', 0, ['status' => 0, 'msg' => $combination_goods_item['goods_name'] . ' ' . $combination_goods_item['key_name'] . '商品库存不足']);
-            }
-            array_push($cart_combination_goods_list, $cart_combination_goods_item);
-        }
-
-        $master_cart_list = Db::name('cart')->where(['user_id' => $this->user_id, 'session_id' => $this->session_id, 'goods_id' => $combination_goods_list[0]['goods_id'], 'spec_key' => ($combination_goods_list[0]['spec_goods_price']['key'] ?: ''),
-            'prom_type' => 7, 'prom_id' => $this->combination['combination_id']])->select();
-        $cart_combination_goods = [];
-        if (!empty($master_cart_list)) {
-            $is_insert = 1;
-            $Cart = new Cart();
-
-            foreach ($master_cart_list as $master_cart_item) {
-//                $combination_goods_master_cart_list = $Cart->where(['combination_group_id' => $master_cart_item['combination_group_id']])->select();
-                $combination_goods_master_cart_list = $Cart->where(['combination_group_id' => $master_cart_item['id']])->whereOr(['id' => $master_cart_item['id']])->select();
-                $combination_goods_master_cart_list_count = count($combination_goods_master_cart_list);
-                if ($combination_goods_master_cart_list_count != $combination_goods_count) {
-                    continue;
-//                    break;
-                }
-
-                $same_num = 0;//初始化个数
-                foreach ($combination_goods_master_cart_list as $cart_key => $cart_val) {
-                    foreach ($cart_combination_goods_list as $goods_item) {
-                        if ($goods_item['goods_id'] == $cart_val['goods_id'] && $goods_item['spec_key'] == $cart_val['spec_key']) {
-                            $combination_goods_master_cart_list[$cart_key]['goods_num'] = $combination_goods_master_cart_list[$cart_key]['goods_num'] + $this->goodsBuyNum;
-                            $combination_goods_master_cart_list[$cart_key]['goods_price'] = $goods_item['goods_price'];
-                            $combination_goods_master_cart_list[$cart_key]['member_goods_price'] = $goods_item['member_goods_price'];
-                            $same_num++;
-                        }
-                    }
-                }
-
-                if ($same_num == $combination_goods_count) {
-                    $cart_combination_goods = $combination_goods_master_cart_list;
-                    $is_insert = 0;
-                    break;
-                }
-            }
-        } else {
-            $is_insert = 1;
-        }
-        if ($is_insert) {
-            //先插入主商品
-            $master_cart = new Cart($cart_combination_goods_list[0]);
-            $master_cart->save();
-            //更新主商品的combination_group_id
-//            $master_cart->save(['combination_group_id' => $master_cart['id']]);
-            $master_cart->save(['combination_group_id' => 0]);//xwy-2018-6-4
-            array_shift($cart_combination_goods_list);//移除主商品
-            foreach ($cart_combination_goods_list as $goods_key => $goods_item) {
-                $cart_combination_goods_list[$goods_key]['combination_group_id'] = $master_cart['id'];
-            }
-            Db::name('cart')->insertAll($cart_combination_goods_list);
-        } else {
-            foreach ($cart_combination_goods as $cart_key => $cart) {
-                $cart->save();
-            }
-        }
-
+        $this -> getCartList();
+        //更新购物车信息
     }
 
     /**
-     * 商品物流配送和运费
-     * @param $goods_id
-     * @param $region_id
-     * @throws TpshopException
-     */
-    public function dispatching($goods_id, $region_id)
-    {
-        $Goods = new \app\common\model\Goods();
-        $goods = $Goods->cache(true)->where('goods_id',$goods_id)->find();
-        $freightLogic = new FreightLogic();
-        $freightLogic->setGoodsModel($goods);
-        $freightLogic->setRegionId($region_id);
-        $freightLogic->setGoodsNum(1);
-        $isShipping = $freightLogic->checkShipping();
-        if(!$isShipping){
-            throw new TpshopException('该地区不支持配送', 0, ['status'=>0,'msg'=>$goods['goods_name'].'该地区不支持配送','result'=>'']);
-        }
-    }
+     * 函数：_plusOne
+     * 功能：将物品的购买数量+1
+     * 简介：根据提供的购物车物品序号$skey将指定的商品数量+1
+     * 时间：2011年7月30日 23:24:26
+     * 作者：by zhjp
+     * Enter description here ...
 
-    /**
-     * 找出搭配副商品
+     * @param Int $skey
      */
-    public function getCombination($cartList){
-        //查出搭配购的商品
-        if($cartList){
-            $Cart = new Cart();
-            foreach ($cartList as $cartKey => $cartVal) {
-                if ($cartVal['prom_type'] == 7) {
-                    $arr = $Cart->where(['combination_group_id' => $cartVal['id'], ['id' , '<>', $cartVal['id']]])->select();
-                    $cartList = $cartList->merge($arr);
-                }
-            }
-        }
-        return $cartList;
+    private function _plusOne($skey){
+        //指定物品购买数量+1
+        (new Cart()) -> where('id',$skey) -> Inc('quantity') -> update();
     }
-
     /**
-     * 转换成带店铺数据的购物车商品（拼凑成多商家同样的数据格式）
-     * @param $cartList|购物车列表
-     * @return false|\PDOStatement|string|\think\Collection
+     * 函数：_minusOne
+     * 功能：将物品的购买数量-1
+     * 简介：根据提供的购物车物品序号$skey将指定的商品数量-1
+     * 时间：2011年7月30日 23:27:19
+     * 作者：by zhjp
+     * Enter description here ...
+     * @param unknown_type $cartName
+     * @param unknown_type $skey
      */
-    public function getStoreCartList($cartList){
-        $storeList = [];
-        foreach($cartList as $cartKey => $cartVal)
-        {
-            $storeList[0]['cartList'][] = $cartList[$cartKey];
-            $storeList[0]['store_total_price'] += $cartList[$cartKey]['total_fee'];//店铺商品优惠前购买的总价
-            $storeList[0]['store_goods_price'] += $cartList[$cartKey]['goods_fee'];//店铺商品优惠后购买的总价
-            $storeList[0]['store_cut_price'] += $cartList[$cartKey]['cut_fee'];//店铺商品节省的总价
-            $storeList[0]['store_goods_weight'] += $cartList[$cartKey]['goods']['weight'] * $cartList[$cartKey]['goods_num'];//店铺商品的总重量
+    private function _minusOne($skey){
+        //查询购物车单个信息
+        $quantity = (new Cart())::where('id',$skey) -> value('quantity');
+        if($quantity < 2){
+//            return 2;
+            throw new TpshopException('立即购买', 0, '商品数量不能小于1' );
         }
-        return $storeList;
+        (new Cart()) -> where('id',$skey) -> dec('quantity') -> update();
+        //更新购物车信息
     }
 
 }

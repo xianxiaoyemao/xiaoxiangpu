@@ -1,12 +1,14 @@
 <?php
 namespace app\common\controller;
+use app\common\model\Address;
 use app\common\model\Cart;
-use app\common\model\Order;
+use app\common\model\Orders;
 use app\common\model\Product;
 use app\common\model\ProductSku;
 use app\common\model\Shops;
-
-class Common{
+use think\facade\Db;
+use app\common\model\UserLog;
+class CommonController{
     protected $user_id = 0;
     protected $cartc_id = 0;//user_id
     protected $specvalue;
@@ -120,7 +122,7 @@ class Common{
         while(true){
             $order_sn = $this ->createOrderNm() ; // 订单编号
 //            $order_sn = date('YmdHis').rand(1000,9999); // 订单编号
-            $order_sn_count = (new Order)::where("order_sn = '$order_sn'")->count();
+            $order_sn_count = (new Orders)::where("order_sn = '$order_sn'")->count();
             if($order_sn_count == 0)
                 break;
         }
@@ -145,6 +147,49 @@ class Common{
             sprintf('%02d', rand(0, 99)); //  随机数 2位
         return $order_sn;
     }
+    /**
+     * 开启事务
+     */
+    public static function beginTrans()
+    {
+        Db::startTrans();
+    }
+
+    /**
+     * 提交事务
+     */
+    public static function commitTrans()
+    {
+        Db::commit();
+    }
+
+    /**
+     * 关闭事务
+     */
+    public static function rollbackTrans()
+    {
+        Db::rollback();
+    }
+
+    /**
+     * 根据结果提交滚回事务
+     * @param $res
+     */
+    public static function checkTrans($res)
+    {
+        if ($res) {
+            self::commitTrans();
+        } else {
+            self::rollbackTrans();
+        }
+    }
+
+    public static function insertLog($event,$type=0){
+        //记录日志
+        $data =['content'=>$event,'type'=>$type,'addtime'=>time(),'status' => 1];
+        (new UserLog)::create($data);
+    }
+
 
 
 }
