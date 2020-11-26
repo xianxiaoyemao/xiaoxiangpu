@@ -54,6 +54,7 @@ class CartLogic extends CommonController {
 //      $cartlist = (new Cart) -> hasWhere('product', $haswhere) -> with(['product','skus'])->where($cartWhere) -> select() -> toArray();
         $cartlist = (new Cart)  -> with(['product','skus']) ->where($cartWhere)  -> select() -> toArray();
         $cartCheckAfterList = $this->checkCartList($cartlist);// 获取购物车商品
+        $procdut =  $this -> getGoodsprice($cartlist);
         $arr =[];
         $result=[];
         foreach($cartCheckAfterList as $v){
@@ -86,11 +87,15 @@ class CartLogic extends CommonController {
                     $val['cartlist'][$k]['isfailure'] = 1;
                     $val['cartlist'][$k]['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
                 }
-//                dump($val);die;
             }
             $cartlist[$key] = $val;
         }
-        return $cartlist;
+        $data = [
+            'total_price' => $procdut['total_price'],
+            'goods_num' => $procdut['goods_num'],
+            'data' => $cartlist
+        ];
+        return $data;
     }
     /**
      * 过滤掉无效的购物车商品
@@ -108,8 +113,16 @@ class CartLogic extends CommonController {
         return $cartList;
     }
 
-
-
+    //获取商品总价和商品总数量
+    public function getGoodsprice($cartCheckAfterList){
+        $total_price = $goods_num = 0;
+        foreach ($cartCheckAfterList as $key => $val){
+            $goods_num += (int)$val['quantity'];
+            $total_price += $val['price'] * (int)$val['quantity'];
+        }
+        $total_price = round($total_price,2);
+        return compact('total_price', 'goods_num');
+    }
 
     /**
      * 加入购物车入口
@@ -165,8 +178,6 @@ class CartLogic extends CommonController {
 
     }
 
-
-
     /**
      * 立即购买
      * @return mixed
@@ -194,11 +205,7 @@ class CartLogic extends CommonController {
             'bar_code' => $this->goods['bar_code'],
             'images' => $this->goods['images'],
         ];
-        $shopdata = [
-            'shop_id' => $this->goods['shop_id'],//店铺ID
-            'shoptitle' => (new Shops())::where('id',$this->goods['shop_id']) -> value('title'),//店铺ID
-            'cartlist' => $buyGoods
-        ];
+
 //        if($this->goods['is_rush'] == 1){
 //
 //        }
@@ -206,13 +213,19 @@ class CartLogic extends CommonController {
         if ($this->goodsBuyNum > $store_count) {
             throw new TpshopException('立即购买', 0, '商品库存不足，剩余' . $store_count);
         }
+        $shopdata = [
+            'shop_id' => $this->goods['shop_id'],//店铺ID
+            'shoptitle' => (new Shops())::where('id',$this->goods['shop_id']) -> value('title'),//店铺ID
+            'cartlist' => $buyGoods
+        ];
+        $procdut =  $this -> getGoodsprice($buyGoods);
 
-//        $cart = new Cart();
-//        $buyGoods['member_goods_price']?$buyGoods['member_goods_price']=round($buyGoods['member_goods_price'],2):'';
-//        $buyGoods['cut_fee'] = $cart->getCutFeeAttr(0, $buyGoods);
-//        $buyGoods['goods_fee'] = $cart->getGoodsFeeAttr(0, $buyGoods);
-//        $buyGoods['total_fee'] = $cart->getTotalFeeAttr(0, $buyGoods);
-        return $shopdata;
+        $data = [
+            'total_price' => $procdut['total_price'],
+            'goods_num' => $procdut['goods_num'],
+            'data' => $shopdata
+        ];
+        return $data;
     }
 
 
