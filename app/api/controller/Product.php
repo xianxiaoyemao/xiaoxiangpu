@@ -18,8 +18,12 @@ class Product extends BaseController{
     public function productlist(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $type = $request->post('type');
+        $keyword = $request->post('keyword');
 //        $cid = $request->post('cid') ?? 0;
         $where = "status=1";
+        if (!empty($keyword) && isset($keyword)) {
+            $where .= " and name like '%$keyword%'";
+        }
         $orderby = "createtime desc";
         $page = $request->post('page') ?? 0;
         $limit = 20;
