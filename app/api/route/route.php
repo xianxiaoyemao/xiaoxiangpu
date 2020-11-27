@@ -35,8 +35,8 @@ Route::post('cartitem/cart2', 'cartitem/cart2');
 Route::post('cartitem/cartsubmit', 'cartitem/cartsubmit');//提交订单
 //Route::post('cartitem/cartconfirm', 'cartitem/cartconfirm');//确认订单
 //订单管理
-Route::post('order/createorder', 'order/createorder');
-
+Route::post('order/orderlist', 'order/orderlist');
+Route::post('order/orderdetail', 'order/orderdetail');
 //我的
 Route::post('personal/index', 'personal/index');
 Route::post('personal/convert', 'personal/convert');
