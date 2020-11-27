@@ -60,6 +60,7 @@ class Exclfile{
         }else{
             // 临时文件
             $tempFile  = $_FILES["$software"]['tmp_name'];
+//            dump($_FILES);die;
             //判断上传文件是否超限
             if($_FILES["$software"]['size']>1024*1024*2) {
                 die('{"status":0,"msg":"上传文件不能超过2M"}');
