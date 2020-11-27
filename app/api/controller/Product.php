@@ -6,6 +6,7 @@ use app\BaseController;
 //use app\Exceptions\InvalidRequestException;
 //use Illuminate\Http\Request;
 //use Illuminate\Pagination\LengthAwarePaginator;
+use app\common\model\Cart;
 use app\common\model\ProductDetails;
 use app\common\model\ProductSku;
 use think\facade\Db;
@@ -17,8 +18,12 @@ class Product extends BaseController{
     public function productlist(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $type = $request->post('type');
+        $keyword = $request->post('keyword');
 //        $cid = $request->post('cid') ?? 0;
         $where = "status=1";
+        if (!empty($keyword) && isset($keyword)) {
+            $where .= " and name like '%$keyword%'";
+        }
         $orderby = "createtime desc";
         $page = $request->post('page') ?? 0;
         $limit = 20;
