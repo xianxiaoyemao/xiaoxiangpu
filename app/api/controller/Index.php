@@ -7,6 +7,7 @@ use app\admin\model\User;
 use app\BaseController;
 use app\common\model\Adv;
 use app\common\model\Config;
+use app\common\model\Orders;
 use app\Request;
 use app\common\model\Product;
 class Index extends BaseController
@@ -52,7 +53,7 @@ class Index extends BaseController
         ];
 
         //是不是新人
-        $order = Order::where('user_id', $request->post('uid'))->select();
+        $order = Orders::where('user_id', $request->post('uid'))->select();
         if ($order) {
             $isNew = false;
         } else {
