@@ -64,6 +64,18 @@ class Order extends BaseController
     }
 
 
+    public function orderdel(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $orderid = $request -> post('orderid/d');
+        $res = (new Orders())::where('id',$orderid)-> delete();
+        if($res){
+            (new OrdersDetail())::where('order_id',$orderid)-> delete();
+            return apiBack('success', "删除成功", '10000');
+        }else{
+            return apiBack('fail', "删除失败", '10004');
+        }
+    }
+
     public function orderconst($orderwhere,$type){
         $orderlist = Db::name('orders_detail')  -> alias('od') -> where($orderwhere)
             -> join('orders o','od.order_id=o.id')
@@ -133,11 +145,31 @@ class Order extends BaseController
         $total_price = $coun_price = $pay_price = 0;
         foreach ($cartlist as $key => $val){
             foreach ($val['orderlist'] as $k => $v){
+                $cartlist[$key]['total_number'] +=$v['number'];
                 $cartlist[$key]['total_price'] += $v['price'] * (int)$v['number'];
             }
         }
         return $cartlist;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     //秒杀
@@ -212,10 +244,6 @@ class Order extends BaseController
         //订单信息暂存 redis 哈希表，后续处理
         app('redis') -> hSet('order_info',$user_id,json_encode($goods_info));
         return '购买成功';
-    }
-    //查看订单
-    public function showorder(){
-
     }
 
         /**
