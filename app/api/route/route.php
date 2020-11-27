@@ -45,4 +45,4 @@ Route::post('personal/index', 'personal/index');
 Route::post('personal/convert', 'personal/convert');
 
 //上传
-Route::post('ajax/ajaxupload', 'order/ajaxupload');//评价
+Route::post('ajax/ajaxupload', 'ajax/ajaxupload');//评价
