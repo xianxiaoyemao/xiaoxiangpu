@@ -38,7 +38,11 @@ Route::post('cartitem/cartsubmit', 'cartitem/cartsubmit');//提交订单
 Route::post('order/orderlist', 'order/orderlist');
 Route::post('order/orderdetail', 'order/orderdetail');
 Route::post('order/orderdel', 'order/orderdel');
+Route::post('order/evaluation', 'order/evaluation');//评价
 
 //我的
 Route::post('personal/index', 'personal/index');
 Route::post('personal/convert', 'personal/convert');
+
+//上传
+Route::post('ajax/ajaxupload', 'order/ajaxupload');//评价

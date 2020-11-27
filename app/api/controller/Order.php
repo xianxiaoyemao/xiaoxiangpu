@@ -4,6 +4,7 @@ use app\BaseController;
 use app\common\model\Cart;
 use app\common\model\OrdersDetail;
 use app\common\model\Product;
+use app\common\model\ProductComment;
 use app\Request;
 use app\common\model\Address;
 use app\common\model\Orders;
@@ -64,6 +65,34 @@ class Order extends BaseController
     }
 
 
+    //商品评价
+    public function evaluation(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $uid = $request -> post('uid/d');
+        $pid = $request -> post('pid/d');
+        $comment = $request -> post('comment');
+        $images = $request -> post('images');
+        $socre = $request -> post('socre');
+        if(!$pid)  return apiBack('fail', '请选择商品', '10004');
+        if(!$socre)  return apiBack('fail', '评分不能为空', '10004');
+        $data = [
+            'product_id' => $pid,
+            'user_id' => $uid,
+            'comment' => $comment,
+            'images' => $images,
+            'socre' => $socre,
+            'createtime' => time(),
+            'status' => 1,
+        ];
+        $res = (new ProductComment())::create($data);
+        if($res){
+            return apiBack('success', "评价成功", '10000');
+        }else{
+            return apiBack('fail', "评价失败", '10004');
+        }
+    }
+
+
     public function orderdel(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $orderid = $request -> post('orderid/d');
@@ -81,7 +110,7 @@ class Order extends BaseController
             -> join('orders o','od.order_id=o.id')
             -> join('product p','p.id=od.product_id')
             -> join('product_sku ps','ps.id=od.skuid')
-            -> field('o.id as orderid,o.order_sn,o.createtime,o.paytime,o.payment_price,o.amount_price,o.status,
+            -> field('o.id as orderid,o.order_sn,o.createtime,o.paytime,o.payment_price,o.amount_price,o.status,o.is_code,o.up_code,
             od.speckey,od.specvalue,od.price,od.number,od.skuid,
             p.id as pid,p.shop_id,p.name,p.images,ps.title as skutitle')
             -> order('o.createtime desc')
@@ -98,6 +127,8 @@ class Order extends BaseController
                 $result[$v['shop_id']]['createtime'] = $v['createtime'];
                 $result[$v['shop_id']]['paytime'] = $v['paytime'];
                 $result[$v['shop_id']]['status'] = $v['status'];
+                $result[$v['shop_id']]['is_code'] = $v['is_code'];
+                $result[$v['shop_id']]['up_code'] = $v['up_code'];
                 $result[$v['shop_id']]['shoptitle'] =  (new Shops())::where('id', $v['shop_id']) -> value('title');
                 $result[$v['shop_id']]['orderlist'][]=[
                     'skuid' => $v['skuid'],
@@ -151,9 +182,6 @@ class Order extends BaseController
         }
         return $cartlist;
     }
-
-
-
 
 
 
