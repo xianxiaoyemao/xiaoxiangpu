@@ -16,23 +16,25 @@ class PlaceOrder extends CommonController{
         self::beginTrans();
         try {
             $this->queueInc();
-            $order_no = [];
-            foreach ($cartList as $key => $val){
+            $order_no = '';
+            foreach ($cartList['data'] as $key => $val){
                 $order_sn =  $this->addOrder($uid,$areaid,$val['cartlist'],$uf,$remark);//$uid,$shop_id,$addressid,$remark
-                if($dining == 0){
-                    $this->addOrderGoods($order_sn['orderid'],$val['cartlist']);
-                }else{
-                    $this->addShopOrder($order_sn['orderid'],$val['cartlist'],$take_time,$val['shopid']);
-                }
+                $this->addOrderGoods($order_sn['orderid'],$val['cartlist'],$dining,$take_time,$val['shopid']);
+//                if($dining == 0){
+//
+//                }else{
+//                    $this->addShopOrder($order_sn['orderid'],$val['cartlist'],$take_time,$val['shopid']);
+//                }
                 if($order_sn){
-                    array_push($order_no,$order_sn['order_sn']);
+                    $order_no.= $order_sn['order_sn'] .',';
                 }else{
-                    $order_no = $order_no;
+                    $order_no .= $order_sn['order_sn'];
                 }
             }
             $this-> queueDec();
             self::commitTrans();
-            return $order_no;
+            $topicid = rtrim($order_no, ',');
+            return $topicid;
         }catch  (\PDOException $e) {
             self::rollbackTrans();
             throw new TpshopException("订单入库", 0,  '生成订单时SQL执行错误错误原因：' . $e->getMessage());
@@ -48,8 +50,7 @@ class PlaceOrder extends CommonController{
     /**
      * 订单提交结束
      */
-    private function queueDec()
-    {
+    private function queueDec(){
         Cache::dec('queue');
     }
 
@@ -61,7 +62,8 @@ class PlaceOrder extends CommonController{
         foreach ($cartList as $key => $val) {
             //查询库存
             $gstoke = (new ProductSku())::where('id', $val['skuid'])->value('stock');
-            if ($gstoke == 0) {
+//            dump($gstoke);die;
+            if ($gstoke == 0 || $gstoke < (int)$val['quantity']) {
                 return;
             }
 //            $store = (new ProductSku)::where('id', $val['skuid'])
@@ -122,7 +124,10 @@ class PlaceOrder extends CommonController{
     /**
      * 插入订单商品表
      */
-    private function addOrderGoods($orderid,$cartList){
+    private function addOrderGoods($orderid,$cartList,$dining,$take_time,$shopid){
+        if($orderid == ''){
+            return;
+        }
         $orderGoodsAllData = [];
         foreach ($cartList as $key => $val) {
             $ordergooddata = [
@@ -133,6 +138,9 @@ class PlaceOrder extends CommonController{
                 'speckey' => $val['speckey'],
                 'specvalue' => $val['specvalue'],
                 'number' => $val['quantity'],
+                'is_defll' => $dining,
+                'task_time' => $take_time,
+//                'shop_id' => $shop_id,
                 'total_price' => $val['price'] * (int)$val['quantity'],
                 'createtime' => time()
             ];

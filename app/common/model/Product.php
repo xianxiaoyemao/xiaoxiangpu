@@ -43,6 +43,9 @@ class Product extends BaseModel
         return $this -> hasMany(Cart::class);
     }
 
+    public function ordersdetail(){
+        return $this -> hasOne(OrdersDetail::class);
+    }
 
     public function productlist($where,$field,$orderby,$start,$end){
       $retust =  Product::where($where)
