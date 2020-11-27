@@ -9,6 +9,7 @@ use app\BaseController;
 use app\common\model\Cart;
 use app\common\model\ProductDetails;
 use app\common\model\ProductSku;
+use app\common\model\User;
 use think\facade\Db;
 use app\Request;
 use app\common\model\Product as PModel;
@@ -19,6 +20,7 @@ class Product extends BaseController{
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $type = $request->post('type');
         $keyword = $request->post('keyword');
+        $uid = $request->post('uid');
 //        $cid = $request->post('cid') ?? 0;
         $where = "status=1";
         if (!empty($keyword) && isset($keyword)) {
@@ -28,6 +30,8 @@ class Product extends BaseController{
         $page = $request->post('page') ?? 0;
         $limit = 20;
         $cate = [];
+        //0元购 分享人数
+        $share_user = 0;
         $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, cate_name');
         switch ($type){
             case 'ms':
@@ -46,6 +50,7 @@ class Product extends BaseController{
                 break;
             case 'buy0':
                 $where.=" and buy0=1";
+                $share_user = User::where('invitecode', $uid)->count();
                 break;
         }
         $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,is_rush';
@@ -57,7 +62,8 @@ class Product extends BaseController{
         $data =[
             'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
             'data' => $list,
-            'cate' => $cate
+            'cate' => $cate,
+            'share_user_count' => $share_user
         ];
         return apiBack('success', '成功', '10000', $data);
     }
