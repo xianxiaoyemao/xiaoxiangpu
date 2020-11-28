@@ -20,7 +20,6 @@ class Ajax extends BaseController {
 
     public function ajaxupload(Request $request){
         $name = $request -> get('action');
-//        $fileimg = $request -> post('pjtuimg');
         $uplaodsrc = '/storage/';
         $upload = new Exclfile(SHUJUCUNCHU);
         switch ($name){
