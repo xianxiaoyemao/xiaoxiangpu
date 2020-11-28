@@ -217,6 +217,7 @@ class CartLogic extends CommonController {
             'shoptitle' => (new Shops())::where('id',$this->goods['shop_id']) -> value('title'),//店铺ID
             'cartlist' => $buyGoods
         ];
+//        dump($shopdata);die;
         $procdut =  $this -> getGoodsprice($buyGoods);
 
         $data = [
