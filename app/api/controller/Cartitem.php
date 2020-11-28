@@ -151,12 +151,11 @@ class Cartitem extends BaseController{
                 ->setProductSku($skuid)
                 ->setGoodsBuyNum($quantity);
             try{
-                $buyGoods = $cartLogic->buyNow();
+                $cartList = $cartLogic->buyNow();
             }catch (TpshopException $t){
                 $error = $t->getErrorArr();
                 return apiBack('fail', $error['msg'], '10004');
             }
-            $cartList[0] = $buyGoods;
         }else{
             if(empty($cartid)){
                 return apiBack('fail', '你的购物车没有选中商品', '10004');
