@@ -20,6 +20,7 @@ use app\common\model\Product;
 use app\Request;
 use app\common\util\TpshopException;
 use think\facade\Db;
+use Yansongda\Pay\Pay;
 
 class Cartitem extends BaseController{
     //购物车列表
@@ -267,6 +268,11 @@ class Cartitem extends BaseController{
     }
 
 
+    /**
+     * 创建订单
+     * @param Request $request
+     * @return \think\response\Json
+     */
     public function createOrder (Request $request)
     {
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
@@ -276,53 +282,70 @@ class Cartitem extends BaseController{
         //总价
         $total_price = $post['total_price'];
         $order = [];
-        $detail = [];
         $order_ids = [];
         $common = new CommonController();
-        foreach ($data as $k => $v) {
-            $order['user_id'] = $post['uid'];
-            $order['addressid'] = $address;
-            $order['order_sn'] = $common->create_order_no();
-            $order['status'] = 1;
-            $order['createtime'] = time();
+        $common::beginTrans();
+        try {
+            foreach ($data as $k => $v) {
+                $order['user_id'] = $post['uid'];
+                $order['addressid'] = $address;
+                $order['order_sn'] = $common->create_order_no();
+                $order['status'] = 1;
+                $order['createtime'] = time();
 
-            $product_price = 0;
-            foreach ($v as $key => $val) {
-                $detail[$key]['product_id'] = $val['pid'];
-                $detail[$key]['skuid'] = $val['skuid'];
-                $detail[$key]['price'] = $val['price'];
-                $detail[$key]['total_price'] = $val['price'] * $val['quantity'];
-                $detail[$key]['number'] = $val['quantity'];
-                $detail[$key]['specvalue'] = $val['specvalue'];
-                $detail[$key]['speckey'] = $val['speckey'];
-                $detail[$key]['createtime'] = time();
+                $product_price = 0;
+                $detail = [];
+                foreach ($v as $key => $val) {
+                    $detail[$key]['product_id'] = $val['pid'];
+                    $detail[$key]['skuid'] = $val['skuid'];
+                    $detail[$key]['price'] = $val['price'];
+                    $detail[$key]['total_price'] = $val['price'] * $val['quantity'];
+                    $detail[$key]['number'] = $val['quantity'];
+                    $detail[$key]['specvalue'] = $val['specvalue'];
+                    $detail[$key]['speckey'] = $val['speckey'];
+                    $detail[$key]['createtime'] = time();
 
-                $product_price += $val['price'] * $val['quantity'];
+                    $product_price += $val['price'] * $val['quantity'];
+                }
+
+                $order['payment_price'] = $product_price;
+                $order['goods_price'] = $product_price;
+                $order_id = Db::name('orders')->insertGetId($order);
+                array_push($order_ids, $order_id);
+                foreach ($detail as $key => $value) {
+                    $detail[$key]['order_id'] = intval($order_id);
+                }
+                // dump($detail);die;
+                Db::name('orders_detail')->insertAll($detail);
             }
 
-            $order['payment_price'] = $product_price;
-            $order['goods_price'] = $product_price;
-            $order_id = Db::name('orders')->insertGetId($order);
-            array_push($order_ids, $order_id);
+            $pay_order_no = $common->create_order_no();
+            $pay_order = [
+                'order_sn' => $pay_order_no,
+                'order_ids' => implode(',', $order_ids),
+                'createtime' => time(),
+                'pay_price' => $total_price
+            ];
+            Db::name('orders_pay')->insert($pay_order);
 
-            foreach ($detail as $value) {
-                $value['order_id'] = $order_id;
-            }
-            Db::name('orders_detail')->insertAll($detail);
+            $openid = \app\common\model\User::where('id', $post['uid'])->value('openid');
+            $payment = new Payment();
+            $res = $payment -> pay($pay_order_no, $total_price, '小香铺下单', $openid);
+            dump($res);
+            // 提交事务
+            Db::commit();
+        } catch (\Exception $e) {
+            Db::rollback();
+            return $e->getMessage();
         }
 
-        $pay_order = [
-            'order_sn' => $common->create_order_no(),
-            'order_ids' => implode(',', $order_ids),
-            'createtime' => time(),
-            'pay_price' => $total_price
-        ];
-
-        Db::name('orders_pay')->insert($pay_order);
     }
 
 
-
+    public function mini_pay ()
+    {
+        app('');
+    }
 
 
 
