@@ -272,7 +272,7 @@ class Cartitem extends BaseController{
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $post = $request->post();
         $data = $post['data'];
-        $address = Address::where('user_id', $post['uid'])->where('is_defult', 1)->value('id');
+        $address = $post['address_id'];
         //总价
         $total_price = $post['total_price'];
         $order = [];
@@ -288,7 +288,6 @@ class Cartitem extends BaseController{
 
             $product_price = 0;
             foreach ($v as $key => $val) {
-                $detail[$key]['product_id'] = $val['pid'];
                 $detail[$key]['product_id'] = $val['pid'];
                 $detail[$key]['skuid'] = $val['skuid'];
                 $detail[$key]['price'] = $val['price'];
