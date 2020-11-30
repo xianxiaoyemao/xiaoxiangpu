@@ -291,12 +291,13 @@ class Cartitem extends BaseController{
                 $detail[$key]['product_id'] = $val['pid'];
                 $detail[$key]['skuid'] = $val['skuid'];
                 $detail[$key]['price'] = $val['price'];
-                $detail[$key]['total_price'] = $val['price'] * $val['number'];
-                $detail[$key]['number'] = $val['number'];
+                $detail[$key]['total_price'] = $val['price'] * $val['quantity'];
+                $detail[$key]['number'] = $val['quantity'];
                 $detail[$key]['specvalue'] = $val['specvalue'];
+                $detail[$key]['speckey'] = $val['speckey'];
                 $detail[$key]['createtime'] = $val['createtime'];
 
-                $product_price += $val['price'] * $val['number'];
+                $product_price += $val['price'] * $val['quantity'];
             }
 
             $order['payment_price'] = $product_price;
