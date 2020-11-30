@@ -283,15 +283,11 @@ class Cartitem extends BaseController{
             $order['user_id'] = $post['uid'];
             $order['addressid'] = $address;
             $order['order_sn'] = $common->create_order_no();
-            $order['payment_price'] = $v['price'];
-            $order['goods_price'] = $v['price'];
             $order['status'] = 1;
             $order['createtime'] = time();
-            $order_id = Db::name('orders')->insertGetId($order);
-            array_push($order_ids, $order_id);
 
+            $product_price = 0;
             foreach ($v as $key => $val) {
-                $detail[$key]['order_id'] = $order_id;
                 $detail[$key]['product_id'] = $val['pid'];
                 $detail[$key]['product_id'] = $val['pid'];
                 $detail[$key]['skuid'] = $val['skuid'];
@@ -300,6 +296,17 @@ class Cartitem extends BaseController{
                 $detail[$key]['number'] = $val['number'];
                 $detail[$key]['specvalue'] = $val['specvalue'];
                 $detail[$key]['createtime'] = $val['createtime'];
+
+                $product_price += $val['price'] * $val['number'];
+            }
+
+            $order['payment_price'] = $product_price;
+            $order['goods_price'] = $product_price;
+            $order_id = Db::name('orders')->insertGetId($order);
+            array_push($order_ids, $order_id);
+
+            foreach ($detail as $value) {
+                $value['order_id'] = $order_id;
             }
             Db::name('orders_detail')->insert($detail);
         }
