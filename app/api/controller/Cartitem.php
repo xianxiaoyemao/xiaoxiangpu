@@ -308,7 +308,7 @@ class Cartitem extends BaseController{
             foreach ($detail as $value) {
                 $value['order_id'] = $order_id;
             }
-            Db::name('orders_detail')->insert($detail);
+            Db::name('orders_detail')->insertAll($detail);
         }
 
         $pay_order = [
