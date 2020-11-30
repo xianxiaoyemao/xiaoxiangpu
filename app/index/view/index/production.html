@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>产品中心</title>
-    <link rel="shortcut icon" href="__HOME__/home/img/xym.ico">
-    <link type="text/css" href="__HOME__/home/css/base.css" rel="stylesheet">
-    <link rel="stylesheet" href="__HOME__/home/css/pro.css">
-</head>
+<link rel="stylesheet" href="__HOME__/home/css/pro.css">
 <style>
     body, html {height: 100%;}
     .zhezhao {
@@ -51,27 +42,8 @@
         width: 100%;
     }
 </style>
-<body>
-    <div class="boxAll">
-        <div class="boxHeader">
-            <div class="headLeft">
-                <img src="__HOME__/home/img/Logo1.png" alt="">
-            </div>
-            <div class="headNav">
-                <a href="{:url('index/index')}">
-                    网站首页
-                </a>
-                <a href="{:url('index/about')}">
-                    关于我们
-                </a>
-                <a href="#">
-                    产品中心
-                    <div class="navimg">
-                        <img src="__HOME__/home/img/17.png" alt="">
-                    </div>
-                </a>
-            </div>
-        </div>
+{include file="public/header"}
+{include file="public/top"}
         <div class="banner">
             <div class="pro_banner">
                 <div class="bannerLeft">
@@ -122,76 +94,5 @@
                 <img src="__HOME__/home/img/21.png" alt="">
             </div>
         </div>
-        <div class="footer">
-            <div class="footercenter">
-                <div style="height: 35px;"></div>
-                <div class="footerLeft">
-                    <div class="borderleft">
-                        <h1>
-                            西安小野猫信息科技有限公司
-                        </h1>
-                        <h2>
-                            地址：西安市曲江区莱安中心T2
-                        </h2>
-                        <h3>
-                            服务热线：888-88888888
-                        </h3>
-                    </div>
-                </div>
-                <div class="footercenter2">
-                    <h4>在线留言</h4>
-                    <div>
-                        <span>*</span> 姓名：<input id="username" name="username" style="padding-left: 5px; color: #fff" type="text" class="subinput">
-                    </div>
-                    <div>
-                        <span>*</span> 电话：<input id="mobile" name="mobile" style="padding-left: 5px; color: #fff" type="text">
-                    </div>
-                    <div>
-                        <span>*</span> 备注：<input id="remark" name="remark" style="padding-left: 5px; color: #fff" type="text">
-                    </div>
-                    <div class="sub" style="cursor: pointer">
-                        <img src="__HOME__/home/img/submit.png" alt="">
-                    </div>
-                </div>
-                <div class="footeright">
-                    <div>
-                        <!-- <img src="" alt=""> -->
-                    </div>
-                    <span>
-                        扫一扫添加微信关注
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="indexfooter">
-            <p>版权所有@西安小野猫信息科技有限公司 &nbsp;&nbsp;&nbsp;&nbsp; <a href="http://beian.miit.gov.cn/"> 陕ICP备2020017280号 </a> &nbsp;&nbsp;&nbsp;&nbsp; 技术支持：科技网络</p>
-        </div>
-    </div>
 
-</body>
-</html>
-<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
-<script>
-    $(".bannerLeft ul li").click(function(){
-        $(".bannerLeft ul li").removeClass("li_active");
-        $(this).addClass("li_active")
-    })
-    $(".dinggou").click(function(){
-        $(".zhezhao").css("display","block")
-    })
-    $(".clone").click(function(){
-        $(".zhezhao").css("display","none")
-    })
-    // 提交
-    $(".sub").click(function(){
-        let username = $('#username').val()
-        let mobile = $('#mobile').val()
-        let remark = $('#remark').val()
-
-        $.post('/admin/index/web/add', {'username': username, 'mobile': mobile, 'remark': remark}, function (e) {
-            if (e.status == 'success') {
-                alert('提交成功')
-            }
-        })
-    })
-</script>
+{include file="public/footer"}
