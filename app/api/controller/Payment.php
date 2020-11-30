@@ -1,16 +1,17 @@
 <?php
 namespace app\api\controller;
 use app\Request;
+use think\facade\Log;
 use Yansongda\Pay\Pay;
 
 class Payment{
 
     protected $config = [
-        'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
+//        'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
         'miniapp_id' => 'wx2321f85bc3478c47', // 小程序 APPID
-        'mch_id' => '14577xxxx',
+        'mch_id' => '',
         'key' => 'f51786f99ac85501d4c335c8c7f24bd8',
-        'notify_url' => 'http://yanda.net.cn/notify.php',
+        'notify_url' => 'https://hlhis.sxtyyd.com/payment/notify',
         'log' => [ // optional
             'file' => './logs/wechatmini.log',
             'level' => 'info', // 建议生产环境等级调整为 info，开发环境为 debug
@@ -45,7 +46,7 @@ class Payment{
 
         try{
             $data = $pay->verify(); // 是的，验签就这么简单！
-
+            Log::write('==============' . json_encode($data));
             Log::debug('Wechat notify', $data->all());
         } catch (\Exception $e) {
             // $e->getMessage();
