@@ -40,6 +40,8 @@ Route::post('order/orderdetail', 'order/orderdetail');
 Route::post('order/orderdel', 'order/orderdel');
 Route::post('order/evaluation', 'order/evaluation');//评价
 
+Route::post('cartitem/createorder', 'cartitem/createOrder');
+
 //我的
 Route::post('personal/index', 'personal/index');
 Route::post('personal/convert', 'personal/convert');
