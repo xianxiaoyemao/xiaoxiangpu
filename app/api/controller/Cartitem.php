@@ -10,6 +10,7 @@ namespace app\api\controller;
 use app\admin\model\User;
 use app\BaseController;
 use app\common\controller\CartLogic;
+use app\common\controller\CommonController;
 use app\common\model\Cart;
 use app\common\model\Address;
 use app\common\model\OrdersShop;
@@ -18,6 +19,8 @@ use app\common\model\ProductSku;
 use app\common\model\Product;
 use app\Request;
 use app\common\util\TpshopException;
+use think\facade\Db;
+
 class Cartitem extends BaseController{
     //购物车列表
     public function cartlist(Request $request){
@@ -191,7 +194,7 @@ class Cartitem extends BaseController{
         $uid = $request -> post('uid/d');
         $addressid = $request -> post("addressid/d"); //  收货地址id
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
-        $json =$request -> post("jsondata");
+//        $json =$request -> post("jsondata");
         $totle_price = floatval($request -> post("totle_price"));//商品总价
 
         $dining = $request -> post("dining/d",0);//用餐方式 1自提 0
@@ -269,12 +272,46 @@ class Cartitem extends BaseController{
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $post = $request->post();
         $data = $post['data'];
+        $address = Address::where('user_id', $post['uid'])->where('is_defult', 1)->value('id');
+        //总价
+        $total_price = $post['total_price'];
         $order = [];
+        $detail = [];
+        $order_ids = [];
+        $common = new CommonController();
         foreach ($data as $k => $v) {
-            $order[$k]['user_id'] = $post['uid'];
-            $order[$k]['addressid'] = Address::where('user_id', $post['uid'])->where('is_defult', 1)->value('id');
-            $order[$k]['order_sn'] = '';
+            $order['user_id'] = $post['uid'];
+            $order['addressid'] = $address;
+            $order['order_sn'] = $common->create_order_no();
+            $order['payment_price'] = $v['price'];
+            $order['goods_price'] = $v['price'];
+            $order['status'] = 1;
+            $order['createtime'] = time();
+            $order_id = Db::name('orders')->insertGetId($order);
+            array_push($order_ids, $order_id);
+
+            foreach ($v as $key => $val) {
+                $detail[$key]['order_id'] = $order_id;
+                $detail[$key]['product_id'] = $val['pid'];
+                $detail[$key]['product_id'] = $val['pid'];
+                $detail[$key]['skuid'] = $val['skuid'];
+                $detail[$key]['price'] = $val['price'];
+                $detail[$key]['total_price'] = $val['price'] * $val['number'];
+                $detail[$key]['number'] = $val['number'];
+                $detail[$key]['specvalue'] = $val['specvalue'];
+                $detail[$key]['createtime'] = $val['createtime'];
+            }
+            Db::name('orders_detail')->insert($detail);
         }
+
+        $pay_order = [
+            'order_sn' => $common->create_order_no(),
+            'order_ids' => implode(',', $order_ids),
+            'createtime' => time(),
+            'pay_price' => $total_price
+        ];
+
+        Db::name('orders_pay')->insert($pay_order);
     }
 
 
