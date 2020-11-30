@@ -16,13 +16,12 @@ class Product extends BaseModel
     protected $createTime = 'createtime';
     protected $updateTime = 'updatetime';
 
-    public function skus()
-    {
+    public function skus(){
         return $this->hasMany(ProductSku::class);
     }
 
-    public function category()
-    {
+
+    public function category(){
         return $this->belongsTo(Category::class) ;
     }
 
