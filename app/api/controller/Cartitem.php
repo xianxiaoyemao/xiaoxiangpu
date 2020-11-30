@@ -12,6 +12,8 @@ use app\BaseController;
 use app\common\controller\CartLogic;
 use app\common\model\Cart;
 use app\common\model\Address;
+use app\common\model\OrdersShop;
+use app\common\model\OrdersPay;
 use app\common\model\ProductSku;
 use app\common\model\Product;
 use app\Request;
@@ -139,7 +141,6 @@ class Cartitem extends BaseController{
         $quantity = $request -> post('quantity/d') ?? 1;
         $cartLogic = new CartLogic();
         $cartLogic->setUserId($uid);
-//        $couponLogic = new CouponLogic();
         //立即购买
         if($action == 'buy_now'){
             if(!$pid)return apiBack('fail', '请选择商品', '10004');
@@ -149,14 +150,12 @@ class Cartitem extends BaseController{
                 -> setSpecvalue($specvalue)
                 ->setProductSku($skuid)
                 ->setGoodsBuyNum($quantity);
-//            $buyGoods = [];
             try{
-                $buyGoods = $cartLogic->buyNow();
+                $cartList = $cartLogic->buyNow();
             }catch (TpshopException $t){
                 $error = $t->getErrorArr();
                 return apiBack('fail', $error['msg'], '10004');
             }
-            $cartList[0] = $buyGoods;
         }else{
             if(empty($cartid)){
                 return apiBack('fail', '你的购物车没有选中商品', '10004');
@@ -166,8 +165,11 @@ class Cartitem extends BaseController{
         }
         //查询默认收货地址
         $addressinfo = (new Address)::where(['user_id'=>$uid,'is_defult'=>1,'status'=>1]) -> field('id as addressid,contact_name,contact_phone,disarea,address') -> find();
-        if(empty($addressinfo)){return  false;}
-        $cartList['addressinfo'] = $addressinfo -> toArray();
+        if(empty($addressinfo)){
+            $cartList['addressinfo'] = [];   //return apiBack('fail', '请先去设置地址', '10004');
+        }else{
+            $cartList['addressinfo'] = $addressinfo -> toArray();
+        }
         //获取优惠卷数量
 //        $couponnum = count((new coupon)::where('user_id',$uid)->select());
         $cartList['couponsnum'] =  0; //优惠卷  $couponnum
@@ -185,18 +187,20 @@ class Cartitem extends BaseController{
      */
     public function cartsubmit(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $mv = uniqid("XXP_"); //当然你可以加上前缀
-        echo $mv;die;
+//        $mv = uniqid("XXP_"); //当然你可以加上前缀
         $uid = $request -> post('uid/d');
         $addressid = $request -> post("addressid/d"); //  收货地址id
         if(empty($addressid)) return apiBack('fail', '请选择地址', '10000');
+        $json =$request -> post("jsondata");
+        $totle_price = floatval($request -> post("totle_price"));//商品总价
+
         $dining = $request -> post("dining/d",0);//用餐方式 1自提 0
         $cartid = $request -> post("cartid");
         $goods_id = $request -> post("pid/d"); // 商品id
         $skuid = $request -> post("skuid/d"); // 商品规格id
+        $specvalue = $request -> post('specvalue');
         $goods_num = $request -> post("quantity/d");// 商品数量
 
-        $totle_price = floatval($request -> post("totle_price"));//商品总价
 
         $shop_id = $request -> post('shop_id/d');//自提点id
         $take_time = $request -> post('take_time');//自提时间
@@ -223,32 +227,34 @@ class Cartitem extends BaseController{
         try {
             $cartLogic->setUserId($uid);
             if($cartid == ''){
-                $cartLogic->setGoodsModel($goods_id);
-                $cartLogic->setProductSku($skuid);
-                $cartLogic->setGoodsBuyNum($goods_num);
-                $buyGoods = $cartLogic->buyNow();
-                $cartList[0] = $buyGoods;
+                $cartLogic->setGoodsModel($goods_id)
+                    -> setSpecvalue($specvalue)
+                    ->setProductSku($skuid)
+                    ->setGoodsBuyNum($goods_num);
+                $cartList = $cartLogic->buyNow();
             } else {
                 $cartList = $cartLogic->getCartList($cartid);
                 $cartLogic->checkStockCartList($cartList);
 //                $pay->payCart($userCartList);//判断购物车
             }
             $orderids = $placeOrder->addNormalOrder($uid,$cartList,$addressid,0,$remark,$dining,$take_time);
-            if(count($orderids) == 0){
+            if($orderids == ''){
                 return apiBack('fail', '库存不足', '10004');
             }else{
+                $commoncotrll = new \app\common\controller\CommonController();
+                $order_sn =  $commoncotrll -> create_order_no();
                 $ordepay = [
-                    'order_sn' => '',
+                    'order_sn' => $order_sn,
                     'order_ids' => $orderids,
                     'is_defult' => $dining,
-                    'the_code' => $orderids,
+                    'the_code' => '',
                     'pay_price' => floatval($totle_price),
                     'createtime' => time()
                 ];
-                dump($ordepay);die;
-//                foreach ($order_sn as $v){
-//                    dump($v);
-//                }
+                (new OrdersPay())::create($ordepay);
+
+
+                dump($order_sn);die;
 //                return apiBack('success', '创建成功', '10000',['order_sn'=>$order_sn]);
             }
         } catch (TpshopException $t) {

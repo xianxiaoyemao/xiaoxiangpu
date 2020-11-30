@@ -110,11 +110,19 @@ class Product extends BaseController{
     public function productevaluation(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $productid = $request->post('id');
-        $details = (new ProductComment)::with(['product','user']) -> where('id',$productid)
-            -> order('createtime desc')
-            -> limit(0,20)
+        if(empty($productid)) return apiBack('fail', '商品不能为空', '10000');
+        $details = Db::name('product_comment')
+            -> alias('pc')
+            -> where('pc.product_id',$productid)
+//            -> join('product  p','p.id=pc.product_id')
+            -> join('user u','u.id=pc.user_id')
+            -> field('pc.id as pcid,pc.comment,pc.images,pc.socre,pc.createtime,u.username,u.nickname,u.mobile,u.avatar')
             -> select() -> toArray();
-        return apiBack('success', '成功', '10000', $details);
+//            (new ProductComment)::with(['product','user']) -> where('id',$productid)
+//            -> order('createtime desc')
+//            -> limit(0,20)
+//            -> select() -> toArray();
+        return apiBack('success', '获取成功', '10000', $details);
     }
 
 

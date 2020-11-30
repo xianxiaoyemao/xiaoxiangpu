@@ -35,8 +35,14 @@ Route::post('cartitem/cart2', 'cartitem/cart2');
 Route::post('cartitem/cartsubmit', 'cartitem/cartsubmit');//提交订单
 //Route::post('cartitem/cartconfirm', 'cartitem/cartconfirm');//确认订单
 //订单管理
-Route::post('order/createorder', 'order/createorder');
+Route::post('order/orderlist', 'order/orderlist');
+Route::post('order/orderdetail', 'order/orderdetail');
+Route::post('order/orderdel', 'order/orderdel');
+Route::post('order/evaluation', 'order/evaluation');//评价
 
 //我的
 Route::post('personal/index', 'personal/index');
 Route::post('personal/convert', 'personal/convert');
+
+//上传
+Route::any('ajax/ajaxupload', 'ajax/ajaxupload');//评价

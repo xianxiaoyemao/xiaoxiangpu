@@ -2,58 +2,200 @@
 namespace app\api\controller;
 use app\BaseController;
 use app\common\model\Cart;
+use app\common\model\OrdersDetail;
 use app\common\model\Product;
+use app\common\model\ProductComment;
 use app\Request;
 use app\common\model\Address;
-use app\common\model\Order as OrderModel;
+use app\common\model\Orders;
+use app\common\model\Shops;
 //use app\service\OrderService;
+use think\facade\Db;
 class Order extends BaseController
 {
-    //创建订单
-    public function createorder(Request $request){
+    //订单列表
+    public function orderlist(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $uid = $request->post('uid');
-        $type = $request->post('type');
-//        $cartid = $request->post('cartids');
-        $pid = $request->post('pids') ;
-        $price = $request->post('skuprice');
-        $skuid = $request->post('skuid');
-        $quantity = $request->post('quantity');
-        $addressid = $request->post('addressid');
-        $specvalue = $request->post('specvalue');
-        if($pid == ''){
-            return apiBack('fail', '请选择商品id', '10004');
-        }
-        if($addressid == ''){
-           $addressone = (new Address)::where(['user_id'=>$uid,'is_defult'=>1])-> find();
-           $addressid = $addressone -> id;
-        }
-        switch ($type){
-            case 'cart':
-                //查询店铺id
-                $cartlist = (new Product) -> where('id in('.$pid.')') -> field('id,shop_id,name') -> select() -> toArray();
-                $arrlist = array_merge(group_same_key($cartlist,'shop_id'));
-                foreach ($arrlist as $key => $val){
-//                    $this -> ordersave($uid,$pid,$skuid,$price,$quantity,$addressid);
-                }
+        $uid = $request -> post('uid/d');
+        $orderstatus = $request -> post('orderstatus/d') ?? 0;
+        $where = "user_id = " .$uid;
+        $orderwhere = "";
+        switch ($orderstatus){
+            case 1:
+            case 2:
+            case 4:
+                $orderwhere.=$where." and o.status = $orderstatus";
                 break;
-            case 'ljgm':
-                $order_no = $this -> createOrderNm();
-                $res = (new OrderModel) -> cacheKeyCreateOrder($uid,$order_no,$addressid,$pid,$skuid,$price,$specvalue,$quantity);
-                switch ($res){
-                    case 0:
-                        return apiBack('fail', '库存不足', '10004');
-                        break;
-                    case 1:
-                        return apiBack('success', '添加订单成功', '10000',['order_no'=>$order_no]);
-                        break;
-                    case 2:
-                        return apiBack('fail', '添加订单失败', '10004');
-                        break;
-                }
+            case 3:
+                $orderwhere.=$where." and  o.status = 3";
                 break;
+            default:
+                $orderwhere .= $where;
+                break;
+        }
+//        $filed = "id,order_sn,payment_price,status,pay_status,createtime,remark";
+        if($orderwhere != 3){
+            $orderlist = $this -> orderconst($orderwhere,'list');
+//            $orderlist = (new Orders)::with(['ordersdetail'])   -> select() -> toArray();
+        }else{
+
+        }
+        return apiBack('success', "获取订单列表成功", '10000',$orderlist);
+    }
+
+    //订单详情
+    public function orderdetail(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+//        $uid = $request -> post('uid/d');
+        $orderid = $request -> post('orderid/d');
+        if(!$orderid)  return apiBack('fail', '请选择订单', '10004');
+        $addressid = (new Orders())::where('id',$orderid) -> value('addressid');
+        //查询地址
+        $addressinfo = (new Address)::where(['id'=>$addressid])
+            -> field('contact_name,contact_phone,disarea,address')
+            -> find() -> toArray();
+        //查询订单详情
+        $orderwhere = "o.id = $orderid";
+        $orderlist = $this -> orderconst($orderwhere,'');
+        $data = [
+            'addresinfo' => $addressinfo,
+            'orderinfo' => $orderlist,
+        ];
+        return apiBack('success', "获取详情成功", '10000',$data);
+    }
+
+
+    //商品评价
+    public function evaluation(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $uid = $request -> post('uid/d');
+        $pid = $request -> post('pid/d');
+        $comment = $request -> post('comment');
+        $images = $request -> post('images');
+        $socre = $request -> post('socre');
+        if(!$pid)  return apiBack('fail', '请选择商品', '10004');
+        if(!$socre)  return apiBack('fail', '评分不能为空', '10004');
+        $data = [
+            'product_id' => $pid,
+            'user_id' => $uid,
+            'comment' => $comment,
+            'images' => $images,
+            'socre' => $socre,
+            'createtime' => time(),
+            'status' => 1,
+        ];
+        $res = (new ProductComment())::create($data);
+        if($res){
+            return apiBack('success', "评价成功", '10000');
+        }else{
+            return apiBack('fail', "评价失败", '10004');
         }
     }
+
+
+    public function orderdel(Request $request){
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $orderid = $request -> post('orderid/d');
+        $res = (new Orders())::where('id',$orderid)-> delete();
+        if($res){
+            (new OrdersDetail())::where('order_id',$orderid)-> delete();
+            return apiBack('success', "删除成功", '10000');
+        }else{
+            return apiBack('fail', "删除失败", '10004');
+        }
+    }
+
+    public function orderconst($orderwhere,$type){
+        $orderlist = Db::name('orders_detail')  -> alias('od') -> where($orderwhere)
+            -> join('orders o','od.order_id=o.id')
+            -> join('product p','p.id=od.product_id')
+            -> join('product_sku ps','ps.id=od.skuid')
+            -> field('o.id as orderid,o.order_sn,o.createtime,o.paytime,o.payment_price,o.amount_price,o.status,o.is_code,o.up_code,
+            od.speckey,od.specvalue,od.price,od.number,od.skuid,
+            p.id as pid,p.shop_id,p.name,p.images,ps.title as skutitle')
+            -> order('o.createtime desc')
+            -> select() -> toArray();
+        $result=[];
+        $arr = [];
+        if($type == 'list'){
+            foreach ($orderlist as $v){
+                $result[$v['shop_id']]['shopid'] = $v['shop_id'];
+                $result[$v['shop_id']]['orderid'] = $v['orderid'];
+                $result[$v['shop_id']]['order_sn'] = $v['order_sn'];
+                $result[$v['shop_id']]['payment_price'] = $v['payment_price'];
+                $result[$v['shop_id']]['amount_price'] = $v['amount_price'];
+                $result[$v['shop_id']]['createtime'] = $v['createtime'];
+                $result[$v['shop_id']]['paytime'] = $v['paytime'];
+                $result[$v['shop_id']]['status'] = $v['status'];
+                $result[$v['shop_id']]['is_code'] = $v['is_code'];
+                $result[$v['shop_id']]['up_code'] = $v['up_code'];
+                $result[$v['shop_id']]['shoptitle'] =  (new Shops())::where('id', $v['shop_id']) -> value('title');
+                $result[$v['shop_id']]['orderlist'][]=[
+                    'skuid' => $v['skuid'],
+                    'pid' => $v['pid'],
+                    'speckey' => $v['speckey'],
+                    'specvalue' => $v['specvalue'],
+                    'price' => $v['price'],
+                    'number' => $v['number'],
+                    'name' => $v['name'],
+                    'images' => $v['images'],
+                    'skutitle' => $v['skutitle'],
+//                'images' => $v['images']
+                ];
+            }
+        }else{
+            foreach ($orderlist as $v){
+                $result[$v['orderid']]['orderid'] = $v['orderid'];
+                $result[$v['orderid']]['order_sn'] = $v['order_sn'];
+                $result[$v['orderid']]['payment_price'] = $v['payment_price'];
+                $result[$v['orderid']]['amount_price'] = $v['amount_price'];
+                $result[$v['orderid']]['createtime'] = $v['createtime'];
+                $result[$v['orderid']]['status'] = $v['status'];
+                $result[$v['orderid']]['shopid'] = $v['shop_id'];
+                $result[$v['orderid']]['shoptitle'] = (new Shops())::where('id', $v['shop_id']) -> value('title');
+                $result[$v['orderid']]['orderlist'][]=[
+                    'skuid' => $v['skuid'],
+                    'pid' => $v['pid'],
+                    'speckey' => $v['speckey'],
+                    'specvalue' => $v['specvalue'],
+                    'price' => $v['price'],
+                    'number' => $v['number'],
+                    'name' => $v['name'],
+                    'images' => $v['images'],
+                    'skutitle' => $v['skutitle'],
+//                'images' => $v['images']
+                ];
+            }
+        }
+        $cartlist = array_merge($arr,$result);
+        $ret = $this -> getOrderprice($cartlist);
+        return $ret;
+    }
+    //计算订单总价
+    public function getOrderprice($cartlist){
+        $total_price = $coun_price = $pay_price = 0;
+        foreach ($cartlist as $key => $val){
+            foreach ($val['orderlist'] as $k => $v){
+                $cartlist[$key]['total_number'] +=$v['number'];
+                $cartlist[$key]['total_price'] += $v['price'] * (int)$v['number'];
+            }
+        }
+        return $cartlist;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -131,42 +273,7 @@ class Order extends BaseController
         app('redis') -> hSet('order_info',$user_id,json_encode($goods_info));
         return '购买成功';
     }
-    //查看订单
-    public function showorder(){
 
-    }
-    //生成订单
-    public function ordercreate(Request $request,OrderService $orderService){
-
-        app('redis') -> set('ss','1111111');
-        dump(app('redis')-> get('ss'));die;
-        $uid = $this -> uid;
-        $address_id = $request->post('address_id');
-        $remark = $request->post('remark');
-        $items = $request->post('items');
-        $shop_id = $request->post('shop_id');
-        $address = Address::find($address_id);
-        return $orderService -> addOrder($uid,$address,$remark,$items,$shop_id);
-    }
-
-    /**
-     * 生成15位的订单号
-     * @return string 订单号
-     */
-    public function createOrderNm(){
-        $year_code = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
-        $date_code = array('0',
-            '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',
-            'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M',
-            'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y');
-        //一共15位订单号,同一秒内重复概率1/10000000,26年一次的循环\
-        $order_sn = $year_code[(intval(date('Y')) - 2010) % 26] . //年 1位
-            strtoupper(dechex(date('m'))) . //月(16进制) 1位
-            $date_code[intval(date('d'))] . //日 1位
-            substr(time(), -5) . substr(microtime(), 2, 5) . //秒 5位 // 微秒 5位
-            sprintf('%02d', rand(0, 99)); //  随机数 2位
-        return $order_sn;
-    }
         /**
      * 得到新订单号
      * @return  string

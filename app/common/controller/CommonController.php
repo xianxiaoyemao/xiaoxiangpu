@@ -120,7 +120,7 @@ class CommonController{
         $order_sn = null;
         // 保证不会有重复订单号存在
         while(true){
-            $order_sn = $this ->createOrderNm() ; // 订单编号
+            $order_sn = $this ->create_order_no() ; // 订单编号
 //            $order_sn = date('YmdHis').rand(1000,9999); // 订单编号
             $order_sn_count = (new Orders)::where("order_sn = '$order_sn'")->count();
             if($order_sn_count == 0)
@@ -128,7 +128,10 @@ class CommonController{
         }
         return $order_sn;
     }
-
+    public function create_order_no() {
+        $order_no = date('Ymd').substr(time(), -5) . substr(microtime(), 2, 5) . sprintf('%02d', rand(1000, 9999));
+        return $order_no;
+    }
     /**
      * 生成15位的订单号
      * @return string 订单号
