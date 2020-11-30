@@ -172,7 +172,7 @@ class Cartitem extends BaseController{
 //        $couponnum = count((new coupon)::where('user_id',$uid)->select());
         $cartList['couponsnum'] =  0; //优惠卷  $couponnum
         //获取用户积分
-        $cartList['integral'] = (new User)::where(['id'=>$uid]) -> value('score'); //积分
+        $cartList['integral'] = (new User)::where(['id'=>$uid]) -> value('money'); //积分
 //        $cartGoodsList = get_arr_column($cartList['cart'],'product');
 //        $cartPriceInfo = $cartLogic->getCartPriceInfo($cartList['cart']);  //初始化数据。商品总额/节约金额/商品总共数量
 //        $userCouponList = $couponLogic->getUserAbleCouponList($uid, $cartGoodsId, $cartGoodsCatId);//用户可用的优惠券列表
@@ -257,6 +257,19 @@ class Cartitem extends BaseController{
         }
     }
 
+
+    public function createOrder (Request $request)
+    {
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $post = $request->post();
+        $data = $post['data'];
+        $order = [];
+        foreach ($data as $k => $v) {
+            $order[$k]['user_id'] = $post['uid'];
+            $order[$k]['addressid'] = Address::where('user_id', $post['uid'])->where('is_defult', 1)->value('id');
+            $order[$k]['order_sn'] = '';
+        }
+    }
 
 
 
