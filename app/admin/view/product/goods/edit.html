@@ -81,7 +81,12 @@
             <input type="text" class="form-control" name="row[price]" value="{$row.price|htmlentities}" data-rule="required" />
         </div>
     </div>
-
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">优惠价格:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="row[discount_price]" value="{$row.discount_price|htmlentities}"  />
+        </div>
+    </div>
     <div class="form-group">
         <label  class="control-label col-xs-12 col-sm-2">商品销量:</label>
         <div class="col-xs-12 col-sm-8">
@@ -92,6 +97,12 @@
         <label  class="control-label col-xs-12 col-sm-2">商品库存:</label>
         <div class="col-xs-12 col-sm-8">
             <input type="number" class="form-control" name="row[inventory]" value="{$row.inventory|htmlentities}" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">商品出产地:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="row[parea]" value="" />
         </div>
     </div>
     <div class="form-group">

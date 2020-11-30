@@ -38,7 +38,8 @@ class Product extends BaseController{
                 $where.=" and is_rush=1";
                 break;
             case 'jmj':
-                $where.=" and category_id=2";
+//                if()
+                $where.=" and pcid=2";
                 $cate = $db->where('pid', 2)->select()->toArray();
                 break;
             case 'xjtcp':
@@ -53,6 +54,7 @@ class Product extends BaseController{
                 $share_user = User::where('invitecode', $uid)->count();
                 break;
         }
+
         $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,is_rush';
 //        $list = (new PModel)::productlist($where,$productsfild,$orderby,$page,$limit);
         $list = (new PModel)::with('shops')->where($where)
