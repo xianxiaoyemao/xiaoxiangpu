@@ -37,11 +37,6 @@ class Product extends BaseController{
                 $where.=" and is_rush = 1";
                 break;
             case 'jmj':
-//                if($cid == 0){
-//
-//                }else{
-//                    $where.=" and pcid=2 and category_id = $cid";
-//                }
                 $where.=" and pcid=2";
                 $cate = $db->where('pid', 2)->select()->toArray();
                 break;
@@ -63,6 +58,28 @@ class Product extends BaseController{
             -> field($productsfild)
             -> order('createtime desc')
             -> select()  -> toArray();
+        switch ($type){
+            case 'ms':
+            case 'group':
+            case 'buy0':
+                $cartlist = $list;
+                break;
+            case 'jmj':
+            case 'xjtcp':
+                $cartlist = $this -> goodslist($list);
+                break;
+        }
+
+        $data =[
+            'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
+            'data' => $cartlist,
+            'cate' => $cate,
+            'share_user_count' => $share_user
+        ];
+        return apiBack('success', '成功', '10000', $data);
+    }
+
+    public function goodslist($list){
         $arr =[];
         $result=[];
         foreach($list as $v){
@@ -81,15 +98,8 @@ class Product extends BaseController{
             ];
         }
         $cartlist = array_merge($arr,$result);
-        $data =[
-            'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
-            'data' => $cartlist,
-            'cate' => $cate,
-            'share_user_count' => $share_user
-        ];
-        return apiBack('success', '成功', '10000', $data);
+        return $cartlist;
     }
-
     //商品详情
     public function productdetails(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
