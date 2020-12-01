@@ -22,9 +22,9 @@ class Product extends BaseController{
         $keyword = $request->post('keyword');
         $uid = $request->post('uid/d');
         $cid = $request->post('cid/d') ?? 0;
-        $where = "status=1";
+        $where = "p.status=1";
         if (!empty($keyword) && isset($keyword)) {
-            $where .= " and name like '%$keyword%'";
+            $where .= " and p.name like '%$keyword%'";
         }
         $page = $request->post('page') ?? 0;
         $limit = 20;
@@ -34,21 +34,21 @@ class Product extends BaseController{
         $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, cate_name');
         switch ($type){
             case 'ms':
-                $where.=" and is_rush = 1";
+                $where.=" and p.is_rush = 1";
                 break;
             case 'jmj':
-                $where.=" and pcid=2";
+                $where.=" and p.pcid=2";
                 $cate = $db->where('pid', 2)->select()->toArray();
                 break;
             case 'xjtcp':
-                $where.=" and pcid=3";
+                $where.=" and p.pcid=3";
                 $cate = $db->where('pid', 3)->select()->toArray();
                 break;
             case 'group':
-                $where.=" and is_rush = 2"; //拼团
+                $where.=" and p.is_rush = 2"; //拼团
                 break;
             case 'buy0':
-                $where.=" and buy0=1";
+                $where.=" and p.buy0=1";
                 $share_user = User::where('invitecode', $uid)->count();
                 break;
         }
@@ -57,7 +57,8 @@ class Product extends BaseController{
         $list = Db::name('product') -> alias('p')
             -> join('category c','c.id=p.category_id')
             -> field($productsfild)
-            -> order('p.createtime desc,c.createtime desc')
+            -> where($where)
+            -> order('c.createtime desc,p.createtime desc')
             -> select() -> toArray();
 //            (new PModel)::with('category')->where($where)
 //            -> field($productsfild)
