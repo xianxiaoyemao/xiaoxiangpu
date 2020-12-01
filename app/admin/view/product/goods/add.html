@@ -8,7 +8,11 @@
     <div class="form-group">
         <label class="control-label col-xs-12 col-sm-2">商品分类:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_select('row[category_id]', $category, null, ['class'=>'form-control', 'required'=>''])}
+            <div class="form-inline" data-toggle="cxselect" data-selects="province,city">
+                <select class="province form-control" name="row[province_id]" data-url="ajax/area"></select>
+                <select class="city form-control"  name="row[city_id]" data-query-name="province"></select>
+
+            </div>
         </div>
     </div>
     <div class="form-group">
@@ -54,13 +58,13 @@
         <div id="prev" style="padding-left: 18%">
             <div id="skuattr" class="form-group">
                 <div class="col-xs-12 col-sm-2">
-                    <input type="text" class="form-control" size="40" name="rowsku[sku_title][]" value="" placeholder="属性名称"/>
+                    <input type="text" class="form-control" size="40" name="rowsku[sku_title][]" value="" placeholder="属性名称" data-rule="required"/>
                 </div>
                 <div class="col-xs-12 col-sm-2">
-                    <input type="text" class="form-control" name="rowsku[sku_price][]" value="" placeholder="价格"/>
+                    <input type="text" class="form-control" name="rowsku[sku_price][]" value="" placeholder="价格" data-rule="required"/>
                 </div>
                 <div class="col-xs-12 col-sm-2">
-                    <input type="text" class="form-control" name="rowsku[stock][]" value="" placeholder="库存"/>
+                    <input type="text" class="form-control" name="rowsku[stock][]" value="" placeholder="库存" data-rule="required"/>
                 </div>
                 <span class="btn btn-sm btn-danger btn-remove"><i class="fa fa-times"></i></span>
             </div>
@@ -80,7 +84,7 @@
     <div class="form-group">
         <label  class="control-label col-xs-12 col-sm-2">优惠价格:</label>
         <div class="col-xs-12 col-sm-8">
-            <input type="text" class="form-control" name="row[discount_price]" value="" data-rule="required" />
+            <input type="text" class="form-control" name="row[discount_price]" value="" placeholder="" />
         </div>
     </div>
     <div class="form-group">
