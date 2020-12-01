@@ -40,9 +40,9 @@ class Index extends BaseController
         //0元购
         $buyBy0 = (new Product)::productlist(['status'=>1,'buy0'=>1],$productsfild,$orderby,0,3);
         //店长推荐chanpin
-        $shopproducts =  (new Product)::productlist(['status'=>1,'is_recommend'=>1,'category_id'=>2],$productsfild,$orderby,0,6);
+        $shopproducts =  (new Product)::productlist(['status'=>1,'is_recommend'=>1,'pcid'=>2],$productsfild,$orderby,0,6);
         //新疆特产
-        $xjtcp =  (new Product)::productlist(['status'=>1,'category_id'=>3],$productsfild,$orderby,0,6);
+        $xjtcp =  (new Product)::productlist(['status'=>1,'pcid'=>3],$productsfild,$orderby,0,6);
 
         //分享图片
         $chicken_img = Config::where('name', 'share_chicken_img')->value('value');
