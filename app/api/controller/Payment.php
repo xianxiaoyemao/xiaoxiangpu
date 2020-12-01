@@ -57,7 +57,7 @@ class Payment{
             'out_trade_no' => time() . '123460',
             'total_fee' => 1,
             'trade_type' => 'JSAPI', // 请对应换成你的支付方式对应的值类型
-            'openid' => 'o-AqT4ljAzQV8yoUxfBv61gv-9y4',
+            'openid' => 'o-AqT4oiOyxptQ9wS9NsJgWVXV1g',
         ]);
         if ($result['return_code'] != 'SUCCESS' || $result['result_code'] != 'SUCCESS') {
             return [];

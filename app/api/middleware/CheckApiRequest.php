@@ -11,7 +11,7 @@ class CheckApiRequest extends BaseController
 {
     public function handle (Request $request, \Closure $next)
     {
-        if ($request->pathinfo() !== 'wechat/wxlogin' || $request->pathinfo() !== 'payment/notify') {
+        if (!in_array($request->pathinfo(), ['wechat/wxlogin', 'payment/notify'])) {
             $accessToken = $request->post('access_token');
             $uid = $request->post('uid');
             if ($accessToken == '' || $uid == '') return apiBack('fail', 'Invalid Request', '10004');
