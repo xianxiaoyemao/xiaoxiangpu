@@ -38,8 +38,8 @@ class Payment{
             'body' => $msg,
             'openid' => $openid,
         ];
-
-        $result = Pay::wechat($this->config)->miniapp($order);
+        $pay = Pay::wechat($this->config);
+        $result = $pay->miniapp($order);
 
         return $result;
     }
