@@ -284,6 +284,7 @@ class Cartitem extends BaseController{
         $order = [];
         $order_ids = [];
         $common = new CommonController();
+        $pay_order_no = $common->create_order_no();
         $common::beginTrans();
         try {
             foreach ($data as $k => $v) {
@@ -319,7 +320,6 @@ class Cartitem extends BaseController{
                 Db::name('orders_detail')->insertAll($detail);
             }
 
-            $pay_order_no = $common->create_order_no();
             $pay_order = [
                 'order_sn' => $pay_order_no,
                 'order_ids' => implode(',', $order_ids),
@@ -328,16 +328,16 @@ class Cartitem extends BaseController{
             ];
             Db::name('orders_pay')->insert($pay_order);
 
-            $openid = \app\common\model\User::where('id', $post['uid'])->value('openid');
-            $payment = new Payment();
-            $res = $payment -> pay($pay_order_no, $total_price, '小香铺下单', $openid);
-            dump($res);
             // 提交事务
             Db::commit();
         } catch (\Exception $e) {
             Db::rollback();
             return $e->getMessage();
         }
+        $openid = \app\common\model\User::where('id', $post['uid'])->value('openid');
+        $payment = new Payment();
+        $res = $payment -> pay($pay_order_no, $total_price, '小香铺下单', $openid);
+        return apiBack('success', '成功', '10000', $res);
 
     }
 
