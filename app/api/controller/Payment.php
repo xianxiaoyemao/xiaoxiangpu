@@ -55,9 +55,9 @@ class Payment{
         $result = $app->order->unify([
             'body' => '测试',
             'out_trade_no' => '20201201125346',
-            'total_fee' => 88,
+            'total_fee' => 0.01,
             'trade_type' => 'JSAPI', // 请对应换成你的支付方式对应的值类型
-            'openid' => 'oWGHA4svW6U3dk1CPkPCw7im3GEg',
+            'openid' => 'o-AqT4ljAzQV8yoUxfBv61gv-9y4',
         ]);
         $prepayId = $result['prepay_id'];
         $jssdk = $app->jssdk;
