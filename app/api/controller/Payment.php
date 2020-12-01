@@ -1,19 +1,36 @@
 <?php
 namespace app\api\controller;
+use app\common\model\Orders;
+use app\common\model\OrdersPay;
 use app\Request;
 use think\facade\Config;
+use think\facade\Db;
 use think\facade\Log;
 use Yansongda\Pay\Pay;
+use EasyWeChat\Factory;
 
 class Payment{
 
+//    protected $config = [
+////      'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
+//        'miniapp_id' => '',
+//        'mch_id' => '',
+//        'key' => '',
+//        'notify_url' => '',
+//        'log' => [],
+//    ];
+
     protected $config = [
-//      'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
-        'app_id' => '',
-        'mch_id' => '',
-        'key' => '',
-        'notify_url' => '',
-        'log' => [],
+        // 必要配置
+        'app_id'             => '',
+        'mch_id'             => '',
+        'key'                => '',   // API 密钥
+
+            // 如需使用敏感接口（如退款、发送红包等）需要配置 API 证书路径(登录商户平台下载 API 证书)
+        'cert_path'          => 'path/to/your/cert.pem', // XXX: 绝对路径！！！！
+        'key_path'           => 'path/to/your/key',      // XXX: 绝对路径！！！！
+
+        'notify_url'         => '',     // 你也可以在下单时单独设置来想覆盖它
     ];
 
     public function __construct()
@@ -25,40 +42,63 @@ class Payment{
         $this->config['notify_url'] = 'https://mxxp.xianxiaoyemao.com/payment/notify';
     }
 
-    //https://blog.csdn.net/supergao222/article/details/77844651
-    //https://qq52o.me/1659.html
-    public function pay ($order_no, $money, $msg, $openid){
-//        $ses = app('redis') ;
-//        $ses -> set('hhhh','1111111111');
-//        $res = $ses -> get('hhhh');
 
-        $order = [
-            'out_trade_no' => $order_no,
-            'total_fee' => floatval($money) * 100, // **单位：分**
+    public function pay ($order_no = '', $money = '', $msg = '', $openid = ''){
+        /*$order = [
+            'out_trade_no' => '1234567890',
+            'total_fee' => floatval(0.01) * 100, // **单位：分**
+            'body' => '测试',
+            'openid' => 'oWGHA4svW6U3dk1CPkPCw7im3GEg',
+        ];*/
+        /*$pay = Pay::wechat($this->config);
+        $result = $pay->miniapp($order);*/
+
+        $app = Factory::payment($this->config);
+
+        $result = $app->order->unify([
             'body' => $msg,
+            'out_trade_no' => $order_no,
+            'total_fee' => $money * 100,
+            'trade_type' => 'JSAPI', // 请对应换成你的支付方式对应的值类型
             'openid' => $openid,
-        ];
-        $pay = Pay::wechat($this->config);
-        $result = $pay->miniapp($order);
-
-        return $result;
+        ]);
+        if ($result['return_code'] != 'SUCCESS' || $result['result_code'] != 'SUCCESS') {
+            return [];
+        } else {
+            $prepayId = $result['prepay_id'];
+            $jssdk = $app->jssdk;
+            $config = $jssdk->bridgeConfig($prepayId, false); // 返回数组
+            return $config;
+        }
     }
 
 
 
     public function notify()
     {
-        $pay = Pay::wechat($this->config);
+        $app = Factory::payment($this->config);
+        $response = $app->handlePaidNotify(function($message, $fail){
+            Log::write($message);
+            Log::write('=========================================');
+            $order_id = OrdersPay::where('order_sn', $message['out_trade_no'])->value('order_ids');
+            $order = explode(',', $order_id);
+            Db::name('orders')->where('id', 'in', $order)->update(['status' => 2]);
+            Log::write('=====================11111111=================');
+            if (!$order_id) { // 如果订单不存在 或者 订单已经支付过了
+                return true;
+            }
 
-        try{
-            $data = $pay->verify(); // 是的，验签就这么简单！
-            Log::write('==============' . json_encode($data));
-            Log::debug('Wechat notify', $data->all());
-        } catch (\Exception $e) {
-            // $e->getMessage();
-        }
-
-        return $pay->success()->send();// laravel 框架中请直接 `return $pay->success()`
+            if ($message['return_code'] === 'SUCCESS') { // return_code 表示通信状态，不代表支付状态
+                // 用户是否支付成功
+                if ($message['result_code'] === 'SUCCESS') {
+                } elseif ($message['result_code'] === 'FAIL') {
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        });
+        return $response;
     }
 
 
