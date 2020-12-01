@@ -1,7 +1,10 @@
 <?php
 namespace app\api\controller;
+use app\common\model\Orders;
+use app\common\model\OrdersPay;
 use app\Request;
 use think\facade\Config;
+use think\facade\Db;
 use think\facade\Log;
 use Yansongda\Pay\Pay;
 use EasyWeChat\Factory;
@@ -53,11 +56,11 @@ class Payment{
         $app = Factory::payment($this->config);
 
         $result = $app->order->unify([
-            'body' => '测试',
-            'out_trade_no' => time() . '123460',
-            'total_fee' => 1,
+            'body' => $msg,
+            'out_trade_no' => $order_no,
+            'total_fee' => $money * 100,
             'trade_type' => 'JSAPI', // 请对应换成你的支付方式对应的值类型
-            'openid' => 'o-AqT4oiOyxptQ9wS9NsJgWVXV1g',
+            'openid' => $openid,
         ]);
         if ($result['return_code'] != 'SUCCESS' || $result['result_code'] != 'SUCCESS') {
             return [];
@@ -77,7 +80,11 @@ class Payment{
         $response = $app->handlePaidNotify(function($message, $fail){
             Log::write($message);
             Log::write('=========================================');
-            /*if (!$order || $order['status']==2) { // 如果订单不存在 或者 订单已经支付过了
+            $order_id = OrdersPay::where('order_sn', $message['out_trade_no'])->where('status', 1)->value('order_ids');
+            $order = explode(',', $order_id);
+            Db::name('orders')->where('id', 'in', $order)->update(['status' => 2]);
+            Log::write('=====================11111111=================');
+            if (!$order_id) { // 如果订单不存在 或者 订单已经支付过了
                 return true;
             }
 
@@ -89,7 +96,7 @@ class Payment{
                 }
             } else {
                 return false;
-            }*/
+            }
         });
         return $response;
     }

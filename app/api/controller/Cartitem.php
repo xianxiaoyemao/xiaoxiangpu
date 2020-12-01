@@ -336,7 +336,7 @@ class Cartitem extends BaseController{
         }
         $openid = \app\common\model\User::where('id', $post['uid'])->value('openid');
         $payment = new Payment();
-        $res = $payment -> pay($pay_order_no, $total_price, '小香铺下单', $openid);
+        $res = $payment -> pay($pay_order_no, $total_price, '小香铺购物下单', $openid);
         if ($res) {
             return apiBack('success', '成功', '10000', $res);
         } else {
