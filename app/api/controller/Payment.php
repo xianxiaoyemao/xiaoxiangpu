@@ -80,7 +80,7 @@ class Payment{
         $response = $app->handlePaidNotify(function($message, $fail){
             Log::write($message);
             Log::write('=========================================');
-            $order_id = OrdersPay::where('order_sn', $message['out_trade_no'])->where('status', 1)->value('order_ids');
+            $order_id = OrdersPay::where('order_sn', $message['out_trade_no'])->value('order_ids');
             $order = explode(',', $order_id);
             Db::name('orders')->where('id', 'in', $order)->update(['status' => 2]);
             Log::write('=====================11111111=================');
