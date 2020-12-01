@@ -1,24 +1,29 @@
 <?php
 namespace app\api\controller;
 use app\Request;
+use think\facade\Config;
 use think\facade\Log;
 use Yansongda\Pay\Pay;
 
 class Payment{
 
     protected $config = [
-//        'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
-        'miniapp_id' => 'wx2321f85bc3478c47', // 小程序 APPID
+//      'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
+        'miniapp_id' => '',
         'mch_id' => '',
-        'key' => 'f51786f99ac85501d4c335c8c7f24bd8',
-        'notify_url' => 'https://hlhis.sxtyyd.com/payment/notify',
-        'log' => [ // optional
-            'file' => './logs/wechatmini.log',
-            'level' => 'info', // 建议生产环境等级调整为 info，开发环境为 debug
-            'type' => 'single', // optional, 可选 daily.
-            'max_file' => 30, // optional, 当 type 为 daily 时有效，默认 30 天
-        ],
+        'key' => '',
+        'notify_url' => '',
+        'log' => [],
     ];
+
+    public function __construct()
+    {
+        $this->config['miniapp_id'] = \config('pay.miniprogram.app_id');
+        $this->config['mch_id'] = \config('pay.miniprogram.mch_id');
+        $this->config['key'] = \config('pay.miniprogram.key');
+        $this->config['log'] = \config('pay.miniprogram.log');
+        $this->config['notify_url'] = 'https://mxxp.xianxiaoyemao.com/payment/notify';
+    }
 
     //https://blog.csdn.net/supergao222/article/details/77844651
     //https://qq52o.me/1659.html
@@ -26,6 +31,7 @@ class Payment{
 //        $ses = app('redis') ;
 //        $ses -> set('hhhh','1111111111');
 //        $res = $ses -> get('hhhh');
+
         $order = [
             'out_trade_no' => $order_no,
             'total_fee' => floatval($money) * 100, // **单位：分**
