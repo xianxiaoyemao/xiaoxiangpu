@@ -9,7 +9,7 @@ class Payment{
 
     protected $config = [
 //      'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
-        'app_id' => '',
+        'miniapp_id' => '',
         'mch_id' => '',
         'key' => '',
         'notify_url' => '',
@@ -18,7 +18,7 @@ class Payment{
 
     public function __construct()
     {
-        $this->config['app_id'] = \config('pay.miniprogram.app_id');
+        $this->config['miniapp_id'] = \config('pay.miniprogram.app_id');
         $this->config['mch_id'] = \config('pay.miniprogram.mch_id');
         $this->config['key'] = \config('pay.miniprogram.key');
         $this->config['log'] = \config('pay.miniprogram.log');
