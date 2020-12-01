@@ -75,8 +75,9 @@ class Goods extends Backend
                 $details = $this->request->post('details/a');
                 $spec = $this->request->post('spec/a');
                 try {
-                    $params['pcid'] = (new Category)::where('id',$params['category_id']) -> field('pid')->find()->toArray()['pid'];
+                    $pos = array_search(min($skus['sku_price']), $skus['sku_price']);
                     $params['images'] = explode(',',$details['images_url'])[0];
+                    $params['price'] = $skus['sku_price'][$pos];
                     $params['inventory'] = array_sum($skus['stock']);
                     $params['product_spec_info'] = $this->getSpenInfo($spec['spec_name'], $spec['spec_value']);
                     $params['createtime'] = time();
@@ -93,14 +94,9 @@ class Goods extends Backend
             }
             $this->error();
         }
-//        $this -> goodsselect();
         return $this-> fetch();
     }
 
-    public function goodsselect(){
-
-        echo 111111;die;
-    }
     /**
      * 商品修改
      * @param null $ids
@@ -129,8 +125,9 @@ class Goods extends Backend
             $skus = $this->request->post('rowsku/a');
             $details = $this->request->post('details/a');
             try {
-                $params['pcid'] = (new Category)::where('id',$params['category_id']) -> field('pid')->find()->toArray()['pid'];
+                $pos = array_search(min($skus['sku_price']), $skus['sku_price']);
                 $params['images'] = explode(',',$details['images_url'])[0];
+                $params['price'] = $skus['sku_price'][$pos];
                 $params['inventory'] = array_sum($skus['stock']);
                 $params['product_spec_info'] = $this->getSpenInfo($spec['spec_name'], $spec['spec_value']);
                 $params['updatetime'] = time();
