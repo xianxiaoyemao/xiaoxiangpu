@@ -235,14 +235,27 @@ class Ajax extends Backend{
         $this->success();
     }
 
+    public function goodcategory(){
+        $pid = $this->request->get('pid/d');
+        $where = "status = 1";
+        $categorylist = null;
+        if($pid == 0){
+            $where.= " and pid=$pid";
+            $categorylist = Db::name('category')->where($where)->field('id as value,cate_name as name')->order('id desc')->select();
+        }else{
+            $where.= " and pid=$pid";
+            $categorylist = Db::name('category')->where($where)->field('id as value,cate_name as name')->order('id desc')->select();
+        }
+        $this->success('', null, $categorylist);
+    }
+
     /**
      * 读取分类数据,联动列表.
      */
-    public function category()
-    {
+    public function category(){
         $type = $this->request->get('type');
         $pid = $this->request->get('pid');
-        $where = ['status' => 'normal'];
+        $where = ['status' => 1];
         $categorylist = null;
         if ($pid !== '') {
             if ($type) {
@@ -252,7 +265,8 @@ class Ajax extends Backend{
                 $where['pid'] = $pid;
             }
 
-            $categorylist = Db::name('category')->where($where)->field('id as value,name')->order('weigh desc,id desc')->select();
+            $categorylist = Db::name('category')->where($where)->field('id as value,name')->order('id desc')->select();
+
         }
         $this->success('', null, $categorylist);
     }
