@@ -54,7 +54,7 @@ class Payment{
 
         $result = $app->order->unify([
             'body' => '测试',
-            'out_trade_no' => '20201201125346',
+            'out_trade_no' => time() . '123460',
             'total_fee' => 0.01,
             'trade_type' => 'JSAPI', // 请对应换成你的支付方式对应的值类型
             'openid' => 'o-AqT4ljAzQV8yoUxfBv61gv-9y4',
@@ -62,7 +62,7 @@ class Payment{
         $prepayId = $result['prepay_id'];
         $jssdk = $app->jssdk;
         $config = $jssdk->bridgeConfig($prepayId, false); // 返回数组
-        return apiBack('success', '成功', '10000', $config);
+        return $config;
     }
 
 
