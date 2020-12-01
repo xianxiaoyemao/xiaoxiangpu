@@ -26,7 +26,6 @@ class Product extends BaseController{
         if (!empty($keyword) && isset($keyword)) {
             $where .= " and name like '%$keyword%'";
         }
-        $orderby = "createtime desc";
         $page = $request->post('page') ?? 0;
         $limit = 20;
         $cate = [];
@@ -35,33 +34,51 @@ class Product extends BaseController{
         $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, cate_name');
         switch ($type){
             case 'ms':
-                $where.=" and is_rush=1";
+                $where.=" and is_rush = 1";
                 break;
             case 'jmj':
-                $where.=" and category_id=2";
+                $where.=" and pcid=2";
                 $cate = $db->where('pid', 2)->select()->toArray();
                 break;
             case 'xjtcp':
-                $where.=" and category_id=3";
+                $where.=" and pcid=3";
                 $cate = $db->where('pid', 3)->select()->toArray();
                 break;
             case 'group':
-                $where.=" and spell_group > 1";
+                $where.=" and is_rush = 2"; //拼团
                 break;
             case 'buy0':
                 $where.=" and buy0=1";
                 $share_user = User::where('invitecode', $uid)->count();
                 break;
         }
-        $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,is_rush';
+        $productsfild = 'id,name,images,price,bar_code,discount_price,shop_id,category_id,sales,is_rush';
 //        $list = (new PModel)::productlist($where,$productsfild,$orderby,$page,$limit);
-        $list = (new PModel)::with('shops')->where($where)
+        $list = (new PModel)::with('category')->where($where)
             -> field($productsfild)
             -> order('createtime desc')
             -> select()  -> toArray();
+        $arr =[];
+        $result=[];
+        foreach($list as $v){
+            $result[$v['category_id']]['cid'] = $v['category_id'];
+            $result[$v['category_id']]['cname'] = $v['category']['cate_name'];
+            $result[$v['category_id']]['plist'][]=[
+                'id'=>$v['id'],
+                'images'=>$v['images'],
+                'name'=>$v['name'],
+                'sales'=>$v['sales'],
+                'bar_code'=>$v['bar_code'],
+                'price'=>$v['price'],
+                'category_id'=>$v['category_id'],
+                'shop_id'=>$v['shop_id'],
+                'discount_price'=>$v['discount_price'],
+            ];
+        }
+        $cartlist = array_merge($arr,$result);
         $data =[
             'secskill' => ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()],
-            'data' => $list,
+            'data' => $cartlist,
             'cate' => $cate,
             'share_user_count' => $share_user
         ];
