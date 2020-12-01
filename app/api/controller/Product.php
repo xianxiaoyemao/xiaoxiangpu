@@ -20,8 +20,8 @@ class Product extends BaseController{
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $type = $request->post('type');
         $keyword = $request->post('keyword');
-        $uid = $request->post('uid');
-//        $cid = $request->post('cid') ?? 0;
+        $uid = $request->post('uid/d');
+        $cid = $request->post('cid/d') ?? 0;
         $where = "status=1";
         if (!empty($keyword) && isset($keyword)) {
             $where .= " and name like '%$keyword%'";
@@ -37,6 +37,11 @@ class Product extends BaseController{
                 $where.=" and is_rush = 1";
                 break;
             case 'jmj':
+//                if($cid == 0){
+//
+//                }else{
+//                    $where.=" and pcid=2 and category_id = $cid";
+//                }
                 $where.=" and pcid=2";
                 $cate = $db->where('pid', 2)->select()->toArray();
                 break;
