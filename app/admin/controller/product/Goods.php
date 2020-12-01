@@ -93,9 +93,14 @@ class Goods extends Backend
             }
             $this->error();
         }
+//        $this -> goodsselect();
         return $this-> fetch();
     }
 
+    public function goodsselect(){
+
+        echo 111111;die;
+    }
     /**
      * 商品修改
      * @param null $ids

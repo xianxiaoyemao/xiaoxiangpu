@@ -31,7 +31,7 @@ select::-moz-focus-inner,
 input[type="file"] > input[type="button"]::-moz-focus-inner {
 border: 0;
 outline : 0;
-} 
+}
 
 
 textarea{
@@ -60,3 +60,6 @@ img{border:0px;  outline-width:0px;  vertical-align:top;}
 .clear{clear:both;}
 /* .w1200{ width:1200px; margin:0 auto;} */
 .hide { display:none;}
+
+
+
