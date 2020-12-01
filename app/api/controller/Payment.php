@@ -39,26 +39,30 @@ class Payment{
         $this->config['notify_url'] = 'https://mxxp.xianxiaoyemao.com/payment/notify';
     }
 
-    //https://blog.csdn.net/supergao222/article/details/77844651
-    //https://qq52o.me/1659.html
-    public function pay ($order_no = '', $money = '', $msg = '', $openid = ''){
-//        $ses = app('redis') ;
-//        $ses -> set('hhhh','1111111111');
-//        $res = $ses -> get('hhhh');
 
-        $order = [
+    public function pay ($order_no = '', $money = '', $msg = '', $openid = ''){
+        /*$order = [
             'out_trade_no' => '1234567890',
             'total_fee' => floatval(0.01) * 100, // **单位：分**
             'body' => '测试',
             'openid' => 'oWGHA4svW6U3dk1CPkPCw7im3GEg',
-        ];
+        ];*/
         /*$pay = Pay::wechat($this->config);
         $result = $pay->miniapp($order);*/
 
-        $payment = Factory::payment($this->config);
-        $jssdk = $payment->jssdk;
-        $config = $jssdk->bridgeConfig($prepayId, false); // 返回数组
-        dump($config);die;
+        $app = Factory::payment($this->config);
+
+        $result = $app->order->unify([
+            'body' => '测试',
+            'out_trade_no' => '20201201125346',
+            'total_fee' => 88,
+            'trade_type' => 'JSSDK', // 请对应换成你的支付方式对应的值类型
+            'openid' => 'oWGHA4svW6U3dk1CPkPCw7im3GEg',
+        ]);
+
+        /*$jssdk = $payment->jssdk;
+        $config = $jssdk->bridgeConfig($prepayId, false); // 返回数组*/
+        dump($result);die;
         return $config;
     }
 
