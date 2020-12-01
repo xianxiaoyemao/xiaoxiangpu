@@ -27,16 +27,16 @@ class Payment{
 
     //https://blog.csdn.net/supergao222/article/details/77844651
     //https://qq52o.me/1659.html
-    public function pay ($order_no, $money, $msg, $openid){
+    public function pay ($order_no = '', $money = '', $msg = '', $openid = ''){
 //        $ses = app('redis') ;
 //        $ses -> set('hhhh','1111111111');
 //        $res = $ses -> get('hhhh');
 
         $order = [
-            'out_trade_no' => $order_no,
-            'total_fee' => floatval($money) * 100, // **单位：分**
-            'body' => $msg,
-            'openid' => $openid,
+            'out_trade_no' => '1234567890',
+            'total_fee' => floatval(0.01) * 100, // **单位：分**
+            'body' => '测试',
+            'openid' => 'oWGHA4svW6U3dk1CPkPCw7im3GEg',
         ];
         $pay = Pay::wechat($this->config);
         $result = $pay->miniapp($order);
