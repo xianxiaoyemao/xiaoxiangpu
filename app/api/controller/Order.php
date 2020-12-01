@@ -33,13 +33,15 @@ class Order extends BaseController
                 $orderwhere .= $where;
                 break;
         }
+//        dump($orderwhere);die;
 //        $filed = "id,order_sn,payment_price,status,pay_status,createtime,remark";
-        if($orderwhere != 3){
-            $orderlist = $this -> orderconst($orderwhere,'list');
-//            $orderlist = (new Orders)::with(['ordersdetail'])   -> select() -> toArray();
-        }else{
-
-        }
+//        if($orderwhere != 3){
+//            $orderlist = $this -> orderconst($orderwhere,'list');
+////            $orderlist = (new Orders)::with(['ordersdetail'])   -> select() -> toArray();
+//        }else{
+//
+//        }
+        $orderlist = $this -> orderconst($orderwhere,'list');
         return apiBack('success', "获取订单列表成功", '10000',$orderlist);
     }
 

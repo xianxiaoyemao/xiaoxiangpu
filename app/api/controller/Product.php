@@ -52,12 +52,17 @@ class Product extends BaseController{
                 $share_user = User::where('invitecode', $uid)->count();
                 break;
         }
-        $productsfild = 'id,name,images,price,bar_code,discount_price,shop_id,category_id,sales,is_rush';
+        $productsfild = 'p.id,p.name,p.images,p.price,p.bar_code,p.discount_price,p.shop_id,p.category_id,p.sales,p.is_rush,c.cate_name as cname';
 //        $list = (new PModel)::productlist($where,$productsfild,$orderby,$page,$limit);
-        $list = (new PModel)::with('category')->where($where)
+        $list = Db::name('product') -> alias('p')
+            -> join('category c','c.id=p.category_id')
             -> field($productsfild)
-            -> order('createtime desc')
-            -> select()  -> toArray();
+            -> order('p.createtime desc,c.createtime desc')
+            -> select() -> toArray();
+//            (new PModel)::with('category')->where($where)
+//            -> field($productsfild)
+//            -> order('createtime desc')
+//            -> select()  -> toArray();
         switch ($type){
             case 'ms':
             case 'group':
@@ -84,7 +89,7 @@ class Product extends BaseController{
         $result=[];
         foreach($list as $v){
             $result[$v['category_id']]['cid'] = $v['category_id'];
-            $result[$v['category_id']]['cname'] = $v['category']['cate_name'];
+            $result[$v['category_id']]['cname'] = $v['cname'];
             $result[$v['category_id']]['plist'][]=[
                 'id'=>$v['id'],
                 'images'=>$v['images'],
@@ -100,7 +105,7 @@ class Product extends BaseController{
         $cartlist = array_merge($arr,$result);
         return $cartlist;
     }
-    //商品详情
+    //商品详情  https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=www.sxtyyd.com
     public function productdetails(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $productid = $request->post('id');

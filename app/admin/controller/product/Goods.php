@@ -105,10 +105,13 @@ class Goods extends Backend
      */
     public function edit ($ids = null){
         $product = $this->model->find($ids);
-//        $details = (new ProductDetails)::where('product_id',$ids) -> find();
+        $details = (new ProductDetails)::where('product_id',$ids) -> find();
+//        echo (new ProductDetails)-> getLastSql();die;
+//        dump($details);die;
         //sku属性
         $sku = $product->skus()->select();
-        $details = $product ->  productdetails() -> find();
+        $details = $product ->  productdetails() -> find() ;
+//        dump($details);die;
         $this->assign('sku', $sku);
         $specinfo = json_decode($product->product_spec_info, 1);
         $spec['spec_name'] =$specinfo['name'];
