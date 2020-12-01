@@ -100,7 +100,7 @@ class Product extends BaseController{
         $cartlist = array_merge($arr,$result);
         return $cartlist;
     }
-    //商品详情
+    //商品详情  https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=www.sxtyyd.com
     public function productdetails(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $productid = $request->post('id');
