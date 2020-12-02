@@ -22,9 +22,9 @@ class Product extends BaseController{
         $keyword = $request->post('keyword');
         $uid = $request->post('uid/d');
         $cid = $request->post('cid/d') ?? 0;
-        $where = "status=1";
+        $where = "p.status=1";
         if (!empty($keyword) && isset($keyword)) {
-            $where .= " and name like '%$keyword%'";
+            $where .= " and p.name like '%$keyword%'";
         }
         $page = $request->post('page') ?? 0;
         $limit = 20;
@@ -34,30 +34,36 @@ class Product extends BaseController{
         $db = Category::where('status', 1)->order('createtime', 'desc')->field('id, cate_name');
         switch ($type){
             case 'ms':
-                $where.=" and is_rush = 1";
+                $where.=" and p.is_rush = 1";
                 break;
             case 'jmj':
-                $where.=" and pcid=2";
+                $where.=" and p.pcid=2";
                 $cate = $db->where('pid', 2)->select()->toArray();
                 break;
             case 'xjtcp':
-                $where.=" and pcid=3";
+                $where.=" and p.pcid=3";
                 $cate = $db->where('pid', 3)->select()->toArray();
                 break;
             case 'group':
-                $where.=" and is_rush = 2"; //拼团
+                $where.=" and p.is_rush = 2"; //拼团
                 break;
             case 'buy0':
-                $where.=" and buy0=1";
+                $where.=" and p.buy0=1";
                 $share_user = User::where('invitecode', $uid)->count();
                 break;
         }
-        $productsfild = 'id,name,images,price,bar_code,discount_price,shop_id,category_id,sales,is_rush';
+        $productsfild = 'p.id,p.name,p.images,p.price,p.bar_code,p.discount_price,p.shop_id,p.category_id,p.sales,p.is_rush,c.cate_name as cname';
 //        $list = (new PModel)::productlist($where,$productsfild,$orderby,$page,$limit);
-        $list = (new PModel)::with('category')->where($where)
+        $list = Db::name('product') -> alias('p')
+            -> join('category c','c.id=p.category_id')
             -> field($productsfild)
-            -> order('createtime desc')
-            -> select()  -> toArray();
+            -> where($where)
+            -> order('c.createtime desc,p.createtime desc')
+            -> select() -> toArray();
+//            (new PModel)::with('category')->where($where)
+//            -> field($productsfild)
+//            -> order('createtime desc')
+//            -> select()  -> toArray();
         switch ($type){
             case 'ms':
             case 'group':
@@ -84,7 +90,7 @@ class Product extends BaseController{
         $result=[];
         foreach($list as $v){
             $result[$v['category_id']]['cid'] = $v['category_id'];
-            $result[$v['category_id']]['cname'] = $v['category']['cate_name'];
+            $result[$v['category_id']]['cname'] = $v['cname'];
             $result[$v['category_id']]['plist'][]=[
                 'id'=>$v['id'],
                 'images'=>$v['images'],
@@ -100,7 +106,7 @@ class Product extends BaseController{
         $cartlist = array_merge($arr,$result);
         return $cartlist;
     }
-    //商品详情
+    //商品详情  https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=www.sxtyyd.com
     public function productdetails(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $productid = $request->post('id');
