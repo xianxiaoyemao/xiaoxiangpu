@@ -344,6 +344,30 @@ class Cartitem extends BaseController{
         }
     }
 
+    /**
+     * 订单款支付
+     * @param Request $request
+     * @return \think\response\Json
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidArgumentException
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidConfigException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function orderPay (Request $request)
+    {
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $total_price = $request->post('total_price');
+        $pay_order_no = $request->post('order_no');
+        $uid = $request->post('uid');
+        $openid = \app\common\model\User::where('id', $uid)->value('openid');
+        $payment = new Payment();
+        $res = $payment -> pay($pay_order_no, $total_price, '小香铺购物下单', $openid);
+        if ($res) {
+            return apiBack('success', '成功', '10000', $res);
+        } else {
+            return apiBack('fail', '获取订单失败', '10001');
+        }
+    }
+
 
     public function mini_pay ()
     {

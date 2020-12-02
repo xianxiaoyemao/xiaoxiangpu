@@ -41,6 +41,7 @@ Route::post('order/orderdel', 'order/orderdel');
 Route::post('order/evaluation', 'order/evaluation');//评价
 
 Route::post('cartitem/createorder', 'cartitem/createOrder');
+Route::post('cartitem/orderpay', 'cartitem/orderPay');
 Route::post('payment/notify', 'payment/notify');
 
 //我的
