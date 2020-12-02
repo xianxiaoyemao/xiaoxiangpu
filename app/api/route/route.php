@@ -46,6 +46,8 @@ Route::post('payment/notify', 'payment/notify');
 //我的
 Route::post('personal/index', 'personal/index');
 Route::post('personal/convert', 'personal/convert');
+Route::post('personal/invite', 'personal/invite');
+Route::post('personal/invitecode', 'personal/inviteCode');
 
 //上传
 Route::any('ajax/ajaxupload', 'ajax/ajaxupload');//评价
