@@ -1,0 +1,25 @@
+<style>
+    li{list-style: none;height: 30px;line-height: 30px;}
+</style>
+<div>
+    <h5>订单详情</h5>
+    <div class="detail">
+        <ul>
+            <li>订单编号：{$row.order_sn}</li>
+            <li>
+                订单状态：{if $row.status == 1}<span style="color: red">未付款</span>
+                {elseif $row.status == 2}<span style="color: green">已支付</span>
+                {elseif $row.status == 3}<span style="color: green">已发货</span>
+                {elseif $row.status == 4}<span style="color: green">已签收</span>{/if}
+            </li>
+            <li>订单时间：{$row.createtime|date='Y-m-d H:i:s'}</li>
+            <li>支付时间：{$row.createtime|date='Y-m-d H:i:s'}</li>
+        </ul>
+    </div>
+</div>
+<div class="hide layer-footer">
+    <label class="control-label col-xs-12 col-sm-2"></label>
+    <div class="col-xs-12 col-sm-8">
+        <button type="reset" class="btn btn-primary btn-embossed btn-close" onclick="Layer.closeAll();">{:__('Close')}</button>
+    </div>
+</div>

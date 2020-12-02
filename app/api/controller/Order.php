@@ -54,7 +54,7 @@ class Order extends BaseController
         $addressid = (new Orders())::where('id',$orderid) -> value('addressid');
         //查询地址
         $addressinfo = (new Address)::where(['id'=>$addressid])
-            -> field('contact_name,contact_phone,disarea,address')
+            -> field('id as areaid,contact_name,contact_phone,disarea,address')
             -> find() -> toArray();
         //查询订单详情
         $orderwhere = "o.id = $orderid";

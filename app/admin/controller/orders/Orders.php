@@ -3,8 +3,11 @@
 
 namespace app\admin\controller\orders;
 use app\common\controller\Backend;
+use app\common\model\Address;
+use app\common\model\OrdersDetail;
 use app\Request;
 use think\facade\Db;
+use app\common\model\Orders as OrdersModel;
 class Orders extends Backend{
     public function index(Request $request){
         if ($this->request->isAjax()) {
@@ -12,21 +15,40 @@ class Orders extends Backend{
                 return $this->selectpage();
             }
             [$where, $sort, $order, $offset, $limit] = $this->buildparams();
-            $total = Db::name('orders') -> alias('o') -> join('user u','u.id=o.user_id')
+            $total = (new OrdersModel())
                 ->where($where)
-//                ->where('o.status', 1)
+                ->order('createtime desc')
                 ->count();
-            $list =  Db::name('orders') -> alias('o') -> join('user u','u.id=o.user_id')
+            $list =  (new OrdersModel())
                 ->where($where)
-//                ->where('o.status', 1)
-//                ->order($sort, $order)
-//                ->limit($offset, $limit)
+                ->order('createtime desc')
+                ->limit($offset, $limit)
                 ->select();
-            echo Db::name('orders') -> getLastSql();
-            dump($list);die;
             $result = ['total' => $total, 'rows' => $list];
             return json($result);
         }
+        $statusList = [
+            '1' => '未付款',
+            '2' => '已付款',
+            '3' => '已发货',
+            '4' => '已签收',
+        ];
+        $this -> assign('statusList',$statusList);
         return $this-> fetch();
+    }
+
+
+    /**
+     * 详情.
+     */
+    public function detail($ids){
+        $row =  (new OrdersModel())::where('id',$ids) -> find() -> toArray();
+        $addressinfo = (new Address())::where('id',$row['addressid']) -> find();
+        $detail= (new OrdersDetail())-> where('order_id',$ids) -> select() -> toArray();
+
+//        dump($row);die;
+//        $row['createtime'] = date('Y-m-d H:i:s',$row['createtime']);
+        $this->assign('row', $row);
+        return $this->fetch();
     }
 }

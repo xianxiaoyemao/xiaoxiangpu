@@ -25,15 +25,15 @@ class User extends BaseModel
     }
 
     public function cartItems(){
-        return $this->hasMany(CartItem::class);
+        return $this->hasMany(Cart::class);
     }
 
-    public function order(){
-        return $this->hasMany(Order::class,'user_id');
+    public function orders(){
+        return $this->hasMany(Orders::class,'user_id');
     }
 
     public function addresses()
     {
-        return $this->hasMany(Adresss::class);
+        return $this->hasMany(Address::class);
     }
 }
