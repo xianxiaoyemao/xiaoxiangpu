@@ -6,114 +6,105 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
             Table.api.init({
                 extend: {
                     index_url: 'orders.orders/index',
-                    add_url: 'orders.orders/add',
-                    edit_url: 'orders.orders/edit',
+                    add_url: '',
+                    edit_url: '',
                     del_url: 'orders.orders/del',
                     multi_url: 'orders.orders/multi',
                 }
             });
 
             var table = $("#table");
-            // 初始化表格
-            table.bootstrapTable({
+             // 初始化表格
+             table.bootstrapTable({
+
                 url: $.fn.bootstrapTable.defaults.extend.index_url,
+                pk: 'id',
+                sortName: 'weigh',
                 columns: [
                     [
-                        {field: 'state', checkbox: true, },
-                        {field: 'id', title: 'ID'},
-                        {field: 'name', title: '商品名称'},
-                        {field: 'price', title: '市场价格'},
-                        {field: 'sales', title: '销量'},
-                        {field: 'is_hot_sale', title: '热卖商品',formatter:function (value) {
+                        {checkbox: true},
+                        {field: 'id', title:'ID'},
+                        {field: 'order_sn', title: '订单编号'},
+
+                        {field: 'user_id', title: '用户详情', table: table, events: Table.api.events.operate,
+                        buttons:[
+                        {
+                            name: 'order_detail',
+                            hidden:false,
+                            title: '查看详情',
+                            classname: 'btn btn-xs btn-success btn-dialog',
+                            icon: 'fa fa-newspaper-o',
+                            url: 'order/ordergoods/detail',
+                        }]
+                        , formatter: Table.api.formatter.operate},
+                        {field: 'goods_price', title: '总金额'},
+                        {field: 'amount_price', title: '优惠金额'},
+                        {field: 'payment_price', title: '实际支付金额'},
+                        {field: 'createtime', title: '添加时间', formatter: Table.api.formatter.datetime},
+                        {field: 'paytime', title: '支付时间', formatter: Table.api.formatter.datetime},
+                        {field: 'status', title: '状态',formatter:function (value) {
                                 if(value == 1){
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 是</span>';
-                                }else{
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 不是</span>';
+                                    return '<span style="color:red"><i class="fa fa-circle"></i> 未付款</span>';
+                                }else if (value == 2){
+                                    return '<span style="color:green"><i class="fa fa-circle"></i> 已付款</span>';
+                                }else if (value == 3){
+                                    return '<span class="text-success"><i class="fa fa-circle"></i> 已发货</span>';
+                                }else if (value == 4){
+                                    return '<span class="text-success"><i class="fa fa-circle"></i> 已签收</span>';
                                 }
                             },operate:false
                         },
-                        {field: 'is_recommend', title: '店长推荐', formatter:function (value) {
-                                if(value == 1){
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 是</span>';
-                                }else{
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 不是</span>';
-                                }
-                            },operate:false
-                        },
-                        {field: 'is_new', title: '新品',  formatter:function (value) {
-                                if(value == 1){
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 是</span>';
-                                }else{
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 不是</span>';
-                                }
-                            },operate:false
-                        },
-                        {field: 'is_rush', title: '抢购商品',  formatter:function (value) {
-                                if(value == 1){
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 是</span>';
-                                }else{
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 不是</span>';
-                                }
-                            },operate:false
-                        },
-                        {field: 'status', title: '状态', formatter:function (value) {
-                                if(value == 1){
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 正常</span>';
-                                }else{
-                                    return '<span class="text-success"><i class="fa fa-circle"></i> 隐藏</span>';
-                                }
-                            },operate:false
-                        },
-                        {field: 'createtime', title: '创建时间', formatter: Table.api.formatter.datetime},
-                        {field: 'operate', title: __('Operate'), events: Table.api.events.operate, formatter: function (value, row, index) {
-                                return Table.api.formatter.operate.call(this, value, row, index, table);
-                            }}
+                        {field: 'operate', title: __('Operate'), events: Controller.api.events.operate, formatter: Controller.api.formatter.operate}
                     ]
                 ]
+            });
+             // 绑定TAB事件
+             $('.panel-heading a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var field = $(this).closest("ul").data("field");
+                var value = $(this).data("value");
+                var options = table.bootstrapTable('getOptions');
+                options.pageNumber = 1;
+                options.queryParams = function (params) {
+                    var filter = {};
+                    if (value !== '') {
+                        filter[field] = value;
+                    }
+
+                    params.filter = JSON.stringify(filter);
+                    return params;
+                };
+
+                table.bootstrapTable('refresh', {});
+                return false;
             });
             // 为表格绑定事件
             Table.api.bindevent(table);
         },
-        add: function () {
-            Form.api.bindevent($("form[role=form]"));
-            // uploadfile()
-            zhuijia()
-        },
-        edit: function () {
-            Form.api.bindevent($("form[role=form]"));
-            zhuijia()
+        api: {
+            bindevent: function () {
+                Form.api.bindevent($("form[role=form]"));
+            },
+            formatter: {
+                browser: function (value, row, index) {
+                    return '<a class="btn btn-xs btn-browser">' + row.useragent.split(" ")[0] + '</a>';
+                },
+                operate: function (value, row, index) {
+                    return '<a class="btn btn-info btn-xs btn-detail">订单详情</a> '
+                            + Table.api.formatter.operate(value, row, index, $("#table"));
+                },
+            },
+            events: {
+                operate: $.extend({
+                    'click .btn-detail': function (e, value, row, index) {
+                        // console.log(row['id'])
+                        Backend.api.open('orders.orders/detail/ids/' + row['id'], '订单详情');
+                    }
+                }, Table.api.events.operate)
+            }
         }
 
     };
     return Controller;
-
-    //上传商品详情图
-    function uploadfile(){
-        alert(11111111111)
-    }
-
-    //追加
-    function zhuijia(){
-        $('#append').click(function () {
-            var html = $('#skuattr').html();
-            var str = '<div id="skuattr" class="form-group">\n' +
-                '                <div class="col-xs-12 col-sm-2">\n' +
-                '                    <input type="text" class="form-control" size="40" name="rowsku[sku_title][]" value="" placeholder="属性名称"/>\n' +
-                '                </div>\n' +
-                '                <div class="col-xs-12 col-sm-2">\n' +
-                '                    <input type="text" class="form-control" name="rowsku[sku_price][]" value="" placeholder="价格"/>\n' +
-                '                </div>\n' +
-                '                <div class="col-xs-12 col-sm-2">\n' +
-                '                    <input type="text" class="form-control" name="rowsku[stock][]" value="" placeholder="库存"/>\n' +
-                '                </div>\n' +
-                '                <span class="btn btn-sm btn-danger btn-remove"><i class="fa fa-times"></i></span>\n' +
-                '            </div>';
-            $('#append').parent().prev().children('#prev').append(str);
-        });
-        $(document).on("click", "#prev .form-group .btn-remove", function () {
-            $(this).parent().remove();
-        });
-    }
 });
 
 
