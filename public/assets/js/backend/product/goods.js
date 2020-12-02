@@ -21,6 +21,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                     [
                         {field: 'state', checkbox: true, },
                         {field: 'id', title: 'ID'},
+                        {field: 'images', title: '商品图片' ,events: Table.api.events.image, formatter: Table.api.formatter.image, operate: false},
                         {field: 'name', title: '商品名称'},
                         {field: 'price', title: '市场价格'},
                         {field: 'sales', title: '销量'},

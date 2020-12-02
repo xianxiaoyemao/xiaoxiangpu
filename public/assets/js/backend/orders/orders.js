@@ -25,18 +25,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {checkbox: true},
                         {field: 'id', title:'ID'},
                         {field: 'order_sn', title: '订单编号'},
-
-                        {field: 'user_id', title: '用户详情', table: table, events: Table.api.events.operate,
-                        buttons:[
-                        {
-                            name: 'order_detail',
-                            hidden:false,
-                            title: '查看详情',
-                            classname: 'btn btn-xs btn-success btn-dialog',
-                            icon: 'fa fa-newspaper-o',
-                            url: 'order/ordergoods/detail',
-                        }]
-                        , formatter: Table.api.formatter.operate},
                         {field: 'goods_price', title: '总金额'},
                         {field: 'amount_price', title: '优惠金额'},
                         {field: 'payment_price', title: '实际支付金额'},
