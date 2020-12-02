@@ -74,6 +74,9 @@ class Product extends BaseController{
             case 'xjtcp':
                 $cartlist = $this -> goodslist($list);
                 break;
+            case '':
+                $cartlist = $list;
+                break;
         }
 
         $data =[
