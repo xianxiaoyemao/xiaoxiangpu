@@ -2,14 +2,12 @@
 namespace app\api\controller;
 use app\admin\model\Category;
 use app\BaseController;
-//use app\common\SearchBuilders\ProductSearchBuilder;
-//use app\Exceptions\InvalidRequestException;
-//use Illuminate\Http\Request;
-//use Illuminate\Pagination\LengthAwarePaginator;
 use app\common\model\Cart;
 use app\common\model\ProductDetails;
 use app\common\model\ProductSku;
 use app\common\model\User;
+use app\api\controller\SecondsKill;
+use app\common\util\TpshopException;
 use think\facade\Db;
 use app\Request;
 use app\common\model\Product as PModel;
@@ -112,7 +110,8 @@ class Product extends BaseController{
     //商品详情  https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=www.sxtyyd.com
     public function productdetails(Request $request){
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
-        $productid = $request->post('id');
+        $productid = $request->post('id/d');
+        $uid = $request->post('uid/d');
         if(empty($productid)){
             return apiBack('fail', '商品id不能为空', '10004');
         }
@@ -125,20 +124,28 @@ class Product extends BaseController{
         $pdetails['introduce'] = $details->introduce;
         $pdetails['comment_num'] = ProductComment::where('product_id', $productid)->count();
         $pdetails['product_spec_info'] = json_decode($pdetails['product_spec_info'],true);
+
         if($pdetails['is_rush'] == 1){
             $pdetails['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
         }
+
         //:with(['productdetails'=>function($query){$query->field('product_id,images_url,picdesc,introduce');}])
 //            -> find() ->toArray();
         $skulist = (new ProductSku)::where('product_id',$productid)  -> field('id as skuid,title,price as skuprice,stock') -> select()->toArray();
-        foreach ($skulist as $key => $val){
-            $res=app('redis')->llen('goods_store'.$productid.$val['skuid']);
-            $count=$val['stock']-$res;
-            for($i=0;$i<$count;$i++){
-                app('redis') ->lpush('goods_store'.$productid.$val['skuid'],1);
-            }
-//            dump(app('redis')->llen('goods_store'.$productid.$val['skuid']));die;
+        $sekill = new  SecondsKill($productid,$uid);
+        try {
+            $sekill -> _before_detail();
+        }catch (TpshopException $t){
+            $error = $t->getErrorArr();
         }
+//        foreach ($skulist as $key => $val){
+//            $res=app('redis')->llen('goods_store'.$productid.$val['skuid']);
+//            $count=$val['stock']-$res;
+//            for($i=0;$i<$count;$i++){
+//                app('redis') ->lpush('goods_store'.$productid.$val['skuid'],1);
+//            }
+////            dump(app('redis')->llen('goods_store'.$productid.$val['skuid']));die;
+//        }
         $data =[
             'details'=>$pdetails,
             'skulist'=> $skulist,

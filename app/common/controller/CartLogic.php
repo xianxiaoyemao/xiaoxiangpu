@@ -205,9 +205,6 @@ class CartLogic extends CommonController {
             'bar_code' => $this->goods['bar_code'],
             'images' => $this->goods['images'],
         ];
-//        if($this->goods['is_rush'] == 1){
-//
-//        }
         $store_count = $this->specGoodsPrice['stock'];
         if ($this->goodsBuyNum > $store_count) {
             throw new TpshopException('立即购买', 0, '商品库存不足，剩余' . $store_count);
@@ -225,6 +222,10 @@ class CartLogic extends CommonController {
             'data' => $shopdata
         ];
         return $data;
+    }
+
+    public function buyNowms(){
+
     }
 
     /**

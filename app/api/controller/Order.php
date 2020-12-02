@@ -170,8 +170,9 @@ class Order extends BaseController
                 ];
             }
         }
-        $cartlist = array_merge($arr,$result);
-        $ret = $this -> getOrderprice($cartlist);
+//        $cartlist = array_merge($arr,$result);
+//        $ret = $this -> getOrderprice($cartlist);
+        $ret = $this -> getOrderprice(array_values($result));
         return $ret;
     }
     //计算订单总价
