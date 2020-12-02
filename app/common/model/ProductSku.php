@@ -11,13 +11,16 @@ class ProductSku extends BaseModel
 //        return $this->belongsTo(Product::class);
 //    }
     public function product(){
-        return $this->hasOne(Product::class,"product_id","id");
+        return $this->hasMany(Product::class,"product_id","id");
     }
 
      public function skucartitem(){
         return $this -> hasMany(Cart::class);
     }
 
+    public function ordersdetail(){
+        return $this -> hasOne(OrdersDetail::class);
+    }
 //    public function decreaseStock($amount)
 //    {
 //        if ($amount < 0) {

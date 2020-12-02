@@ -117,22 +117,23 @@ class Order extends BaseController
             p.id as pid,p.shop_id,p.name,p.images,ps.title as skutitle')
             -> order('o.createtime desc')
             -> select() -> toArray();
+
         $result=[];
         $arr = [];
         if($type == 'list'){
             foreach ($orderlist as $v){
-                $result[$v['shop_id']]['shopid'] = $v['shop_id'];
-                $result[$v['shop_id']]['orderid'] = $v['orderid'];
-                $result[$v['shop_id']]['order_sn'] = $v['order_sn'];
-                $result[$v['shop_id']]['payment_price'] = $v['payment_price'];
-                $result[$v['shop_id']]['amount_price'] = $v['amount_price'];
-                $result[$v['shop_id']]['createtime'] = $v['createtime'];
-                $result[$v['shop_id']]['paytime'] = $v['paytime'];
-                $result[$v['shop_id']]['status'] = $v['status'];
-                $result[$v['shop_id']]['is_code'] = $v['is_code'];
-                $result[$v['shop_id']]['up_code'] = $v['up_code'];
-                $result[$v['shop_id']]['shoptitle'] =  (new Shops())::where('id', $v['shop_id']) -> value('title');
-                $result[$v['shop_id']]['orderlist'][]=[
+                $result[$v['order_sn']]['shopid'] = $v['shop_id'];
+                $result[$v['order_sn']]['orderid'] = $v['orderid'];
+                $result[$v['order_sn']]['order_sn'] = $v['order_sn'];
+                $result[$v['order_sn']]['payment_price'] = $v['payment_price'];
+                $result[$v['order_sn']]['amount_price'] = $v['amount_price'];
+                $result[$v['order_sn']]['createtime'] = $v['createtime'];
+                $result[$v['order_sn']]['paytime'] = $v['paytime'];
+                $result[$v['order_sn']]['status'] = $v['status'];
+                $result[$v['order_sn']]['is_code'] = $v['is_code'];
+                $result[$v['order_sn']]['up_code'] = $v['up_code'];
+                $result[$v['order_sn']]['shoptitle'] =  (new Shops())::where('id', $v['shop_id']) -> value('title');
+                $result[$v['order_sn']]['orderlist'][]=[
                     'skuid' => $v['skuid'],
                     'pid' => $v['pid'],
                     'speckey' => $v['speckey'],
