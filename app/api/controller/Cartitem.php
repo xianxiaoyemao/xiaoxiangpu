@@ -143,6 +143,7 @@ class Cartitem extends BaseController{
         $skuid = $request -> post('skuid/d');//商品规格id
         $specvalue = $request -> post('specvalue');
         $quantity = $request -> post('quantity/d') ?? 1;
+        $is_rush = $request -> post('is_rush/d');
         $cartLogic = new CartLogic();
         $cartLogic->setUserId($uid);
         //立即购买
@@ -155,7 +156,11 @@ class Cartitem extends BaseController{
                 ->setProductSku($skuid)
                 ->setGoodsBuyNum($quantity);
             try{
-                $cartList = $cartLogic->buyNow();
+                if($is_rush == 1){
+                    $cartList = $cartLogic->buyNowms();
+                }else{
+                    $cartList = $cartLogic->buyNow();
+                }
             }catch (TpshopException $t){
                 $error = $t->getErrorArr();
                 return apiBack('fail', $error['msg'], '10004');
