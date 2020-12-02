@@ -13,7 +13,33 @@
                 {elseif $row.status == 4}<span style="color: green">已签收</span>{/if}
             </li>
             <li>订单时间：{$row.createtime|date='Y-m-d H:i:s'}</li>
-            <li>支付时间：{$row.createtime|date='Y-m-d H:i:s'}</li>
+            <li>支付时间：{$row.paytime|date='Y-m-d H:i:s'}</li>
+            <li>联系人：{$araeinfo.contact_name}</li>
+            <li>联系人电话：{$araeinfo.contact_phone}</li>
+            <li>收货地址：{$araeinfo.disarea}</li>
+            <li>详细地址：{$araeinfo.address}</li>
+            <li>商品列表：
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>商品名称</th>
+                            <th>商品图片</th>
+                            <th>份量</th>
+                            <th>商品价格</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {volist name="detail" id="vo"  }
+                    <tr>
+                        <td>{$vo.product.name}</td>
+                        <td><img src="{$vo.product.images}" width="60" height="50"></td>
+                        <td>{$vo.skus.title}</td>
+                        <td>{$vo.skus.price}元</td>
+                    </tr>
+                    {/volist}
+                    </tbody>
+                </table>
+            </li>
         </ul>
     </div>
 </div>

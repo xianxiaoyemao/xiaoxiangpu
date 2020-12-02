@@ -44,11 +44,17 @@ class Orders extends Backend{
     public function detail($ids){
         $row =  (new OrdersModel())::where('id',$ids) -> find() -> toArray();
         $addressinfo = (new Address())::where('id',$row['addressid']) -> find();
-        $detail= (new OrdersDetail())-> where('order_id',$ids) -> select() -> toArray();
-
-//        dump($row);die;
-//        $row['createtime'] = date('Y-m-d H:i:s',$row['createtime']);
+        $detail= (new OrdersDetail())::with(['product','skus'])
+            -> where('order_id',$ids) -> select() -> toArray();
+//        $detail= Db::name('orders_detail') -> alias('od')
+//            -> join('product p','p.id=od.product_id')
+//            -> join('product_sku ps','ps.id=od.skuid')
+//            -> where('od.order_id',$ids) -> select() -> toArray();
+//        echo Db::name('orders_detail') -> getLastSql();
+//        dump($detail);die;
+        $this->assign('araeinfo', $addressinfo);
         $this->assign('row', $row);
+        $this->assign('detail', $detail);
         return $this->fetch();
     }
 }
