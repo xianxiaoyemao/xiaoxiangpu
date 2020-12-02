@@ -10,6 +10,8 @@ use app\common\model\Config;
 use app\common\model\Orders;
 use app\Request;
 use app\common\model\Product;
+use think\facade\Db;
+
 class Index extends BaseController
 {
     public function userRegister (Request $request)
@@ -58,6 +60,18 @@ class Index extends BaseController
             $isNew = true;
         } else {
             $isNew = false;
+        }
+
+        $row = Db::name('orders')->alias('o')
+            ->join('user u', 'o.user_id = u.id', 'left')
+            ->join('orders_detail od', 'od.order_id = o.id', 'left')
+            ->join('product p', 'p.id = od.product_id', 'left')
+            ->where('o.status', 2)
+            ->order('o.createtime', 'desc')
+            ->field('u.nickname, p.name, od.number')->select()->toArray();
+        $roll = [];
+        foreach ($row as $k => $v) {
+            $roll[] = $v['nickname'] . '购买了' . $v['number'] . '份' . $v['name'];
         }
 
         $roll = ['xxx用户购买两份椒麻鸡', '王小二购买新疆特产一份', '张三购买椒麻鸡套餐两份', '李四购买椒麻鸡两份'];

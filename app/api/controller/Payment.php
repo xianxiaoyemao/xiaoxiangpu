@@ -11,15 +11,6 @@ use EasyWeChat\Factory;
 
 class Payment{
 
-//    protected $config = [
-////      'app_id' => 'wxb3fxxxxxxxxxxx', // 公众号 APPID
-//        'miniapp_id' => '',
-//        'mch_id' => '',
-//        'key' => '',
-//        'notify_url' => '',
-//        'log' => [],
-//    ];
-
     protected $config = [
         // 必要配置
         'app_id'             => '',
@@ -42,17 +33,18 @@ class Payment{
         $this->config['notify_url'] = 'https://mxxp.xianxiaoyemao.com/payment/notify';
     }
 
-
+    /**
+     * 支付
+     * @param string $order_no
+     * @param string $money
+     * @param string $msg
+     * @param string $openid
+     * @return array|string
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidArgumentException
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidConfigException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
     public function pay ($order_no = '', $money = '', $msg = '', $openid = ''){
-        /*$order = [
-            'out_trade_no' => '1234567890',
-            'total_fee' => floatval(0.01) * 100, // **单位：分**
-            'body' => '测试',
-            'openid' => 'oWGHA4svW6U3dk1CPkPCw7im3GEg',
-        ];*/
-        /*$pay = Pay::wechat($this->config);
-        $result = $pay->miniapp($order);*/
-
         $app = Factory::payment($this->config);
 
         $result = $app->order->unify([
@@ -72,18 +64,18 @@ class Payment{
         }
     }
 
-
-
+    /**
+     * 回调地址
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @throws \EasyWeChat\Kernel\Exceptions\Exception
+     */
     public function notify()
     {
         $app = Factory::payment($this->config);
         $response = $app->handlePaidNotify(function($message, $fail){
-            Log::write($message);
-            Log::write('=========================================');
             $order_id = OrdersPay::where('order_sn', $message['out_trade_no'])->value('order_ids');
             $order = explode(',', $order_id);
-            Db::name('orders')->where('id', 'in', $order)->update(['status' => 2]);
-            Log::write('=====================11111111=================');
+            Db::name('orders')->where('id', 'in', $order)->update(['status' => 2, 'paytime' => time()]);
             if (!$order_id) { // 如果订单不存在 或者 订单已经支付过了
                 return true;
             }
