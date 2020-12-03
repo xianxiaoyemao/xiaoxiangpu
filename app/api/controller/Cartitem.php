@@ -129,6 +129,54 @@ class Cartitem extends BaseController{
         }
     }
 
+    public function goskk(Request $request){
+        // 取出用户
+        if( !$this->userPop())
+        {
+            $this->insertLog('no users buy');
+            return;
+        }
+        /// 判断是否重复下订单
+        if( in_array( $this->user_id, $this->redis->sMembers( 'users_buy')))
+        {
+            $this->insertLog($this->user_id.' repeat place order');
+            return;
+        }
+        // 检查库存
+        $count=$this->redis->lpop('goods_store');
+        if(!$count){
+            $this->insertLog($this->user_id .' error:no store redis');
+            return;
+        }
+
+        // 开启事务 确保订单不会重复下
+
+        //生成订单
+        $order_sn=$this->build_order_no();
+
+        $order_rs = Db::name( 'order')
+            ->insert([
+                'order_sn' => $order_sn,
+                'user_id' => $this->user_id,
+                'goods_id' => $this->goods_id,
+                'sku_id' => $this->sku_id,
+                'price' => $this->price
+            ]);
+
+        //库存减少
+        $store_rs = Db::name( 'store')
+            ->where( 'sku_id', $this->sku_id)
+            ->Dec( 'number', $this->number);
+        if($store_rs){
+            // 用户购买成功，把user_id存入set集合缓存。拿来判断该用户是否会继续下单
+            $this->redis->sAdd( 'users_buy', $this->user_id);
+            $this->insertLog($this->user_id .' 库存减少成功');
+            return;
+        }else{
+            $this->insertLog($this->user_id .' 库存减少失败');
+            return;
+        }
+    }
 
 
     /**
@@ -143,6 +191,7 @@ class Cartitem extends BaseController{
         $skuid = $request -> post('skuid/d');//商品规格id
         $specvalue = $request -> post('specvalue');
         $quantity = $request -> post('quantity/d') ?? 1;
+        $is_rush = $request -> post('is_rush/d');
         $cartLogic = new CartLogic();
         $cartLogic->setUserId($uid);
         //立即购买
@@ -155,7 +204,11 @@ class Cartitem extends BaseController{
                 ->setProductSku($skuid)
                 ->setGoodsBuyNum($quantity);
             try{
-                $cartList = $cartLogic->buyNow();
+                if($is_rush == 1){
+                    $cartList = $cartLogic->buyNowms();
+                }else{
+                    $cartList = $cartLogic->buyNow();
+                }
             }catch (TpshopException $t){
                 $error = $t->getErrorArr();
                 return apiBack('fail', $error['msg'], '10004');
