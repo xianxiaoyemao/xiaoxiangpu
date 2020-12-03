@@ -1,12 +1,12 @@
 <?php
 namespace app\api\controller;
 use app\admin\model\Category;
+use app\api\controller\SecondsKill;
 use app\BaseController;
 use app\common\model\Cart;
 use app\common\model\ProductDetails;
 use app\common\model\ProductSku;
 use app\common\model\User;
-use app\api\controller\SecondsKill;
 use app\common\util\TpshopException;
 use think\facade\Db;
 use app\Request;
@@ -124,28 +124,28 @@ class Product extends BaseController{
         $pdetails['introduce'] = $details->introduce;
         $pdetails['comment_num'] = ProductComment::where('product_id', $productid)->count();
         $pdetails['product_spec_info'] = json_decode($pdetails['product_spec_info'],true);
-
+        $skulist = (new ProductSku)::where('product_id',$productid)  -> field('id as skuid,title,price as skuprice,stock') -> select()->toArray();
         if($pdetails['is_rush'] == 1){
             $pdetails['secskill'] = ['skill_start'=>strtotime(C('skill_start')) - time(),'skill_end'=>strtotime(C('skill_end')) - time()];
-        }
-
-        //:with(['productdetails'=>function($query){$query->field('product_id,images_url,picdesc,introduce');}])
-//            -> find() ->toArray();
-        $skulist = (new ProductSku)::where('product_id',$productid)  -> field('id as skuid,title,price as skuprice,stock') -> select()->toArray();
-        $sekill = new  SecondsKill($productid,$uid);
-        try {
-            $sekill -> _before_detail();
-        }catch (TpshopException $t){
-            $error = $t->getErrorArr();
-        }
-//        foreach ($skulist as $key => $val){
+            foreach ($skulist as $key => $val){
+                $sekill = new  SecondsKill($productid,$uid,$val['skuid'],$val['stock']);
+                try {
+                    $sekill -> _before_detail();
+                }catch (TpshopException $t){
+                    $error = $t->getErrorArr();
+                }
 //            $res=app('redis')->llen('goods_store'.$productid.$val['skuid']);
 //            $count=$val['stock']-$res;
 //            for($i=0;$i<$count;$i++){
 //                app('redis') ->lpush('goods_store'.$productid.$val['skuid'],1);
 //            }
-////            dump(app('redis')->llen('goods_store'.$productid.$val['skuid']));die;
-//        }
+            }
+        }
+
+        //:with(['productdetails'=>function($query){$query->field('product_id,images_url,picdesc,introduce');}])
+//            -> find() ->toArray();
+
+
         $data =[
             'details'=>$pdetails,
             'skulist'=> $skulist,
