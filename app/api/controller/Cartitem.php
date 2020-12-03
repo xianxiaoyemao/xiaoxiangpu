@@ -7,7 +7,8 @@
  */
 
 namespace app\api\controller;
-use app\admin\model\User;
+
+
 use app\BaseController;
 use app\common\controller\CartLogic;
 use app\common\controller\CommonController;
@@ -17,6 +18,7 @@ use app\common\model\OrdersShop;
 use app\common\model\OrdersPay;
 use app\common\model\ProductSku;
 use app\common\model\Product;
+use app\common\model\User;
 use app\Request;
 use app\common\util\TpshopException;
 use think\facade\Db;
@@ -332,6 +334,7 @@ class Cartitem extends BaseController{
         $post = $request->post();
         $data = $post['data'];
         $address = $post['address_id'];
+        $discount = $post['discount'];
         //总价
         $total_price = $post['total_price'];
         $order = [];
@@ -380,7 +383,9 @@ class Cartitem extends BaseController{
                 'pay_price' => $total_price
             ];
             Db::name('orders_pay')->insert($pay_order);
-
+            $user = User::where('id', $post['uid'])->find();
+            $user->money -= $discount;
+            $user->save();
             // 提交事务
             Db::commit();
         } catch (\Exception $e) {
