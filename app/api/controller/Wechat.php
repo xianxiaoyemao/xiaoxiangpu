@@ -119,7 +119,7 @@ class Wechat extends BaseController
         if ($shareUid) {
             $share_money = $this->configModel->where('name', 'share_money')->value('value');
             $user->invitecode = $shareUid;
-            $shareUser = User::where('id', $uid)->find();
+            $shareUser = User::where('id', $shareUid)->find();
             $shareUser->money += $share_money;
             $shareUser->save();
         }
