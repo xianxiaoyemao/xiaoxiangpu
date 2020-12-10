@@ -332,6 +332,7 @@ class Cartitem extends BaseController{
     {
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $post = $request->post();
+        $cartids =  $request->post('cartid');
         $data = $post['data'];
         $address = $post['address_id'];
         $discount = $post['discount'];
@@ -395,6 +396,9 @@ class Cartitem extends BaseController{
         $openid = \app\common\model\User::where('id', $post['uid'])->value('openid');
         $payment = new Payment();
         $res = $payment -> pay($pay_order_no, $total_price, '小香铺购物下单', $openid);
+        if ($cartids) {
+            $this->delCart($cartids);
+        }
         if ($res) {
             return apiBack('success', '成功', '10000', $res);
         } else {
@@ -424,6 +428,18 @@ class Cartitem extends BaseController{
         } else {
             return apiBack('fail', '获取订单失败', '10001');
         }
+    }
+
+    /**
+     * 删除购物车
+     * @param $ids
+     * @return bool
+     */
+    private function delCart ($ids)
+    {
+        $ids = explode(',', $ids);
+        Cart::where('id', 'in', $ids)->delete();
+        return true;
     }
 
 
