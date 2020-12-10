@@ -99,10 +99,10 @@ class Goods extends Backend
         return $this-> fetch();
     }
     //添加sku信息
-    public function insertskuinfo($skuTitle,$pid,$skuPrice,$skuStock){
+    public function insertskuinfo($skuTitle,$skuPrice,$skuStock,$pid){
         $sku = [];
         foreach ($skuTitle as $k => $v) {
-            $sku[$k]['product_id'] = $pid[$k];
+            $sku[$k]['product_id'] = $pid;
             $sku[$k]['title'] = $v;
             $sku[$k]['price'] = $skuPrice[$k];
             $sku[$k]['stock'] = $skuStock[$k];
@@ -117,9 +117,6 @@ class Goods extends Backend
      */
     public function edit ($ids = null){
         $product = $this->model->find($ids);
-        $details = (new ProductDetails)::where('product_id',$ids) -> find();
-//        echo (new ProductDetails)-> getLastSql();die;
-//        dump($details);die;
         //sku属性
         $sku = $product->skus()->select();
         $details = $product ->  productdetails() -> find() ;
