@@ -368,6 +368,7 @@ class Cartitem extends BaseController{
 
                 $order['payment_price'] = $product_price;
                 $order['goods_price'] = $product_price;
+                $order['amount_price'] = $discount / 2;
                 $order_id = Db::name('orders')->insertGetId($order);
                 array_push($order_ids, $order_id);
                 foreach ($detail as $key => $value) {
