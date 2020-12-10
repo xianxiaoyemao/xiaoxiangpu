@@ -32,7 +32,7 @@ class Index extends BaseController
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
 
         //轮播图
-        $swiper = Adv::where('title', '首页轮播')->field('advurl')->select()->toArray();
+        $swiper = Adv::where('pid', '3')->field('advurl')->select()->toArray();
         $swiper = array_column($swiper, 'advurl');
 
         $productsfild = 'id,name,images,price,discount_price,shop_id,category_id,sales,product_spec_info';
