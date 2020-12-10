@@ -81,11 +81,13 @@ class Goods extends Backend
                     $params['inventory'] = array_sum($skus['stock']);
                     $params['product_spec_info'] = $this->getSpenInfo($spec['spec_name'], $spec['spec_value']);
                     $params['createtime'] = time();
+                    $params['starttime'] = strtotime($params['starttime']);
+                    $params['endtime'] = strtotime($params['endtime']);
                     $this->model->save($params);
                     $details['product_id'] = $this->model->id;
                     $details['createtime'] = time();
                     (new ProductDetails) -> save($details);
-                    $sku = $this->getSkuInfo($skus['sku_title'], $skus['sku_price'], $skus['stock'], $this->model->id);
+                    $sku = $this->insertskuinfo($skus['sku_title'], $skus['sku_price'], $skus['stock'], $this->model->id);
                     $this->skuModel->saveAll($sku);
                     $this->success();
                 } catch (Exception $e) {
@@ -96,7 +98,17 @@ class Goods extends Backend
         }
         return $this-> fetch();
     }
-
+    //添加sku信息
+    public function insertskuinfo($skuTitle,$pid,$skuPrice,$skuStock){
+        $sku = [];
+        foreach ($skuTitle as $k => $v) {
+            $sku[$k]['product_id'] = $pid[$k];
+            $sku[$k]['title'] = $v;
+            $sku[$k]['price'] = $skuPrice[$k];
+            $sku[$k]['stock'] = $skuStock[$k];
+        }
+        return $sku;
+    }
     /**
      * 商品修改
      * @param null $ids
@@ -134,10 +146,11 @@ class Goods extends Backend
                 $params['inventory'] = array_sum($skus['stock']);
                 $params['product_spec_info'] = $this->getSpenInfo($spec['spec_name'], $spec['spec_value']);
                 $params['updatetime'] = time();
+                $params['starttime'] = strtotime($params['starttime']);
+                $params['endtime'] = strtotime($params['endtime']);
                 $product->save($params);
-                $skuInfo = $this->getSkuInfo($skus['sku_title'], $skus['sku_price'], $skus['stock'], $ids);
-                $this->skuModel->where('product_id', $ids)->delete();
-                $this->skuModel->saveAll($skuInfo);
+                $this->getSkuInfo($skus['skuid'],$skus['sku_title'], $skus['sku_price'], $skus['stock'], $ids);
+//                $this->skuModel->saveAll($skuInfo);
                 (new ProductDetails) -> where('product_id',$ids) -> update($details);
                 $this->success($ids);
             } catch (Exception $e) {
@@ -148,19 +161,33 @@ class Goods extends Backend
         return $this->fetch();
     }
 
-    public function getSkuInfo ($skuTitle, $skuPrice, $skuStock, $pid) {
-        $sku = [];
-        foreach ($skuTitle as $k => $v) {
-            $sku[$k]['product_id'] = $pid;
-            $sku[$k]['title'] = $v;
-            $sku[$k]['price'] = $skuPrice[$k];
-            $sku[$k]['stock'] = $skuStock[$k];
+    //修改sku信息
+    public function getSkuInfo ($skuid,$skuTitle, $skuPrice, $skuStock, $pid) {
+        $savenumber=0;
+        foreach ($skuTitle as $k => $v){
+            if(isset($skuid[$k])){
+               $sku = [
+                   'product_id'=>$pid,
+                   'title'=>$v,
+                   'price'=>$skuPrice[$k],
+                   'stock'=>$skuStock[$k],
+                   'create_time' => time()
+               ];
+               $savenumber += $this->skuModel->where('id', $skuid[$k])->update($sku);
+            }else{
+                $sku1 = [
+                    'product_id'=>$pid,
+                    'title'=>$v,
+                    'price'=>$skuPrice[$k],
+                    'stock'=>$skuStock[$k],
+                    'create_time' => time()
+                ];
+                $this->skuModel-> insert($sku1);
+            }
         }
-        return $sku;
     }
 
-    public function getSpenInfo ($specName, $specValue)
-    {
+    public function getSpenInfo ($specName, $specValue){
         $spec = explode('-', $specValue);
         $specInfo = [
             'name' => $specName,

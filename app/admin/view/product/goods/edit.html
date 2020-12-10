@@ -62,6 +62,7 @@
         <div id="prev" style="padding-left: 18%">
             {foreach name="sku" item="vo"}
             <div id="skuattr" class="form-group">
+                <input name="rowsku[skuid][]" value="{$vo.id|0}" style="display: none">
                 <div class="col-xs-12 col-sm-2">
                     <input type="text" class="form-control" size="40" name="rowsku[sku_title][]" value="{$vo.title}" placeholder="属性名称"  data-rule="required"/>
                 </div>
@@ -69,7 +70,7 @@
                     <input type="text" class="form-control" name="rowsku[sku_price][]" value="{$vo.price}" placeholder="价格"  data-rule="required"/>
                 </div>
                 <div class="col-xs-12 col-sm-2">
-                    <input type="text" class="form-control" name="rowsku[stock][]" value="{$vo.stock}" placeholder="库存"  data-rule="required"/>
+                    <input type="number" class="form-control" name="rowsku[stock][]" value="{$vo.stock}" placeholder="库存"  data-rule="required"/>
                 </div>
                 <span class="btn btn-sm btn-danger btn-remove"><i class="fa fa-times"></i></span>
             </div>
@@ -98,12 +99,6 @@
         <label  class="control-label col-xs-12 col-sm-2">商品销量:</label>
         <div class="col-xs-12 col-sm-8">
             <input type="number" class="form-control" name="row[sales]" value="{$row.sales|htmlentities}" />
-        </div>
-    </div>
-    <div class="form-group">
-        <label  class="control-label col-xs-12 col-sm-2">商品库存:</label>
-        <div class="col-xs-12 col-sm-8">
-            <input type="number" class="form-control" name="row[inventory]" value="{$row.inventory|htmlentities}" />
         </div>
     </div>
     <div class="form-group">
@@ -177,7 +172,22 @@
         </div>
     </div>
 
-
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">开始时间</label>
+        <div class="col-xs-4 col-sm-4">
+            <input id="c-starttime" class="form-control datetimepicker form-control"
+                   data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[starttime]" type="text"
+                   value='{$row.starttime|date="Y-m-d H:i:s"}'>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">结束时间</label>
+        <div class="col-xs-4 col-sm-4">
+            <input id="endtime" class="form-control datetimepicker form-control"
+                   data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[endtime]" type="text"
+                   value='{$row.endtime|date="Y-m-d H:i:s"}'>
+        </div>
+    </div>
 
     <div class="form-group hidden layer-footer">
         <label class="control-label col-xs-12 col-sm-2"></label>
