@@ -139,7 +139,7 @@ class Goods extends Backend
             try {
                 $pos = array_search(min($skus['sku_price']), $skus['sku_price']);
                 $params['images'] = explode(',',$details['images_url'])[0];
-                $params['price'] = $skus['sku_price'][$pos];
+                $params['discount_price'] = $skus['sku_price'][$pos];
                 $params['inventory'] = array_sum($skus['stock']);
                 $params['product_spec_info'] = $this->getSpenInfo($spec['spec_name'], $spec['spec_value']);
                 $params['updatetime'] = time();
