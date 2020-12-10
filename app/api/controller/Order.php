@@ -183,7 +183,7 @@ class Order extends BaseController
         foreach ($cartlist as $key => $val){
             foreach ($val['orderlist'] as $k => $v){
                 $cartlist[$key]['total_number'] +=$v['number'];
-                $cartlist[$key]['total_price'] += $v['price'] * (int)$v['number'];
+                $cartlist[$key]['total_price'] += $val['payment_price'];
             }
         }
         return $cartlist;

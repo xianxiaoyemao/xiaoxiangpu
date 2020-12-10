@@ -79,10 +79,16 @@ class Cartitem extends BaseController{
                 $stock = $skunum['stock'];
                 break;
         }
+        //0元购产品
+        $pro0ids = Product::where('buy0', 1)->column('id');
         $cartinfo = (new Cart)::where(['user_id'=>$uid,'product_id'=>$pid,'sku_id'=>$data['sku_id'],'specvalue'=>$data['specvalue']]) ->find();
         if(empty($cartinfo)){
             $res =  (new Cart) -> save($data);
         }else{
+            //判断0元购商品只能添加一个！
+            if (in_array($pid, $pro0ids)) {
+                return apiBack('fail', '0元购商品只能添加一个！', '10004');
+            }
             $quantity = $cartinfo -> quantity + (int)$quantity;
             $data = [
                 'quantity' => $quantity,
@@ -365,10 +371,20 @@ class Cartitem extends BaseController{
 
                     $product_price += $val['price'] * $val['quantity'];
                 }
-
-                $order['payment_price'] = $product_price;
-                $order['goods_price'] = $product_price;
-                $order['amount_price'] = $discount / 2;
+                if ($k == 0) {
+                    $discountPrice = $product_price - $discount;
+                    if ($discountPrice < 0) {
+                        $order['payment_price'] = 0.01;
+                    } else {
+                        $order['payment_price'] = $discountPrice;
+                    }
+                    $order['goods_price'] = $product_price;
+                    $order['amount_price'] = $discount;
+                } else {
+                    $order['payment_price'] = $product_price;
+                    $order['goods_price'] = $product_price;
+                    $order['amount_price'] = 0;
+                }
                 $order_id = Db::name('orders')->insertGetId($order);
                 array_push($order_ids, $order_id);
                 foreach ($detail as $key => $value) {
