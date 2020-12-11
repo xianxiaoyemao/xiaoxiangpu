@@ -273,8 +273,8 @@ class Backend extends BaseController{
         $sort = $this->request->get('sort',
             ! empty($this->model) && $this->model->getPk() ? $this->model->getPk() : 'id');
         $order = $this->request->get('order', 'DESC');
-        $offset = $this->request->get('offset', 0);
-        $limit = $this->request->get('limit', 0);
+        $offset = (int)$this->request->get('offset', 0);
+        $limit = (int)$this->request->get('limit', 0);
         $filter = (array) json_decode($filter, true);
         $op = (array) json_decode($op, true);
         $filter = $filter ? $filter : [];

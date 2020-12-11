@@ -91,6 +91,8 @@ class Wechat extends BaseController
         $user = $this->userModel->where('id', $post['uid'])->find();
         $user->nickname = $post['nickname'];
         $user->avatar = $post['avatar'];
+        $user->createtime = time();
+        $user-> login_ip = get_client_ip();
         $user->save();
         return apiBack('success', '请求成功', '10000');
     }
