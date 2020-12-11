@@ -9,6 +9,7 @@ use app\common\model\User;
 use app\Request;
 use fast\Http;
 use think\facade\Cache;
+use think\facade\Db;
 
 class Wechat extends BaseController
 {
@@ -120,7 +121,9 @@ class Wechat extends BaseController
         if ($shareUid) {
             $share_money = $this->configModel->where('name', 'share_money')->value('value');
             $user->invitecode = $shareUid;
-            $user->money += $share_money;
+            $shareUser = User::where('id', $shareUid)->find();
+            $shareUser->money += $share_money;
+            $shareUser->save();
         }
         $user->mobile = $mobile;
         $user->save();

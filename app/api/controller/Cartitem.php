@@ -7,7 +7,8 @@
  */
 
 namespace app\api\controller;
-use app\admin\model\User;
+
+
 use app\BaseController;
 use app\common\controller\CartLogic;
 use app\common\controller\CommonController;
@@ -17,6 +18,7 @@ use app\common\model\OrdersShop;
 use app\common\model\OrdersPay;
 use app\common\model\ProductSku;
 use app\common\model\Product;
+use app\common\model\User;
 use app\Request;
 use app\common\util\TpshopException;
 use think\facade\Db;
@@ -77,10 +79,16 @@ class Cartitem extends BaseController{
                 $stock = $skunum['stock'];
                 break;
         }
+        //0元购产品
+        $pro0ids = Product::where('buy0', 1)->column('id');
         $cartinfo = (new Cart)::where(['user_id'=>$uid,'product_id'=>$pid,'sku_id'=>$data['sku_id'],'specvalue'=>$data['specvalue']]) ->find();
         if(empty($cartinfo)){
             $res =  (new Cart) -> save($data);
         }else{
+            //判断0元购商品只能添加一个！
+            if (in_array($pid, $pro0ids)) {
+                return apiBack('fail', '0元购商品只能添加一个！', '10004');
+            }
             $quantity = $cartinfo -> quantity + (int)$quantity;
             $data = [
                 'quantity' => $quantity,
@@ -330,8 +338,10 @@ class Cartitem extends BaseController{
     {
         if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
         $post = $request->post();
+        $cartids =  $request->post('cartid');
         $data = $post['data'];
         $address = $post['address_id'];
+        $discount = $post['discount'];
         //总价
         $total_price = $post['total_price'];
         $order = [];
@@ -361,9 +371,20 @@ class Cartitem extends BaseController{
 
                     $product_price += $val['price'] * $val['quantity'];
                 }
-
-                $order['payment_price'] = $product_price;
-                $order['goods_price'] = $product_price;
+                if ($k == 0) {
+                    $discountPrice = $product_price - $discount;
+                    if ($discountPrice < 0) {
+                        $order['payment_price'] = 0.01;
+                    } else {
+                        $order['payment_price'] = $discountPrice;
+                    }
+                    $order['goods_price'] = $product_price;
+                    $order['amount_price'] = $discount;
+                } else {
+                    $order['payment_price'] = $product_price;
+                    $order['goods_price'] = $product_price;
+                    $order['amount_price'] = 0;
+                }
                 $order_id = Db::name('orders')->insertGetId($order);
                 array_push($order_ids, $order_id);
                 foreach ($detail as $key => $value) {
@@ -380,7 +401,9 @@ class Cartitem extends BaseController{
                 'pay_price' => $total_price
             ];
             Db::name('orders_pay')->insert($pay_order);
-
+            $user = User::where('id', $post['uid'])->find();
+            $user->money -= $discount;
+            $user->save();
             // 提交事务
             Db::commit();
         } catch (\Exception $e) {
@@ -390,11 +413,50 @@ class Cartitem extends BaseController{
         $openid = \app\common\model\User::where('id', $post['uid'])->value('openid');
         $payment = new Payment();
         $res = $payment -> pay($pay_order_no, $total_price, '小香铺购物下单', $openid);
+        if ($cartids) {
+            $this->delCart($cartids);
+        }
         if ($res) {
             return apiBack('success', '成功', '10000', $res);
         } else {
             return apiBack('fail', '获取订单失败', '10001');
         }
+    }
+
+    /**
+     * 订单款支付
+     * @param Request $request
+     * @return \think\response\Json
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidArgumentException
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidConfigException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function orderPay (Request $request)
+    {
+        if (!$request->isPost()) return apiBack('fail', '请求方式错误', '10004');
+        $total_price = $request->post('total_price');
+        $pay_order_no = $request->post('order_no');
+        $uid = $request->post('uid');
+        $openid = \app\common\model\User::where('id', $uid)->value('openid');
+        $payment = new Payment();
+        $res = $payment -> pay($pay_order_no, $total_price, '小香铺购物下单', $openid);
+        if ($res) {
+            return apiBack('success', '成功', '10000', $res);
+        } else {
+            return apiBack('fail', '获取订单失败', '10001');
+        }
+    }
+
+    /**
+     * 删除购物车
+     * @param $ids
+     * @return bool
+     */
+    private function delCart ($ids)
+    {
+        $ids = explode(',', $ids);
+        Cart::where('id', 'in', $ids)->delete();
+        return true;
     }
 
 

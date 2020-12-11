@@ -146,17 +146,18 @@ class Order extends BaseController
 //                'images' => $v['images']
                 ];
             }
+            $val = array_values($result);
         }else{
             foreach ($orderlist as $v){
-                $result[$v['orderid']]['orderid'] = $v['orderid'];
-                $result[$v['orderid']]['order_sn'] = $v['order_sn'];
-                $result[$v['orderid']]['payment_price'] = $v['payment_price'];
-                $result[$v['orderid']]['amount_price'] = $v['amount_price'];
-                $result[$v['orderid']]['createtime'] = $v['createtime'];
-                $result[$v['orderid']]['status'] = $v['status'];
-                $result[$v['orderid']]['shopid'] = $v['shop_id'];
-                $result[$v['orderid']]['shoptitle'] = (new Shops())::where('id', $v['shop_id']) -> value('title');
-                $result[$v['orderid']]['orderlist'][]=[
+                $result['orderid'] = $v['orderid'];
+                $result['order_sn'] = $v['order_sn'];
+                $result['payment_price'] = $v['payment_price'];
+                $result['amount_price'] = $v['amount_price'];
+                $result['createtime'] = $v['createtime'];
+                $result['status'] = $v['status'];
+                $result['shopid'] = $v['shop_id'];
+                $result['shoptitle'] = (new Shops())::where('id', $v['shop_id']) -> value('title');
+                $result['orderlist'][]=[
                     'skuid' => $v['skuid'],
                     'pid' => $v['pid'],
                     'speckey' => $v['speckey'],
@@ -169,10 +170,11 @@ class Order extends BaseController
 //                'images' => $v['images']
                 ];
             }
+            $val = $result;
         }
 //        $cartlist = array_merge($arr,$result);
 //        $ret = $this -> getOrderprice($cartlist);
-        $ret = $this -> getOrderprice(array_values($result));
+        $ret = $this -> getOrderprice($val);
         return $ret;
     }
     //计算订单总价
@@ -181,7 +183,7 @@ class Order extends BaseController
         foreach ($cartlist as $key => $val){
             foreach ($val['orderlist'] as $k => $v){
                 $cartlist[$key]['total_number'] +=$v['number'];
-                $cartlist[$key]['total_price'] += $v['price'] * (int)$v['number'];
+                $cartlist[$key]['total_price'] += $val['payment_price'];
             }
         }
         return $cartlist;
@@ -278,7 +280,7 @@ class Order extends BaseController
         return '购买成功';
     }
 
-        /**
+    /**
      * 得到新订单号
      * @return  string
      */

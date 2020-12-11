@@ -72,6 +72,9 @@ class Product extends BaseController{
             case 'xjtcp':
                 $cartlist = $this -> goodslist($list);
                 break;
+            case '':
+                $cartlist = $list;
+                break;
         }
 
         $data =[
@@ -160,7 +163,7 @@ class Product extends BaseController{
             -> alias('pc')
             -> where('pc.product_id',$productid)
 //            -> join('product  p','p.id=pc.product_id')
-            -> join('user u','u.id=pc.user_id')
+            -> join('user u','u.id=pc.user_id', 'left')
             -> field('pc.id as pcid,pc.comment,pc.images,pc.socre,pc.createtime,u.username,u.nickname,u.mobile,u.avatar')
             -> select() -> toArray();
 //            (new ProductComment)::with(['product','user']) -> where('id',$productid)
