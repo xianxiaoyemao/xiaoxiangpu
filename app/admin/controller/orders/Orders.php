@@ -17,11 +17,11 @@ class Orders extends Backend{
             [$where, $sort, $order, $offset, $limit] = $this->buildparams();
             $total = (new OrdersModel())
                 ->where($where)
-                ->order('createtime desc')
+                ->order($sort, $order)
                 ->count();
             $list =  (new OrdersModel())
                 ->where($where)
-                ->order('createtime desc')
+                ->order($sort, $order)
                 ->limit($offset, $limit)
                 ->select();
             $result = ['total' => $total, 'rows' => $list];
@@ -57,4 +57,14 @@ class Orders extends Backend{
         $this->assign('detail', $detail);
         return $this->fetch();
     }
+
+    //删除
+    public function del($ids = ''){
+        if ($ids) {
+            $this->model -> destroy($ids);
+            $this->success();
+        }
+        $this->error();
+    }
+
 }
