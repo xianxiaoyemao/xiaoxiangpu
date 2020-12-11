@@ -17,30 +17,11 @@ header('Access-Control-Allow-Origin:*');
 header('Access-Control-Allow-Methods:*');
 header("Access-Control-Allow-Headers:DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding");
 header('Access-Control-Allow-Credentials:true');//表示是否允许发送Cookie
-
-define('SOF_NAME','[吾景]:');
 define('API_HOST',$_SERVER['HTTP_HOST']);//获取当前域名
-
 define('SHUJUCUNCHU',app()->getRootPath().'public');
 if(!is_dir(SHUJUCUNCHU)){
     mkdir(SHUJUCUNCHU,0777,true);
 }
-
-
-
-
-//判断系统平台
-function smsyem_version(){
-    if (strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') || strpos($_SERVER['HTTP_USER_AGENT'], 'iPad')) {
-        $app_version = "IOS";
-    } else if (strpos($_SERVER['HTTP_USER_AGENT'], 'Android')) {
-        $app_version = "Android";
-    } else {
-        $app_version = "other";
-    }
-    return $app_version;
-}
-
 
 
 //文件下载
