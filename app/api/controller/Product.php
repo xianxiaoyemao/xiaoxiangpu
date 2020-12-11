@@ -22,7 +22,7 @@ class Product extends BaseController{
         $cid = $request->post('cid/d') ?? 0;
         $where = "p.status=1";
         if (!empty($keyword) && isset($keyword)) {
-            $where .= " and p.name like '%$keyword%'";
+            $where .= " and p.buy0 != 1 and p.name like '%$keyword%'";
         }
         $page = $request->post('page') ?? 0;
         $limit = 20;
@@ -35,11 +35,11 @@ class Product extends BaseController{
                 $where.=" and p.is_rush = 1";
                 break;
             case 'jmj':
-                $where.=" and p.pcid=2";
+                $where.=" and p.pcid=2 and p.buy0 != 1";
                 $cate = $db->where('pid', 2)->select()->toArray();
                 break;
             case 'xjtcp':
-                $where.=" and p.pcid=3";
+                $where.=" and p.pcid=3 and p.buy0 != 1";
                 $cate = $db->where('pid', 3)->select()->toArray();
                 break;
             case 'group':
